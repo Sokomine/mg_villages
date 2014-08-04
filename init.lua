@@ -1,0 +1,35 @@
+
+-- reserve namespace for the villages
+mg_villages = {}
+
+mg_villages.all_villages  = {}
+mg_villages.mg_generated_map = {}
+mg_villages.anz_villages = 0;
+
+mg_villages.modpath = minetest.get_modpath( "mg_villages");
+
+dofile(mg_villages.modpath.."/save_restore.lua")
+mg_villages.all_villages     = save_restore.restore_data( 'mg_all_villages.data' ); -- read mg_villages.all_villages data saved for this world from previous runs
+mg_villages.mg_generated_map = save_restore.restore_data( 'mg_generated_map.data' );
+
+dofile(mg_villages.modpath.."/we.lua")
+dofile(mg_villages.modpath.."/rotate.lua")
+
+-- read size from schematics files directly
+-- analyze_mts_file.lua uses handle_schematics.* namespace
+dofile(mg_villages.modpath.."/analyze_mts_file.lua") 
+
+-- Note: the "buildings" talbe is not in the mg_villages.* namespace
+dofile(mg_villages.modpath.."/buildings.lua")
+
+-- replace some materials for entire villages randomly
+dofile(mg_villages.modpath.."/replacements.lua")
+
+dofile(mg_villages.modpath.."/villages.lua")
+
+-- adds a command that allows to teleport to a known village
+dofile(mg_villages.modpath.."/chat_commands.lua")
+-- protect villages from griefing
+dofile(mg_villages.modpath.."/protection.lua")
+-- create and show a map of the world
+dofile(mg_villages.modpath.."/map_of_world.lua")
