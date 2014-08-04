@@ -32,7 +32,7 @@ mg_villages.villages_at_point = function(minp, noise1)
 	for zi = -vcr, 0, vcc do
 		if xi ~= 0 or zi ~= 0 then
 			local mp = {x = minp.x + 80*xi, z = minp.z + 80*zi}
-			local pi = PseudoRandom(get_bseed(mp))
+			local pi = PseudoRandom(mg_villages.get_bseed(mp))
 			local s = pi:next(1, 400)
 			local x = pi:next(mp.x, mp.x + 79)
 			local z = pi:next(mp.z, mp.z + 79)
@@ -40,7 +40,7 @@ mg_villages.villages_at_point = function(minp, noise1)
 		end
 	end
 	end
-	local pr = PseudoRandom(get_bseed(minp))
+	local pr = PseudoRandom(mg_villages.get_bseed(minp))
 	if pr:next(1, 400) > VILLAGE_CHANCE then return {} end -- No village here
 	local x = pr:next(minp.x, minp.x + 79)
 	local z = pr:next(minp.z, minp.z + 79)
@@ -71,7 +71,7 @@ end
 --end
 
 local function inside_village2(bx, sx, bz, sz, village, vnoise)
-	return inside_village(bx, bz, village, vnoise) and inside_village(bx+sx, bz, village, vnoise) and inside_village(bx, bz+sz, village, vnoise) and inside_village(bx+sx, bz+sz, village, vnoise)
+	return mg_villages.inside_village(bx, bz, village, vnoise) and mg_villages.inside_village(bx+sx, bz, village, vnoise) and mg_villages.inside_village(bx, bz+sz, village, vnoise) and mg_villages.inside_village(bx+sx, bz+sz, village, vnoise)
 end
 
 local function choose_building(l, pr, village_type)
@@ -178,7 +178,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 		orient1 = 3
 		orient2 = 1
 	end
-	while inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize, l) do
+	while mg_villages.inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize, l) do
 		if roadsize > 1 and pr:next(1, 4) == 1 then
 			--generate_road(vx, vz, vs, vh, l, pr, roadsize-1, rx, rz, math.abs(rdz), math.abs(rdx))
 			calls_to_do[#calls_to_do+1] = {rx=rx+(roadsize - 1)*rdx, rz=rz+(roadsize - 1)*rdz, rdx=math.abs(rdz), rdz=math.abs(rdx)}
@@ -194,7 +194,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 			local bz
 			local tries = 0
 			while true do
-				if not inside_village(rx, rz, village, vnoise) or road_in_building(rx, rz, rdx, rdz, roadsize, l) then
+				if not mg_villages.inside_village(rx, rz, village, vnoise) or road_in_building(rx, rz, rdx, rdz, roadsize, l) then
 					exitloop = true
 					break
 				end
@@ -227,7 +227,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 	end
 	rx = rxx
 	rz = rzz
-	while inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize, l) do
+	while mg_villages.inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize, l) do
 		if roadsize > 1 and pr:next(1, 4) == 1 then
 			--generate_road(vx, vz, vs, vh, l, pr, roadsize-1, rx, rz, -math.abs(rdz), -math.abs(rdx))
 			calls_to_do[#calls_to_do+1] = {rx=rx+(roadsize - 1)*rdx, rz=rz+(roadsize - 1)*rdz, rdx=-math.abs(rdz), rdz=-math.abs(rdx)}
@@ -243,7 +243,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 			local bz
 			local tries = 0
 			while true do
-				if not inside_village(rx, rz, village, vnoise) or road_in_building(rx, rz, rdx, rdz, roadsize, l) then
+				if not mg_villages.inside_village(rx, rz, village, vnoise) or road_in_building(rx, rz, rdx, rdz, roadsize, l) then
 					exitloop = true
 					break
 				end
@@ -368,7 +368,7 @@ local function generate_bpos(village, pr, vnoise)
 	end
 	return l]=]--
 	local rz = vz
-	while inside_village(rx, rz, village, vnoise) do
+	while mg_villages.inside_village(rx, rz, village, vnoise) do
 		rx = rx - 1
 	end
 	rx = rx + 5
@@ -799,7 +799,7 @@ end
 mg_villages.generate_village = function(village, minp, maxp, data, param2_data, a, vnoise, dirt_with_grass_replacement)
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
-	local seed = get_bseed({x=vx, z=vz})
+	local seed = mg_villages.get_bseed({x=vx, z=vz})
 	local pr_village = PseudoRandom(seed)
 
 	-- only generate a new village if the data is not already stored
