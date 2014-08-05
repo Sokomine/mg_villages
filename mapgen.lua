@@ -60,6 +60,8 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 	local c_dirt   = minetest.get_content_id( 'default:dirt');
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 
+	local node_is_ground = {};
+
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		for _, village in ipairs(villages) do
@@ -71,12 +73,18 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 				while( y > minp.y ) do
 					local ci = data[a:index(x, y, z)];
 					if( ci ~= c_air and ci ~= c_ignore and buffer_index == 0) then
-						-- only nodes on which walking is possible may be counted as ground
-						local node_name = minetest.get_name_from_content_id( ci );
-						local def = minetest.registered_nodes[ node_name ];	
-						if( def and def.walkable == true and def.is_ground_content == true) then
-							-- from now on, save the nodes below
+						if( node_is_ground[ ci ]) then
 							buffer_index = 1;
+						else -- analyze the node
+							-- only nodes on which walking is possible may be counted as ground
+							local node_name = minetest.get_name_from_content_id( ci );
+							local def = minetest.registered_nodes[ node_name ];	
+							if( def and def.walkable == true and def.is_ground_content == true) then
+								-- from now on, save the nodes below
+								buffer_index = 1;
+								-- store information about this node type for later use
+								node_is_ground[ ci ] = 1;
+							end
 						end
 					end
 					-- save found nodes for later use
@@ -129,23 +137,57 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		param2_data = vm:get_param2_data()
 	end
 
-	-- generate the village structure: determine positions of buildings and roads
-	for _, village in ipairs(villages) do
-		village = mg_villages.generate_village( village, village_noise);
-
-		-- mark the roads and the area between buildings and road in the village_area table as "road" (=2)
-	end
-
 	-- determine which coordinates are inside the village and which are not
 	local village_area = {};
+
+	for village_nr, village in ipairs(villages) do
+
+		-- generate the village structure: determine positions of buildings and roads
+		mg_villages.generate_village( village, village_noise);
+
+		-- mark the roads and buildings and the area between buildings in the village_area table
+		-- 2: road
+		-- 3: border around a road 
+		-- 4: building
+		-- 5: border around a building
+		for _, pos in ipairs(village.to_add_data.bpos) do
+			local reserved_for = 4; -- a building will be placed here
+			if( pos.binfo and pos.binfo == 'road' ) then
+				reserved_for = 2; -- the building will be a road
+			end
+			-- the building + a border of 1 around it
+			for x = -1, pos.bsizex do
+				for z = -1, pos.bsizez do
+					local p = {x=pos.x+x, z=pos.z+z};
+					if( not( village_area[ p.x ] )) then
+						village_area[ p.x ] = {};
+					end
+					if( x==-1 or z==-1 or x==pos.bsizex or z==pos.bsizez ) then
+						-- borders around roads are more important than borders between buildings
+						if( not( village_area[ p.x ][ p.z ] ) or (reserved_for == 2 )) then
+							village_area[ p.x ][ p.z ] = { village_nr, reserved_for+1}; -- border around a building
+						end
+					else
+						village_area[ p.x ][ p.z ] = { village_nr, reserved_for }; -- the actual building
+					end
+				end
+			end
+		end
+        end
+
+		 
 	for x = minp.x, maxp.x do
-		village_area[ x ] = {};
+		if( not( village_area[ x ] )) then
+			village_area[ x ] = {};
+		end
 		for z = minp.z, maxp.z do
-			for _, village in ipairs(villages) do
-				if( mg_villages.inside_village(x, z, village, village_noise)) then
-					village_area[ x ][ z ] = 1;
-				else
-					village_area[ x ][ z ] = 0;
+			if( not( village_area[ x ][ z ] )) then
+				village_area[ x ][ z ] = { 0, 0 };
+
+				for village_nr, village in ipairs(villages) do
+					if( mg_villages.inside_village(x, z, village, village_noise)) then
+						village_area[ x ][ z ] = { village_nr, 1};
+					end
 				end
 			end
 		end
@@ -165,6 +207,38 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for _, village in ipairs(villages) do
 		village.to_add_data = mg_villages.place_buildings( village, minp, maxp, data, param2_data, a, village_noise);
 	end
+
+	-- add farmland
+	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
+	local c_desert_sand     = minetest.get_content_id( 'default:desert_sand' );
+	local c_wheat           = minetest.get_content_id( 'farming:wheat_8' );
+	local c_soil_wet        = minetest.get_content_id( 'farming:soil_wet' );
+	local c_soil_sand       = minetest.get_content_id( 'farming:desert_sand_soil_wet' );
+	local c_water_source    = minetest.get_content_id( 'default:water_source');
+	local c_clay            = minetest.get_content_id( 'default:clay');
+	for x = minp.x, maxp.x do
+		for z = minp.z, maxp.z do
+			-- TODO: height of village is important here!
+			if( village_area[ x ][ z ][ 2 ]==1 ) then
+
+				local h = villages[ village_area[ x ][ z ][ 1 ] ].vh;
+				local g = data[a:index( x, h, z )];
+				if( g==c_dirt_with_grass ) then	
+					data[a:index( x,  h+1, z)] = c_wheat;
+					data[a:index( x,  h,   z)] = c_soil_wet;
+					data[a:index( x,  h-1, z)] = c_water_source;
+					data[a:index( x,  h-2, z)] = c_clay;
+				elseif( g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
+					data[a:index( x,  h+1, z)] = c_wheat;
+					data[a:index( x,  h,   z)] = c_soil_sand;
+					data[a:index( x,  h-1, z)] = c_water_source;
+					data[a:index( x,  h-2, z)] = c_clay;
+				end
+			end
+		end
+	end
+-- TODO: desert sand?
+
 
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
