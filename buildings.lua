@@ -337,7 +337,8 @@ mg_villages.buildings_init();
 
 
 --local gravel = minetest.get_content_id("default:gravel")
-local gravel = minetest.get_content_id("default:gravel")
+-- this special "gravel" will not be removed by mapgen and will not fall down like gravel usually does
+local gravel = minetest.get_content_id('mg_villages:road'); --"default:gravel")
 local c_air  = minetest.get_content_id("air");
 local rgravel = {}
 for i = 1, 2000 do

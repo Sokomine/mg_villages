@@ -59,7 +59,8 @@ mg_villages.villages_at_point = function(minp, noise1)
 		mg_villages.village_sizes[  village_type ] = { min = VILLAGE_MIN_SIZE, max = VILLAGE_MAX_SIZE };
 	end
 	local size = pr:next(mg_villages.village_sizes[ village_type ].min, mg_villages.village_sizes[ village_type ].max) 
-	local height = pr:next(5, 20)
+--	local height = pr:next(5, 20)
+	local height = pr:next(1, 5)
 
 --	print("A village of type \'"..tostring( village_type ).."\' of size "..tostring( size ).." spawned at: x = "..x..", z = "..z)
 	--print("A village spawned at: x = "..x..", z = "..z)
@@ -475,7 +476,7 @@ mg_villages.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, param2_
 				end
 			end
 			if( not(node_below.content)
-			    or  node_below.content == moresnow.c_gravel
+			    or  node_below.content == mg_villages.road_node
 			    or  node_below.content == moresnow.c_snow ) then
 				return;
 			end
@@ -540,7 +541,6 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 	local c_dirt                 = minetest.get_content_id( "default:dirt" );
 	local c_dirt_with_grass      = minetest.get_content_id( "default:dirt_with_grass" );
 	local c_dirt_with_snow       = minetest.get_content_id( "default:dirt_with_snow" );
-	local c_gravel               = minetest.get_content_id( "default:gravel");
 	for x = 0, pos.bsizex-1 do
 	for z = 0, pos.bsizez-1 do
 		local has_snow    = false;
@@ -796,7 +796,9 @@ local function generate_walls(bpos, data, a, minp, maxp, vh, vx, vz, vs, vnoise)
 	end
 end
 
-mg_villages.generate_village = function(village, minp, maxp, data, param2_data, a, vnoise, dirt_with_grass_replacement)
+-- determine which building is to be placed where
+-- also choose which blocks to replace with which other blocks (to make villages more intresting)
+mg_villages.generate_village = function(village, vnoise)
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
 	local seed = mg_villages.get_bseed({x=vx, z=vz})
@@ -805,34 +807,47 @@ mg_villages.generate_village = function(village, minp, maxp, data, param2_data, 
 	-- only generate a new village if the data is not already stored
 	-- (the algorithm is fast, but village types and houses which are available may change later on,
   	-- and that might easily cause chaos if the village is generated again with diffrent input)
-	local new_village      = false;
-	local bpos             = {};
-	local replacement_list = {};
-	if( not( village.to_add_data ) or not( village.to_add_data.bpos ) or not( village.to_add_data.replacements )) then
-		bpos             = generate_bpos( village, pr_village, vnoise)
-
-		-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
-		-- now or later; after the first call to this function here, the village data will be final
-		for _, pos in ipairs( bpos ) do
-			local binfo = buildings[pos.btype];
-			if( binfo.farming_plus and binfo.farming_plus == 1 and mg_villages.fruit_list and not pos.furit) then
- 				pos.fruit = mg_villages.fruit_list[ pr_village:next( 1, #mg_villages.fruit_list )];
-			end
-		end
-
-		replacement_list = nil;
-		new_village      = true;
---print('VILLAGE GENREATION: NEW (Nr. '..tostring( village_nr )..')'); -- TODO
-	else
-		-- get the saved data
-		bpos             = village.to_add_data.bpos;
-		replacement_list = village.to_add_data.replacements;
-		new_village      = false;
---print('VILLAGE GENREATION: USING ALREADY GENERATED VILLAGE: Nr. '..tostring( village.nr )); -- TODO
--- TODO		local forget_bpos  = generate_bpos( village, pr_village, vnoise)
+	if( village.to_add_data and village.to_add_data.bpos and village.to_add_data.replacements ) then
+		--print('VILLAGE GENREATION: USING ALREADY GENERATED VILLAGE: Nr. '..tostring( village.nr )); 
+		return;
 	end
 
-village.to_grow = {}; -- TODO this is a temporal solution to avoid flying tree thrunks
+	-- actually generate the village structure
+	local bpos = generate_bpos( village, pr_village, vnoise)
+
+	-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
+	-- now or later; after the first call to this function here, the village data will be final
+	for _, pos in ipairs( bpos ) do
+		local binfo = buildings[pos.btype];
+		if( binfo.farming_plus and binfo.farming_plus == 1 and mg_villages.fruit_list and not pos.furit) then
+ 			pos.fruit = mg_villages.fruit_list[ pr_village:next( 1, #mg_villages.fruit_list )];
+		end
+	end
+
+	-- a changing replacement list would also be pretty confusing
+	local p = PseudoRandom(seed);
+	-- if the village is new, replacement_list is nil and a new replacement list will be created
+	local replacements = mg_villages.get_replacement_table( village.village_type, p, nil );
+	
+	-- store the generated data in the village table 
+	village.to_add_data               = {};
+	village.to_add_data.bpos          = bpos;
+	village.to_add_data.replacements  = replacements.list;
+
+	--print('VILLAGE GENREATION: GENERATING NEW VILLAGE Nr. '..tostring( village.nr ));
+end
+
+
+-- actually place the buildings (at least those which came as .we files; .mts files are handled later on)
+-- this code is also responsible for tree placement
+mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, vnoise)
+	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
+	local village_type = village.village_type;
+	local seed = mg_villages.get_bseed({x=vx, z=vz})
+
+	local bpos             = village.to_add_data.bpos;
+
+	village.to_grow = {}; -- TODO this is a temporal solution to avoid flying tree trunks
 	--generate_walls(bpos, data, a, minp, maxp, vh, vx, vz, vs, vnoise)
 	local pr = PseudoRandom(seed)
 	for _, g in ipairs(village.to_grow) do
@@ -841,14 +856,7 @@ village.to_grow = {}; -- TODO this is a temporal solution to avoid flying tree t
 		end
 	end
 
-	-- a changing replacement list would also be pretty confusing
-	local p = PseudoRandom(seed);
-	-- if the village is new, replacement_list is nil and a new replacement list will be created
-	local replacements = mg_villages.get_replacement_table( village.village_type, p, replacement_list );
-
-	if( not( replacements.table )) then
-		replacements.table = {};
-	end
+	local replacements = mg_villages.get_replacement_table( village.village_type, p, village.to_add_data.replacements );
 
 	local extranodes = {}
 	for _, pos in ipairs(bpos) do

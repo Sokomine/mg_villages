@@ -19,6 +19,9 @@ dofile(mg_villages.modpath.."/rotate.lua")
 -- analyze_mts_file.lua uses handle_schematics.* namespace
 dofile(mg_villages.modpath.."/analyze_mts_file.lua") 
 
+-- adds a special gravel node which will neither fall nor be griefed by mapgen
+dofile(mg_villages.modpath.."/nodes.lua")
+
 -- Note: the "buildings" talbe is not in the mg_villages.* namespace
 dofile(mg_villages.modpath.."/buildings.lua")
 

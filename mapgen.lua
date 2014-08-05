@@ -129,6 +129,28 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		param2_data = vm:get_param2_data()
 	end
 
+	-- generate the village structure: determine positions of buildings and roads
+	for _, village in ipairs(villages) do
+		village = mg_villages.generate_village( village, village_noise);
+
+		-- mark the roads and the area between buildings and road in the village_area table as "road" (=2)
+	end
+
+	-- determine which coordinates are inside the village and which are not
+	local village_area = {};
+	for x = minp.x, maxp.x do
+		village_area[ x ] = {};
+		for z = minp.z, maxp.z do
+			for _, village in ipairs(villages) do
+				if( mg_villages.inside_village(x, z, village, village_noise)) then
+					village_area[ x ][ z ] = 1;
+				else
+					village_area[ x ][ z ] = 0;
+				end
+			end
+		end
+	end
+
 	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a );
 
 	local top_node = 'default:dirt_with_grass';
@@ -141,7 +163,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	end
 
 	for _, village in ipairs(villages) do
-		village.to_add_data = mg_villages.generate_village(village, minp, maxp, data, param2_data, a, village_noise, top_node)
+		village.to_add_data = mg_villages.place_buildings( village, minp, maxp, data, param2_data, a, village_noise);
 	end
 
 	vm:set_data(data)
