@@ -52,6 +52,62 @@ mg_villages.villages_in_mapchunk = function( minp )
 end
 
 
+-- adjust the terrain level to the respective height of the village
+mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp, vm, data, param2_data, a )
+	local c_air    = minetest.get_content_id( 'air' );
+	local c_ignore = minetest.get_content_id( 'ignore' );
+	local c_stone  = minetest.get_content_id( 'default:stone');
+	local c_dirt   = minetest.get_content_id( 'default:dirt');
+	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
+
+	for z = minp.z, maxp.z do
+	for x = minp.x, maxp.x do
+		for _, village in ipairs(villages) do
+			if( mg_villages.inside_village(x, z, village, village_noise)) then
+				local buffer = {};
+				local buffer_param2 = {};
+				local buffer_index  = 0;
+				y = maxp.y;
+				while( y > minp.y ) do
+					local ci = data[a:index(x, y, z)];
+					if( ci ~= c_air and ci ~= c_ignore and buffer_index == 0) then
+						-- only nodes on which walking is possible may be counted as ground
+						local node_name = minetest.get_name_from_content_id( ci );
+						local def = minetest.registered_nodes[ node_name ];	
+						if( def and def.walkable == true and def.is_ground_content == true) then
+							-- from now on, save the nodes below
+							buffer_index = 1;
+						end
+					end
+					-- save found nodes for later use
+					if( buffer_index > 0 ) then
+						buffer[        buffer_index ] = ci;
+						buffer_param2[ buffer_index ] = param2_data[a:index(x, y, z)];
+						buffer_index = buffer_index + 1;
+					end
+					-- make sure there is air for the village
+					if( y > village.vh and ci ~= c_ignore and ci ~= c_air ) then
+						data[a:index( x, y, z)] = c_air;
+					end
+					y = y-1;
+				end
+					
+				-- apply the data found in the buffer
+				for i,v in ipairs( buffer ) do
+					if( village.vh - i + 1 >= minp.y ) then
+						if( i==1 and buffer[i]==c_dirt ) then
+							buffer[i] = c_dirt_with_grass;
+						end
+						data[       a:index( x, village.vh - i +1, z)] = buffer[        i ];
+						param2_data[a:index( x, village.vh - i +1, z)] = buffer_param2[ i ];
+					end
+				end
+			end
+		end
+	end
+	end
+end
+
 
 mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top )
 
@@ -72,6 +128,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		data = vm:get_data()
 		param2_data = vm:get_param2_data()
 	end
+
+	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a );
 
 	local top_node = 'default:dirt_with_grass';
  	-- replace dirt_with_grass with whatever is common in that biome
