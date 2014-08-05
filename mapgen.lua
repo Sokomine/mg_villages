@@ -1,9 +1,9 @@
 
 mg_villages.wseed = 0;
 
---minetest.register_on_mapgen_init(function(mgparams)
---        mg_villages.wseed = math.floor(mgparams.seed/10000000000)
---end)
+minetest.register_on_mapgen_init(function(mgparams)
+        mg_villages.wseed = math.floor(mgparams.seed/10000000000)
+end)
 
 function mg_villages.get_bseed(minp)
         return mg_villages.wseed + math.floor(5*minp.x/47) + math.floor(873*minp.z/91)
