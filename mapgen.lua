@@ -263,3 +263,19 @@ minetest.register_on_respawnplayer(function(player)
 	spawnplayer(player)
 	return true
 end)
+
+
+-- the actual mapgen
+-- It only does changes if there is at least one village in the area that is to be generated.
+minetest.register_on_generated(function(minp, maxp, seed)
+	-- only generate village on the surface chunks
+	if( minp.y ~= -32 ) then
+		return;
+	end
+	local villages = mg_villages.villages_in_mapchunk( minp );
+	if( villages and #villages > 0 ) then
+		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil );
+	end
+end)
+
+
