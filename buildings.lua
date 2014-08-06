@@ -4,8 +4,7 @@
 mg_villages.village_sizes = {
 	nore         = { min = 20, max = 40,   texture = 'default_stone_brick.png'},
 	taoki        = { min = 30, max = 70,   texture = 'default_brick.png' },
---	medieval     = { min = 25, max = 60,   texture = 'cottages_darkage_straw.png'}, -- they often have straw roofs
-	medieval     = { min = 50, max = 60,   texture = 'cottages_darkage_straw.png'}, -- TODO: increased for easier testing
+	medieval     = { min = 25, max = 60,   texture = 'cottages_darkage_straw.png'}, -- they often have straw roofs
 	charachoal   = { min = 10, max = 15,   texture = 'default_coal_block.png'},
 	lumberjack   = { min = 10, max = 30,   texture = 'default_tree.png'},
 	claytrader   = { min = 10, max = 20,   texture = 'default_clay.png'},
