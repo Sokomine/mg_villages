@@ -52,20 +52,39 @@ mg_villages.villages_in_mapchunk = function( minp )
 end
 
 
+mg_villages.node_is_ground = {}; -- store nodes which have previously been identified as ground
+
+mg_villages.check_if_ground = function( ci )
+	if( not( ci )) then
+		return false;
+	end
+	if( mg_villages.node_is_ground[ ci ]) then
+		return true;
+	end
+	-- analyze the node
+	-- only nodes on which walking is possible may be counted as ground
+	local node_name = minetest.get_name_from_content_id( ci );
+	local def = minetest.registered_nodes[ node_name ];	
+	if( def and def.walkable == true and def.is_ground_content == true) then
+		-- store information about this node type for later use
+		mg_villages.node_is_ground[ ci ] = 1;
+		return true;
+	end
+end
+
 -- adjust the terrain level to the respective height of the village
-mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp, vm, data, param2_data, a )
+mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area )
 	local c_air    = minetest.get_content_id( 'air' );
 	local c_ignore = minetest.get_content_id( 'ignore' );
 	local c_stone  = minetest.get_content_id( 'default:stone');
 	local c_dirt   = minetest.get_content_id( 'default:dirt');
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 
-	local node_is_ground = {};
-
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		for _, village in ipairs(villages) do
-			if( mg_villages.inside_village(x, z, village, village_noise)) then
+			if( village_area[ x ][ z ][ 2 ] > 0 ) then -- inside a village
+--			if( mg_villages.inside_village(x, z, village, village_noise)) then
 				local buffer = {};
 				local buffer_param2 = {};
 				local buffer_index  = 0;
@@ -73,18 +92,9 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 				while( y > minp.y ) do
 					local ci = data[a:index(x, y, z)];
 					if( ci ~= c_air and ci ~= c_ignore and buffer_index == 0) then
-						if( node_is_ground[ ci ]) then
+						if( mg_villages.check_if_ground( ci ) == true) then
+							-- from now on, save the nodes below
 							buffer_index = 1;
-						else -- analyze the node
-							-- only nodes on which walking is possible may be counted as ground
-							local node_name = minetest.get_name_from_content_id( ci );
-							local def = minetest.registered_nodes[ node_name ];	
-							if( def and def.walkable == true and def.is_ground_content == true) then
-								-- from now on, save the nodes below
-								buffer_index = 1;
-								-- store information about this node type for later use
-								node_is_ground[ ci ] = 1;
-							end
 						end
 					end
 					-- save found nodes for later use
@@ -175,7 +185,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
         end
 
-		 
+
+	-- mark the rest ( inside_village but not part of an actual building) as well		 
 	for x = minp.x, maxp.x do
 		if( not( village_area[ x ] )) then
 			village_area[ x ] = {};
@@ -193,7 +204,47 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
 	end
 
-	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a );
+	
+	local height_sum   = {};
+	local height_count = {};
+	-- initialize the variables for counting
+	for village_nr, village in ipairs( villages ) do
+		height_sum[   village_nr ] = 0;
+		height_count[ village_nr ] = 0;
+	end
+	-- try to find the optimal village height by looking at the borders defined by inside_village
+	for x = minp.x+1, maxp.x-1 do
+		for z = minp.z+1, maxp.z-1 do
+			if(     village_area[ x ][ z ][ 2 ] ~= 0
+                            and village_area[ x ][ z ][ 1 ] ~= 0
+			    and ( village_area[ x+1 ][ z   ][ 2 ] == 0
+			       or village_area[ x-1 ][ z   ][ 2 ] == 0 
+			       or village_area[  x  ][ z+1 ][ 2 ] == 0 
+			       or village_area[  x  ][ z-1 ][ 2 ] == 0 )) then
+
+				y = maxp.y;
+				while( y > minp.y and y >= 0) do
+					local ci = data[a:index(x, y, z)];
+					if( ci ~= c_air and ci ~= c_ignore and mg_villages.check_if_ground( ci ) == true) then
+						local village_nr = village_area[ x ][ z ][ 1 ];
+						height_sum[   village_nr ] = height_sum[   village_nr ] + y;
+						height_count[ village_nr ] = height_count[ village_nr ] + 1;
+						y = minp.y - 1;
+					end
+					y = y-1;
+				end
+			end
+		end
+	end
+	for village_nr, village in ipairs( villages ) do
+		if( height_count[ village_nr ] > 0 ) then
+			local ideal_height = math.floor( height_sum[ village_nr ] / height_count[ village_nr ]);
+print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
+		end
+	end
+
+
+	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area );
 
 	local top_node = 'default:dirt_with_grass';
  	-- replace dirt_with_grass with whatever is common in that biome
@@ -214,6 +265,10 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	local c_wheat           = minetest.get_content_id( 'farming:wheat_8' );
 	local c_soil_wet        = minetest.get_content_id( 'farming:soil_wet' );
 	local c_soil_sand       = minetest.get_content_id( 'farming:desert_sand_soil_wet' );
+	-- desert sand soil is only available in minetest_next
+	if( not( c_soil_sand )) then
+		c_soil_sand = c_soil_wet;
+	end
 	local c_water_source    = minetest.get_content_id( 'default:water_source');
 	local c_clay            = minetest.get_content_id( 'default:clay');
 	for x = minp.x, maxp.x do
