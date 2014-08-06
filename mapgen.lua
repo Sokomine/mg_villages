@@ -78,6 +78,7 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 	local c_ignore = minetest.get_content_id( 'ignore' );
 	local c_stone  = minetest.get_content_id( 'default:stone');
 	local c_dirt   = minetest.get_content_id( 'default:dirt');
+	local c_snow   = minetest.get_content_id( 'default:snow');
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 
 	for z = minp.z, maxp.z do
@@ -88,10 +89,13 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 				local buffer = {};
 				local buffer_param2 = {};
 				local buffer_index  = 0;
+				local has_snow      = false;
 				y = maxp.y;
 				while( y > minp.y ) do
 					local ci = data[a:index(x, y, z)];
-					if( ci ~= c_air and ci ~= c_ignore and buffer_index == 0) then
+					if(     ci == c_snow ) then
+						has_snow = true;
+					elseif( ci ~= c_air and ci ~= c_ignore and buffer_index == 0) then
 						if( mg_villages.check_if_ground( ci ) == true) then
 							-- from now on, save the nodes below
 							buffer_index = 1;
@@ -119,6 +123,9 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 						data[       a:index( x, village.vh - i +1, z)] = buffer[        i ];
 						param2_data[a:index( x, village.vh - i +1, z)] = buffer_param2[ i ];
 					end
+				end
+				if( has_snow ) then
+					data[       a:index( x, village.vh+1, z)] = c_snow;
 				end
 			end
 		end
