@@ -286,11 +286,13 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 				local h = villages[ village_area[ x ][ z ][ 1 ] ].vh;
 				local g = data[a:index( x, h, z )];
 				if( g==c_dirt_with_grass ) then	
+					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = c_wheat;
 					data[a:index( x,  h,   z)] = c_soil_wet;
 					data[a:index( x,  h-1, z)] = c_water_source;
 					data[a:index( x,  h-2, z)] = c_clay;
 				elseif( g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
+					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = c_wheat;
 					data[a:index( x,  h,   z)] = c_soil_sand;
 					data[a:index( x,  h-1, z)] = c_water_source;
@@ -299,8 +301,6 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 			end
 		end
 	end
--- TODO: desert sand?
-
 
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
