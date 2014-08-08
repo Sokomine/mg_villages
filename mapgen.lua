@@ -169,7 +169,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		-- 5: border around a building
 		for _, pos in ipairs(village.to_add_data.bpos) do
 			local reserved_for = 4; -- a building will be placed here
-			if( pos.binfo and pos.binfo == 'road' ) then
+			if( pos.btype and pos.btype == 'road' ) then
 				reserved_for = 2; -- the building will be a road
 			end
 			-- the building + a border of 1 around it
@@ -210,6 +210,43 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			end
 		end
 	end
+
+
+	for village_nr, village in ipairs(villages) do
+		-- 7,8: border around a building, prolonged until something else is hit (x- and z direction)
+		for _, pos in ipairs(village.to_add_data.bpos) do
+			-- prolong the space between building in all directions
+			if( pos.btype and not( pos.btype == 'road' )) then
+				local vectors = { {vx=-1, vz= 0, sx=pos.x-2,            sz=pos.z-1 },
+				                  {vx= 1, vz= 0, sx=pos.x+pos.bsizex+2, sz=pos.z-1 },
+				                  {vx=-1, vz= 0, sx=pos.x-2,            sz=pos.z+pos.bsizez+1 },
+				                  {vx= 1, vz= 0, sx=pos.x+pos.bsizex+2, sz=pos.z+pos.bsizez+1 },
+				                  {vx= 0, vz=-1, sx=pos.x-1,            sz=pos.z-2 },
+				                  {vx= 0, vz= 1, sx=pos.x+pos.bsizex+1, sz=pos.z-2 },
+				                  {vx= 0, vz=-1, sx=pos.x-1,            sz=pos.z+pos.bsizez+2 },
+				                  {vx= 0, vz=1,  sx=pos.x+pos.bsizex+1, sz=pos.z+pos.bsizez+2 }};
+				for _,v in ipairs( vectors ) do
+					-- determine start position for this line
+					local p = { x = v.sx, z = v.sz};
+					while( village_area[ p.x ]
+					   and village_area[ p.x ][ p.z ] 
+					   and village_area[ p.x ][ p.z ][ 1 ] == village_nr
+					   and ( village_area[ p.x ][ p.z ][ 2 ] == 1 
+					      or village_area[ p.x ][ p.z ][ 2 ] == 7
+					      or village_area[ p.x ][ p.z ][ 2 ] == 8 )) do -- while inside that village
+						if( v.vx ~= 0 ) then
+							village_area[ p.x ][ p.z ] = { village_nr, 7 };
+						else
+							village_area[ p.x ][ p.z ] = { village_nr, 8 };
+						end
+						p.x = p.x + v.vx;
+						p.z = p.z + v.vz;
+					end
+				end
+			end
+		end
+	end
+
 
 	
 	local height_sum   = {};
@@ -278,9 +315,13 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 	end
 	local c_water_source    = minetest.get_content_id( 'default:water_source');
 	local c_clay            = minetest.get_content_id( 'default:clay');
+	local c_feldweg         = minetest.get_content_id( 'cottages:feldweg');
+	if( not( c_feldweg )) then
+		c_feldweg = c_dirt_with_grass;
+	end
 	for x = minp.x, maxp.x do
 		for z = minp.z, maxp.z do
-			-- TODO: height of village is important here!
+			-- turn unused land (which is either dirt or desert sand) into a field that grows wheat
 			if( village_area[ x ][ z ][ 2 ]==1 ) then
 
 				local h = villages[ village_area[ x ][ z ][ 1 ] ].vh;
@@ -298,6 +339,15 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 					data[a:index( x,  h-1, z)] = c_water_source;
 					data[a:index( x,  h-2, z)] = c_clay;
 				end
+			-- add a path between the fields
+			elseif( village_area[ x ][ z ][ 2 ]==7 ) then
+				local h = villages[ village_area[ x ][ z ][ 1 ] ].vh;
+				data[       a:index( x, h, z)] = c_feldweg;
+				param2_data[a:index( x, h, z)] = 1;
+			elseif( village_area[ x ][ z ][ 2 ]==8) then
+				local h = villages[ village_area[ x ][ z ][ 1 ] ].vh;
+				data[       a:index( x, h, z)] = c_feldweg;
+				param2_data[a:index( x, h, z)] = 0;
 			end
 		end
 	end
