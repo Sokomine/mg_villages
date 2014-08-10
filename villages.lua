@@ -146,7 +146,8 @@ end
 
 local function placeable(bx, bz, bsizex, bsizez, l, exclude_roads)
 	for _, a in ipairs(l) do
-		if (a.btype ~= "road" or not exclude_roads) and math.abs(bx+bsizex/2-a.x-a.bsizex/2)<=(bsizex+a.bsizex)/2 and math.abs(bz+bsizez/2-a.z-a.bsizez/2)<=(bsizez+a.bsizez)/2 then return false end
+		-- with < instead of <=, space_between_buildings can be zero (important for towns where houses are closely packed)
+		if (a.btype ~= "road" or not exclude_roads) and math.abs(bx+bsizex/2-a.x-a.bsizex/2)<(bsizex+a.bsizex)/2 and math.abs(bz+bsizez/2-a.z-a.bsizez/2)<(bsizez+a.bsizez)/2 then return false end
 	end
 	return true
 end
@@ -163,7 +164,7 @@ local function when(a, b, c)
 	if a then return b else return c end
 end
 
-local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
+local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise, space_between_buildings)
 	local vx, vz, vh, vs = village.vx, village.vz, village.vh, village.vs
 	local village_type   = village.village_type;
 	local calls_to_do = {}
@@ -219,8 +220,8 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 				--goto loop
 			end
 			if exitloop then break end
-			rx = rx + (bsizex+1)*rdx
-			rz = rz + (bsizez+1)*rdz
+			rx = rx + (bsizex+space_between_buildings)*rdx
+			rz = rz + (bsizez+space_between_buildings)*rdz
 			mx = rx - 2*rdx
 			mz = rz - 2*rdz
 			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation}
@@ -268,8 +269,8 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 				--goto loop
 			end
 			if exitloop then break end
-			rx = rx + (bsizex+1)*rdx
-			rz = rz + (bsizez+1)*rdz
+			rx = rx + (bsizex+space_between_buildings)*rdx
+			rz = rz + (bsizez+space_between_buildings)*rdz
 			m2x = rx - 2*rdx
 			m2z = rz - 2*rdz
 			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation}
@@ -301,12 +302,12 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise)
 		end
 
 		--generate_road(vx, vz, vs, vh, l, pr, new_roadsize, i.rx, i.rz, i.rdx, i.rdz, vnoise)
-		calls[calls.index] = {village, l, pr, new_roadsize, i.rx, i.rz, i.rdx, i.rdz, vnoise}
+		calls[calls.index] = {village, l, pr, new_roadsize, i.rx, i.rz, i.rdx, i.rdz, vnoise, space_between_buildings}
 		calls.index = calls.index+1
 	end
 end
 
-local function generate_bpos(village, pr, vnoise)
+local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	local vx, vz, vh, vs = village.vx, village.vz, village.vh, village.vs
 	local l = {}
 	local rx = vx - vs
@@ -374,7 +375,7 @@ local function generate_bpos(village, pr, vnoise)
 	end
 	rx = rx + 5
 	calls = {index = 1}
-	generate_road(village, l, pr, FIRST_ROADSIZE, rx, rz, 1, 0, vnoise)
+	generate_road(village, l, pr, FIRST_ROADSIZE, rx, rz, 1, 0, vnoise, space_between_buildings)
 	i = 1
 	while i < calls.index do
 		generate_road(unpack(calls[i]))
@@ -812,8 +813,11 @@ mg_villages.generate_village = function(village, vnoise)
 		return;
 	end
 
+	-- in the case of medieval villages, we later on want to add wheat fields with dirt roads; 1 wide dirt roads look odd
+	local space_between_buildings = mg_villages.village_sizes[ village_type ].space_between_buildings;
+
 	-- actually generate the village structure
-	local bpos = generate_bpos( village, pr_village, vnoise)
+	local bpos = generate_bpos( village, pr_village, vnoise, space_between_buildings)
 
 	-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
 	-- now or later; after the first call to this function here, the village data will be final
