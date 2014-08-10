@@ -18,6 +18,10 @@ mg_villages.inside_village = function(x, z, village, vnoise)
         return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 40
 end
 
+mg_villages.inside_village_area = function(x, z, village, vnoise)
+        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 80
+end
+
 mg_villages.get_vn = function(x, z, noise, village)
         local vx, vz, vs = village.vx, village.vz, village.vs
         return (noise - 2) * 20 +
@@ -203,7 +207,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 				village_area[ x ][ z ] = { 0, 0 };
 
 				for village_nr, village in ipairs(villages) do
-					if( mg_villages.inside_village(x, z, village, village_noise)) then
+					if( mg_villages.inside_village_area(x, z, village, village_noise)) then
 						village_area[ x ][ z ] = { village_nr, 1};
 					end
 				end
