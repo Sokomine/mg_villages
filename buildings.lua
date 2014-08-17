@@ -15,7 +15,7 @@ mg_villages.village_sizes = {
 -- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
 mg_villages.medieval_subtype = false;
 
-buildings = {
+mg_villages.BUILDINGS = {
 
 -- the houses the mod came with
 	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 9,	scm="house", orients={2},                 weight={nore=1   }},
@@ -262,68 +262,68 @@ mg_villages.buildings_init = function()
 
 	local mts_path = mg_villages.modpath.."/schems/";
 	-- determine the size of the given houses
-	for i,v in ipairs( buildings ) do
+	for i,v in ipairs( mg_villages.BUILDINGS ) do
      
 
 		-- read the size of the building
-		local res  = handle_schematics.analyze_mts_file( mts_path..buildings[ i ].scm ); 
+		local res  = handle_schematics.analyze_mts_file( mts_path..mg_villages.BUILDINGS[ i ].scm ); 
 		-- alternatively, read the mts file
 		if( not( res )) then
-			res = mg_villages.import_scm( buildings[ i ].scm );
+			res = mg_villages.import_scm( mg_villages.BUILDINGS[ i ].scm );
 		end
 
 		-- provided the file could be analyzed successfully
 		if( res and res.size and res.size.x ) then
 			-- the file has to be placed with minetest.place_schematic(...)
-			buildings[ i ].is_mts = 1;
+			mg_villages.BUILDINGS[ i ].is_mts = 1;
 
-			buildings[ i ].sizex = res.size.x;
-				buildings[ i ].sizez = res.size.z;
-			buildings[ i ].ysize = res.size.y;
+			mg_villages.BUILDINGS[ i ].sizex = res.size.x;
+				mg_villages.BUILDINGS[ i ].sizez = res.size.z;
+			mg_villages.BUILDINGS[ i ].ysize = res.size.y;
 			
 			-- some buildings may be rotated
 			if(   res.rotated == 90
 			  or  res.rotated == 270 ) then
 
-				buildings[ i ].sizex = res.size.z;
-				buildings[ i ].sizez = res.size.x;
+				mg_villages.BUILDINGS[ i ].sizex = res.size.z;
+				mg_villages.BUILDINGS[ i ].sizez = res.size.x;
 			end
 
-			if( not( buildings[ i ].yoff ) or buildings[ i ].yoff == 0 ) then
-				buildings[ i ].yoff = res.burried;
+			if( not( mg_villages.BUILDINGS[ i ].yoff ) or mg_villages.BUILDINGS[ i ].yoff == 0 ) then
+				mg_villages.BUILDINGS[ i ].yoff = res.burried;
 			end
 
 			-- we do need at least the list of nodenames which will need on_constr later on
-			buildings[ i ].rotated          = res.rotated;
-			buildings[ i ].nodenames        = res.nodenames;
-			buildings[ i ].on_constr        = res.on_constr;
-			buildings[ i ].after_place_node = res.after_place_node;
+			mg_villages.BUILDINGS[ i ].rotated          = res.rotated;
+			mg_villages.BUILDINGS[ i ].nodenames        = res.nodenames;
+			mg_villages.BUILDINGS[ i ].on_constr        = res.on_constr;
+			mg_villages.BUILDINGS[ i ].after_place_node = res.after_place_node;
 
 		-- determine size of worldedit schematics
 		elseif( res and #res and #res>0 and #res[1] and #res[1][1]) then
 
 			-- scm has the following structure: scm[y][x][z] 
-			buildings[ i ].ysize = #res;
-			buildings[ i ].sizex = #res[1];
-			buildings[ i ].sizez = #res[1][1];
+			mg_villages.BUILDINGS[ i ].ysize = #res;
+			mg_villages.BUILDINGS[ i ].sizex = #res[1];
+			mg_villages.BUILDINGS[ i ].sizez = #res[1][1];
 
-			buildings[ i ].is_mts = 0;
+			mg_villages.BUILDINGS[ i ].is_mts = 0;
 
 			-- deep copy the schematics data here so that the file does not have to be read again
 			-- caching cannot be done here as not all nodes from other mods have been registered yet!
 			--buildings[ i ].scm_data_cache = minetest.serialize( res );
 
 		-- missing data regarding building size - do not use this building for anything
-		elseif( not( buildings[ i ].sizex )    or not( buildings[ i ].sizez )
-			or   buildings[ i ].sizex == 0 or      buildings[ i ].sizez==0) then
+		elseif( not( mg_villages.BUILDINGS[ i ].sizex )    or not( mg_villages.BUILDINGS[ i ].sizez )
+			or   mg_villages.BUILDINGS[ i ].sizex == 0 or      mg_villages.BUILDINGS[ i ].sizez==0) then
 
 			-- no village will use it
-			print('[mg_villages] INFO: No schematic found for building \''..tostring( buildings[ i ].scm )..'\'. Will not use that building.');
-			buildings[ i ].weight = {};
+			print('[mg_villages] INFO: No schematic found for building \''..tostring( mg_villages.BUILDINGS[ i ].scm )..'\'. Will not use that building.');
+			mg_villages.BUILDINGS[ i ].weight = {};
 
 		else
 			-- the file has to be handled by worldedit; it is no .mts file
-			buildings[ i ].is_mts = 0;
+			mg_villages.BUILDINGS[ i ].is_mts = 0;
 		end
 		-- print it for debugging usage
    		--print( v.scm .. ': '..tostring(buildings[i].sizex)..' x '..tostring(buildings[i].sizez)..' x '..tostring(buildings[i].ysize)..' h');
@@ -356,14 +356,14 @@ for i = 1, 2000 do
 	rair2[i] = rair
 end
 local road_scm = {rgravel2, rair2}
-buildings["road"] = {yoff = 0, ysize = 2, scm = road_scm}
+mg_villages.BUILDINGS["road"] = {yoff = 0, ysize = 2, scm = road_scm}
 
 local rwall = {{minetest.get_content_id("default:stonebrick")}}
 local wall = {}
 for i = 1, 6 do
 	wall[i] = rwall
 end
-buildings["wall"] = {yoff = 1, ysize = 6, scm = wall}
+mg_villages.BUILDINGS["wall"] = {yoff = 1, ysize = 6, scm = wall}
 
 
 --local total_weight = 0
@@ -382,7 +382,7 @@ mg_villages.village_types[ #mg_villages.village_types ] = 'fields';
 for j,v in ipairs( mg_villages.village_types ) do
 	
 	local total_weight = 0
-	for _, i in ipairs(buildings) do
+	for _, i in ipairs(mg_villages.BUILDINGS) do
 		if( not( i.max_weight )) then
 			i.max_weight = {};
 		end
@@ -392,7 +392,7 @@ for j,v in ipairs( mg_villages.village_types ) do
 		end
 	end
 	local multiplier = 3000/total_weight
-	for _,i in ipairs(buildings) do
+	for _,i in ipairs(mg_villages.BUILDINGS) do
 		if( i.weight and i.weight[ v ] and i.weight[ v ]>0 ) then
 			i.max_weight[v] = i.max_weight[ v ]*multiplier
 		end

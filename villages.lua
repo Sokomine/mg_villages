@@ -80,7 +80,7 @@ local function choose_building(l, pr, village_type)
 	local btype
 	while true do
 		local p = pr:next(1, 3000)
-		for b, i in ipairs(buildings) do
+		for b, i in ipairs(mg_villages.BUILDINGS) do
 			if i.weight[ village_type ] and i.weight[ village_type ] > 0 and i.max_weight and i.max_weight[ village_type ] and i.max_weight[ village_type ] >= p then
 				btype = b
 				break
@@ -88,8 +88,8 @@ local function choose_building(l, pr, village_type)
 		end
 		-- in case no building was found: take the last one that fits
 		if( not( btype )) then
-			for i=#buildings,1,-1 do
-				if( buildings[i].weight and buildings[i].weight[ village_type ] and buildings[i].weight[ village_type ] > 0 ) then
+			for i=#mg_villages.BUILDINGS,1,-1 do
+				if( mg_villages.BUILDINGS[i].weight and mg_villages.BUILDINGS[i].weight[ village_type ] and mg_villages.BUILDINGS[i].weight[ village_type ] > 0 ) then
 					btype = i;
 					i = 1;
 				end
@@ -99,22 +99,22 @@ local function choose_building(l, pr, village_type)
 			return 1;
 		end
 		if( #l<1
-			or not( buildings[btype].avoid )
-			or buildings[btype].avoid==''
-			or not( buildings[ l[#l].btype ].avoid )
-			or buildings[btype].avoid ~= buildings[ l[#l].btype ].avoid) then
+			or not( mg_villages.BUILDINGS[btype].avoid )
+			or mg_villages.BUILDINGS[btype].avoid==''
+			or not( mg_villages.BUILDINGS[ l[#l].btype ].avoid )
+			or mg_villages.BUILDINGS[btype].avoid ~= mg_villages.BUILDINGS[ l[#l].btype ].avoid) then
 
-			if buildings[btype].pervillage ~= nil then
+			if mg_villages.BUILDINGS[btype].pervillage ~= nil then
 				local n = 0
 				for j=1, #l do
-					if( l[j].btype == btype or (buildings[btype].typ and buildings[btype].typ == buildings[ l[j].btype ].typ)) then
+					if( l[j].btype == btype or (mg_villages.BUILDINGS[btype].typ and mg_villages.BUILDINGS[btype].typ == mg_villages.BUILDINGS[ l[j].btype ].typ)) then
 						n = n + 1
 					end
 				end
-				--if n >= buildings[btype].pervillage then
+				--if n >= mg_villages.BUILDINGS[btype].pervillage then
 				--	goto choose
 				--end
-				if n < buildings[btype].pervillage then
+				if n < mg_villages.BUILDINGS[btype].pervillage then
 					return btype
 				end
 			else
@@ -128,16 +128,16 @@ end
 local function choose_building_rot(l, pr, orient, village_type)
 	local btype = choose_building(l, pr, village_type)
 	local rotation
-	if buildings[btype].no_rotate then
+	if mg_villages.BUILDINGS[btype].no_rotate then
 		rotation = 0
 	else
-		if buildings[btype].orients == nil then
-			buildings[btype].orients = {0,1,2,3}
+		if mg_villages.BUILDINGS[btype].orients == nil then
+			mg_villages.BUILDINGS[btype].orients = {0,1,2,3}
 		end
-		rotation = (orient+buildings[btype].orients[pr:next(1, #buildings[btype].orients)])%4
+		rotation = (orient+mg_villages.BUILDINGS[btype].orients[pr:next(1, #mg_villages.BUILDINGS[btype].orients)])%4
 	end
-	local bsizex = buildings[btype].sizex
-	local bsizez = buildings[btype].sizez
+	local bsizex = mg_villages.BUILDINGS[btype].sizex
+	local bsizez = mg_villages.BUILDINGS[btype].sizez
 	if rotation%2 == 1 then
 		bsizex, bsizez = bsizez, bsizex
 	end
@@ -323,51 +323,51 @@ local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	local rx = vx - vs
 	--[=[local l={}
 	local total_weight = 0
-	for _, i in ipairs(buildings) do
+	for _, i in ipairs(mg_villages.BUILDINGS) do
 		if i.weight == nil then i.weight = 1 end
 		total_weight = total_weight+i.weight
 		i.max_weight = total_weight
 	end
 	local multiplier = 3000/total_weight
-	for _,i in ipairs(buildings) do
+	for _,i in ipairs(mg_villages.BUILDINGS) do
 		i.max_weight = i.max_weight*multiplier
 	end
 	for i=1, 2000 do
 		bx = pr:next(vx-vs, vx+vs)
 		bz = pr:next(vz-vs, vz+vs)
 		::choose::
-		--[[btype = pr:next(1, #buildings)
-		if buildings[btype].chance ~= nil then
-			if pr:next(1, buildings[btype].chance) ~= 1 then
+		--[[btype = pr:next(1, #mg_villages.BUILDINGS)
+		if mg_villages.BUILDINGS[btype].chance ~= nil then
+			if pr:next(1, mg_villages.BUILDINGS[btype].chance) ~= 1 then
 				goto choose
 			end
 		end]]
 		p = pr:next(1, 3000)
-		for b, i in ipairs(buildings) do
+		for b, i in ipairs(mg_villages.BUILDINGS) do
 			if i.max_weight > p then
 				btype = b
 				break
 			end
 		end
-		if buildings[btype].pervillage ~= nil then
+		if mg_villages.BUILDINGS[btype].pervillage ~= nil then
 			local n = 0
 			for j=1, #l do
 				if l[j].btype == btype then
 					n = n + 1
 				end
 			end
-			if n >= buildings[btype].pervillage then
+			if n >= mg_villages.BUILDINGS[btype].pervillage then
 				goto choose
 			end
 		end
 		local rotation
-		if buildings[btype].no_rotate then
+		if mg_villages.BUILDINGS[btype].no_rotate then
 			rotation = 0
 		else
 			rotation = pr:next(0, 3)
 		end
-		bsizex = buildings[btype].sizex
-		bsizez = buildings[btype].sizez
+		bsizex = mg_villages.BUILDINGS[btype].sizex
+		bsizez = mg_villages.BUILDINGS[btype].sizez
 		if rotation%2 == 1 then
 			bsizex, bsizez = bsizez, bsizex
 		end
@@ -631,7 +631,7 @@ end
 
 
 local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements)
-	local binfo = buildings[pos.btype]
+	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
 	-- schematics of .mts type are not handled here; they need to be placed using place_schematics
@@ -643,8 +643,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 		scm = minetest.deserialize( binfo.scm_data_cache ); --mg_villages.import_scm(binfo.scm, replacements)
 	-- at first time of spawning, all nodes ought to be defined; thus, we can cache the data
 	elseif( type( binfo.scm ) == "string" ) then
-		scm = mg_villages.import_scm( buildings[ pos.btype ].scm );
-		buildings[ pos.btype ].scm_data_cache = minetest.serialize( scm )
+		scm = mg_villages.import_scm( mg_villages.BUILDINGS[ pos.btype ].scm );
+		mg_villages.BUILDINGS[ pos.btype ].scm_data_cache = minetest.serialize( scm )
 	else
 		scm = binfo.scm
 	end
@@ -756,7 +756,7 @@ mg_villages.place_schematics = function( bpos, replacements, voxelarea, pr )
 
 	for _, pos in ipairs( bpos ) do
 
-		local binfo = buildings[pos.btype];
+		local binfo = mg_villages.BUILDINGS[pos.btype];
 
 
 		-- We need to check all 8 corners of the building.
@@ -793,7 +793,7 @@ mg_villages.place_one_schematic = function( bpos, replacements, pos, mts_path )
 		pos.count_placed = pos.count_placed + 1;
 	end
 
-	local binfo = buildings[pos.btype];
+	local binfo = mg_villages.BUILDINGS[pos.btype];
 
 	local start_pos = { x=( pos.x           ), y=(pos.y + binfo.yoff              ), z=( pos.z )};
 	local end_pos   = { x=( pos.x+pos.bsizex), y=(pos.y + binfo.yoff + binfo.ysize), z=( pos.z + pos.bsizez )};
@@ -951,7 +951,7 @@ mg_villages.generate_village = function(village, vnoise)
 	-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
 	-- now or later; after the first call to this function here, the village data will be final
 	for _, pos in ipairs( bpos ) do
-		local binfo = buildings[pos.btype];
+		local binfo = mg_villages.BUILDINGS[pos.btype];
 		if( binfo.farming_plus and binfo.farming_plus == 1 and mg_villages.fruit_list and not pos.furit) then
  			pos.fruit = mg_villages.fruit_list[ pr_village:next( 1, #mg_villages.fruit_list )];
 		end
