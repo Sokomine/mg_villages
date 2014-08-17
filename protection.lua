@@ -2,10 +2,14 @@
 -- get the id of the village pos lies in (or nil if outside of villages)
 mg_villages.get_town_id_at_pos = function( pos )
 	for id, v in pairs( mg_villages.all_villages ) do
-		if(   ( math.abs( pos.x - v.vx ) < v.vs )
-		  and ( math.abs( pos.z - v.vz ) < v.vs )
+		local size = v.vs * 3;
+		if(   ( math.abs( pos.x - v.vx ) < size )
+		  and ( math.abs( pos.z - v.vz ) < size )
 		  and ( math.abs( pos.y - v.vh ) < 40 )) then
-			return id;
+			local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
+			if( mg_villages.inside_village_area( pos.x,  pos.z, v, village_noise)) then
+				return id;
+			end
 		end
 	end
 	return nil;
