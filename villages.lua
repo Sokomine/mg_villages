@@ -144,10 +144,15 @@ local function choose_building_rot(l, pr, orient, village_type)
 	return btype, rotation, bsizex, bsizez
 end
 
-local function placeable(bx, bz, bsizex, bsizez, l, exclude_roads)
+local function placeable(bx, bz, bsizex, bsizez, l, exclude_roads, orientation)
 	for _, a in ipairs(l) do
 		-- with < instead of <=, space_between_buildings can be zero (important for towns where houses are closely packed)
-		if (a.btype ~= "road" or not exclude_roads) and math.abs(bx+bsizex/2-a.x-a.bsizex/2)<(bsizex+a.bsizex)/2 and math.abs(bz+bsizez/2-a.z-a.bsizez/2)<(bsizez+a.bsizez)/2 then return false end
+		if (a.btype ~= "road" or not exclude_roads) and math.abs(bx+bsizex/2-a.x-a.bsizex/2)<(bsizex+a.bsizex)/2 and math.abs(bz+bsizez/2-a.z-a.bsizez/2)<(bsizez+a.bsizez)/2 then
+			-- dirt roads which go at a 90 degree angel to the current road are not a problem
+			if( not( orientation ) or a.o%2 == orientation%2 ) then
+				return false
+			end
+		end
 	end
 	return true
 end
@@ -163,6 +168,8 @@ end
 local function when(a, b, c)
 	if a then return b else return c end
 end
+
+mg_villages.road_nr = 0;
 
 local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise, space_between_buildings)
 	local vx, vz, vh, vs = village.vx, village.vz, village.vh, village.vs
@@ -180,6 +187,8 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 		orient1 = 3
 		orient2 = 1
 	end
+	-- we have one more road
+	mg_villages.road_nr = mg_villages.road_nr + 1;
 	while mg_villages.inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize, l) do
 		if roadsize > 1 and pr:next(1, 4) == 1 then
 			--generate_road(vx, vz, vs, vh, l, pr, roadsize-1, rx, rz, math.abs(rdz), math.abs(rdx))
@@ -224,7 +233,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 			rz = rz + (bsizez+space_between_buildings)*rdz
 			mx = rx - 2*rdx
 			mz = rz - 2*rdz
-			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation}
+			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = mg_villages.road_nr, side=1, o=orient1 }
 		--end
 	end
 	rx = rxx
@@ -273,7 +282,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 			rz = rz + (bsizez+space_between_buildings)*rdz
 			m2x = rx - 2*rdx
 			m2z = rz - 2*rdz
-			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation}
+			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = mg_villages.road_nr, side=2, o=orient2}
 		--end
 	end
 	if road_in_building(rx, rz, rdx, rdz, roadsize, l) then
@@ -294,7 +303,8 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 		rxmax = math.max(rxx, mx)
 	end
 	l[#l+1] = {x = rxmin, y = vh, z = rzmin, btype = "road",
-		bsizex = rxmax - rxmin + 1, bsizez = rzmax - rzmin + 1, brotate = 0}
+		bsizex = rxmax - rxmin + 1, bsizez = rzmax - rzmin + 1, brotate = 0, road_nr = mg_villages.road_nr}
+	
 	for _, i in ipairs(calls_to_do) do
 		local new_roadsize = roadsize - 1
 		if pr:next(1, 100) <= BIG_ROAD_CHANCE then
@@ -375,14 +385,124 @@ local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	end
 	rx = rx + 5
 	calls = {index = 1}
+	-- the function below is recursive; we need a way to count roads
+	mg_villages.road_nr = 0;
 	generate_road(village, l, pr, FIRST_ROADSIZE, rx, rz, 1, 0, vnoise, space_between_buildings)
 	i = 1
 	while i < calls.index do
 		generate_road(unpack(calls[i]))
 		i = i+1
 	end
+	mg_villages.road_nr = 0;
 	return l
 end
+
+
+-- dirt roads seperate the wheat area around medieval villages into seperate fields and make it look better
+mg_villages.generate_dirt_roads = function( village, vnoise, bpos, secondary_dirt_roads )
+	local dirt_roads = {};
+	if( not( secondary_dirt_roads)) then
+		return dirt_roads;
+	end
+	for _, pos in ipairs( bpos ) do
+
+		local x = pos.x;
+		local z = pos.z; 
+		local sizex = pos.bsizex;
+		local sizez = 2;
+		local orientation = 0;
+		-- prolong the roads; start with a 3x2 piece of road for testing
+		if( pos.btype == 'road' ) then
+			-- the road streches in x direction
+			if( pos.bsizex > pos.bsizez ) then
+				sizex = 3; -- start with a road of length 3
+				sizez = 2;
+				vx    = -1; vz    = 0; vsx   = 1; vsz   = 0;
+				x     = pos.x - sizex;
+				z     = pos.z + math.floor((pos.bsizez-2)/2); -- aim for the middle of the road
+				orientation = 0;
+				-- if it is not possible to prolong the road at one end, then try the other
+				if( not( placeable( x, z, sizex, sizez, bpos,       false, nil))) then
+					x = pos.x + pos.bsizex;
+					vx = 0;
+					orientation = 2;
+				end
+			-- the road stretches in z direction
+			else
+				sizex = 2;
+				sizez = 3;
+				vx    = 0;  vz = -1; vsx   = 0; vsz   = 1;
+				x     = pos.x + math.floor((pos.bsizex-2)/2); -- aim for the middle of the road
+				z     = pos.z - sizez;
+				orientation = 1;
+				if( not( placeable( x, z, sizex, sizez, bpos,       false, nil))) then
+					z = pos.z + pos.bsizez;
+					vz = 0;
+					orientation = 3;
+				end
+			end
+				
+		else
+			if(     pos.o == 0 ) then
+				x = pos.x-pos.side;
+				z = pos.z-2; 
+				sizex = pos.bsizex+1;
+				sizez = 2;
+				vx = 0; vz = 0;  vsx = 1; vsz = 0;
+
+			elseif( pos.o == 2 ) then
+				x = pos.x-pos.side+2;
+				z = pos.z-2; 
+				sizex = pos.bsizex+1;
+				sizez = 2;
+				vx = -1; vz = 0;  vsx = 1; vsz = 0;
+
+			elseif( pos.o == 1 ) then
+				x = pos.x-2;
+				z = pos.z-pos.side+2; 
+				sizex = 2;
+				sizez = pos.bsizez+1;
+				vx = 0;  vz = 1;  vsx = 0; vsz = 1;
+
+			elseif( pos.o == 3 ) then
+				x = pos.x-2;
+				z = pos.z-pos.side; 
+				sizex = 2;
+				sizez = pos.bsizez+1;
+				vx = 0;  vz = 0;  vsx = 0; vsz = 1;
+			end
+			orientation = pos.o;
+
+		end
+
+		-- prolong the dirt road by 1
+		while( placeable( x, z, sizex, sizez, bpos,       false, nil)
+		   and placeable( x, z, sizex, sizez, dirt_roads, false, orientation)
+ 		   and mg_villages.inside_village_area(x, z, village, vnoise)
+ 		   and mg_villages.inside_village_area(x+sizex, z+sizez, village, vnoise)) do
+			sizex = sizex + vsx;
+			sizez = sizez + vsz;
+			x     = x + vx;
+			z     = z + vz;
+		end
+
+		-- the dirt road may exceed the village boundaries slightly, but it may not interfere with other buildings
+		if(   not( placeable( x, z, sizex, sizez, bpos,       false, nil))
+		   or not( placeable( x, z, sizex, sizez, dirt_roads, false, orientation))) then
+			sizex = sizex - vsx;
+			sizez = sizez - vsz;
+			x     = x - vx;
+			z     = z - vz;
+		end
+
+		if(    placeable( x, z, sizex, sizez, bpos,       false, nil)  
+		   and placeable( x, z, sizex, sizez, dirt_roads, false, orientation)) then 
+			dirt_roads[#dirt_roads+1] = {x=x, y=village.vh, z=z, btype="dirt_road", bsizex=sizex, bsizez=sizez, brotate = 0, o=orientation}
+		end
+	end
+	return dirt_roads;
+end
+
 
 
 -- they don't all grow cotton; farming_plus fruits are far more intresting!
@@ -819,6 +939,15 @@ mg_villages.generate_village = function(village, vnoise)
 	-- actually generate the village structure
 	local bpos = generate_bpos( village, pr_village, vnoise, space_between_buildings)
 
+
+	local secondary_dirt_roads = nil; 
+	-- if there is enough space, add dirt roads between the buildings (those will later be prolonged so that they reach the fields)
+	if( space_between_buildings >= 2 and village_type == 'medieval') then
+		secondary_dirt_roads = "dirt_road";
+	end
+
+	local dirt_roads = mg_villages.generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads );
+
 	-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
 	-- now or later; after the first call to this function here, the village data will be final
 	for _, pos in ipairs( bpos ) do
@@ -837,6 +966,7 @@ mg_villages.generate_village = function(village, vnoise)
 	village.to_add_data               = {};
 	village.to_add_data.bpos          = bpos;
 	village.to_add_data.replacements  = replacements.list;
+	village.to_add_data.dirt_roads    = dirt_roads;
 
 	--print('VILLAGE GENREATION: GENERATING NEW VILLAGE Nr. '..tostring( village.nr ));
 end
@@ -867,7 +997,34 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		-- replacements are in table format for mapgen-based building spawning
 		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements )
 	end
+
 	-- replacements are in list format for minetest.place_schematic(..) type spawning
-	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list };
+	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list, dirt_roads = village.to_add_data.dirt_roads };
 end
 
+
+-- add the dirt roads
+mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, vnoise, c_road_node)
+	local c_air = minetest.get_content_id( 'air' );
+	for _, pos in ipairs(village.to_add_data.dirt_roads) do
+		local param2 = 0;
+		if( pos.bsizex > 2 ) then
+			param2 = 1;
+		end
+		for x = 0, pos.bsizex-1 do
+			for z = 0, pos.bsizez-1 do
+				local ax = pos.x+x;
+				local az = pos.z+z;
+			
+                      			if (ax >= minp.x and ax <= maxp.x) and (ay >= minp.y and ay <= maxp.y) and (az >= minp.z and az <= maxp.z) then
+					-- roads have a height of 1 block
+					data[ a:index( ax, pos.y, az)] = c_road_node;
+					param2_data[ a:index( ax, pos.y, az)] = param2;
+					-- ...with air above
+					data[ a:index( ax, pos.y+1, az)] = c_air;
+					data[ a:index( ax, pos.y+2, az)] = c_air;
+				end
+			end
+		end
+	end
+end
