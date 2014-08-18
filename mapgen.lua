@@ -194,6 +194,20 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 				end
 			end
 		end
+		-- mark the dirt roads
+		-- 8: dirt road
+		for _, pos in ipairs(village.to_add_data.dirt_roads) do
+			-- the building + a border of 1 around it
+			for x = 0, pos.bsizex-1 do
+				for z = 0, pos.bsizez-2 do
+					local p = {x=pos.x+x, z=pos.z+z};
+					if( not( village_area[ p.x ] )) then
+						village_area[ p.x ] = {};
+					end
+					village_area[ p.x ][ p.z ] = { village_nr, 8 }; -- the actual dirt road
+				end
+			end
+		end
         end
 
 
