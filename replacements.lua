@@ -61,9 +61,44 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 				table.insert( replacements, {'default:tree', "moretrees:"..v[1].."_trunk"});
 			end
 		end
+	else
+		return nil;
 	end
+	return wood_type;
 -- TODO if minetest.get_modpath("moreblocks") and moretrees.enable_stairsplus the
 end
+
+
+-- if buildings are made out of a certain wood type, people might expect trees of that type nearby
+mg_villages.replace_saplings = function( replacements, wood_type )
+	if(     wood_type == 'default:junglewood' ) then
+		table.insert( replacements, {'default:sapling',  'default:junglesapling'});
+	elseif( wood_type == 'mg:savannawood' ) then
+		table.insert( replacements, {'default:sapling',  'mg:savannasapling'});
+	elseif( wood_type == 'mg:pinewood' ) then
+		table.insert( replacements, {'default:sapling',  'mg:pinesapling'});
+ 	elseif( moretrees and moretrees.treelist ) then
+		for _,v in ipairs( moretrees.treelist ) do
+			if( wood_type == "moretrees:"..v[1].."_planks" ) then
+				table.insert( replacements, {'default:sapling', "moretrees:"..v[1].."_sapling_ongen"});
+			end
+		end
+	end
+end
+
+
+mg_villages.get_sapling_content_id = function( replacements )
+	for _,v in ipairs( replacements ) do
+		-- found the replacement for a sapling
+		if( v[1]=='default:sapling' ) then
+			return minetest.get_content_id( v[2] );
+		end
+	end
+	-- found no repalcement; has to be normal tree growth
+	return minetest.get_content_id( 'default:sapling' );
+end
+
+
 
 
 -- Note: This function is taken from the villages mod (by Sokomine)
@@ -135,6 +170,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		{ 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood' },
 		'default:wood');
       mg_villages.replace_tree_trunk( replacements, wood_type );
+      mg_villages.replace_saplings(   replacements, wood_type );
 
       if( pr:next(1,3)==1 ) then
          table.insert( replacements, {'default:glass', 'default:obsidian_glass'});
@@ -153,6 +189,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		{ 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood' },
 		'default:wood');
       mg_villages.replace_tree_trunk( replacements, wood_type );
+      mg_villages.replace_saplings(   replacements, wood_type );
 
       return replacements;
    end
@@ -337,6 +374,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
    -- except for the floor, everything else may be glass
    table.insert( materials, 'default:glass' );
 
+   local uses_wood = false;
    -- bottom part of the house (usually ground floor from outside)
    local replace_clay = mg_villages.replace_materials( replacements, pr,
 	{'default:clay'},
@@ -344,15 +382,21 @@ mg_villages.get_replacement_list = function( housetype, pr )
 	materials,
 	'default:clay');
    if( replace_clay and replace_clay ~= 'default:clay' ) then
-      mg_villages.replace_tree_trunk( replacements, wood_type );
+      uses_wood = mg_villages.replace_tree_trunk( replacements, replace_clay );
+      mg_villages.replace_saplings(               replacements, replace_clay );
    end
  
    -- upper part of the house (may be the same as the material for the lower part)
-   mg_villages.replace_materials( replacements, pr,
+   local replace_loam = mg_villages.replace_materials( replacements, pr,
 	{'cottages:loam'},
 	{''},
 	materials,
 	'cottages:loam');
+   -- if the bottom was not replaced by wood, perhaps the top is
+   if( not( uses_wood ) and replace_loam ) then
+         mg_villages.replace_tree_trunk( replacements, replace_loam );
+         mg_villages.replace_saplings(   replacements, replace_loam );
+   end
 
 
    -- replace cobble; for these nodes, a stony material is needed (used in wells as well)
