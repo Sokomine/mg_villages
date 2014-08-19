@@ -10,6 +10,7 @@ mg_villages.village_sizes = {
 	claytrader   = { min = 10, max = 20,   space_between_buildings=1, texture = 'default_clay.png'},
 	logcabin     = { min = 15, max = 30,   space_between_buildings=1, texture = 'default_wood.png'},
 	canadian     = { min = 40, max = 110,  space_between_buildings=1, texture = 'wool_white.png'},
+	grasshut     = { min = 10, max = 40,   space_between_buildings=1, texture = 'dryplants_reed.png'},
 }
 
 -- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
@@ -251,11 +252,14 @@ if( minetest.get_modpath( 'hdb' ) and minetest.get_modpath( 'nbu' )) then
 	table.insert( mg_villages.village_types, 'canadian' );
 end
 
+if( minetest.get_modpath( 'dryplants' )) then
+	table.insert( mg_villages.village_types, 'grasshut' );
+end
+
 --mg_villages.village_types = {'lumberjack'};
 --mg_villages.village_types = {'medieval'};
 --mg_villages.village_types = {'claytrader'};
 --mg_villages.village_types = {'grasshut'};
--- TODO: handle grasshut
 
 -- read the data files and fill in information like size and nodes that need on_construct to be called after placing
 mg_villages.buildings_init = function()
@@ -378,7 +382,9 @@ mg_villages.BUILDINGS["wall"] = {yoff = 1, ysize = 6, scm = wall}
 --end
 
 
-mg_villages.village_types[ #mg_villages.village_types ] = 'fields';
+mg_villages.village_types[ #mg_villages.village_types+1 ] = 'fields';
+
+print('[mg_villages] Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
 for j,v in ipairs( mg_villages.village_types ) do
 	
 	local total_weight = 0

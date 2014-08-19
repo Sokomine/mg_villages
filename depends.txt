@@ -5,4 +5,6 @@ stairs
 doors
 cottages?
 moretrees?
+dryplants?
+cavestuff?
 moresnow?
