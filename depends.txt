@@ -3,5 +3,6 @@ farming
 wool
 stairs
 doors
+cottages?
 moretrees?
 moresnow?
