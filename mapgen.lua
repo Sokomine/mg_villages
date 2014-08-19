@@ -184,10 +184,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 						village_area[ p.x ] = {};
 					end
 					if( x==-1 or z==-1 or x==pos.bsizex or z==pos.bsizez ) then
-						-- borders around roads are more important than borders between buildings
-						if( not( village_area[ p.x ][ p.z ] ) and (reserved_for == 2 )) then
-							village_area[ p.x ][ p.z ] = { village_nr, reserved_for+1}; -- border around a building
-						end
+						village_area[ p.x ][ p.z ] = { village_nr, reserved_for+1}; -- border around a building
 					else
 						village_area[ p.x ][ p.z ] = { village_nr, reserved_for }; -- the actual building
 					end
