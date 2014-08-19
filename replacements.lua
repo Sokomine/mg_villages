@@ -258,14 +258,24 @@ mg_villages.get_replacement_list = function( housetype, pr )
    if( housetype == 'grasshut' ) then
 
       table.insert( replacements, {'moreblocks:fence_jungle_wood',     'default:fence' });
-      table.insert( replacements, {'dryplants:reed_roof',              'cottages:roof_straw'});
-      table.insert( replacements, {'dryplants:reed_slab',              'cottages:roof_flat_straw' });
-      table.insert( replacements, {'dryplants:wetreed_roof',           'cottages:roof_reet' });
-      table.insert( replacements, {'dryplants:wetreed_slab',           'cottages:roof_flat_reet' });
-      table.insert( replacements, {'dryplants:wetreed_roof_corner',    'default:wood' });
-      table.insert( replacements, {'dryplants:wetreed_roof_corner_2',  'default:junglewood' });
-      table.insert( replacements, {'cavestuff:desert_pebble_2',        'default:slab_cobble' });
+      if( pr:next( 1, 4) == 1 ) then
+         table.insert( replacements, {'dryplants:reed_roof',              'cottages:roof_straw'});
+         table.insert( replacements, {'dryplants:reed_slab',              'cottages:roof_flat_straw' });
+         table.insert( replacements, {'dryplants:wetreed_roof',           'cottages:roof_reet' });
+         table.insert( replacements, {'dryplants:wetreed_slab',           'cottages:roof_flat_reet' });
+      else -- replace the straw and cobble one of the huts uses
+         table.insert( replacements, {'cottages:straw',                   'dryplants:wetreed' });
+         table.insert( replacements, {'stairs:slab_cobble',               'dryplants:reed_slab' });
+      end
+      if( pr:next( 1, 4) == 1 ) then
+         table.insert( replacements, {'dryplants:wetreed_roof_corner',    'default:wood' });
+         table.insert( replacements, {'dryplants:wetreed_roof_corner_2',  'default:junglewood' });
+      end
+      if( not( minetest.get_modpath( 'cavestuff' ))) then
+         table.insert( replacements, {'cavestuff:desert_pebble_2',        'default:slab_cobble' });
+      end
    
+      table.insert( replacements, {'default:desert_sand', 'default:dirt_with_grass' });
       return replacements;
    end
 
