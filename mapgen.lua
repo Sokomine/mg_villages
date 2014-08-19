@@ -142,22 +142,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
 
-	-- if no voxelmanip data was passed on, read the data here
-	if( not( vm ) or not( a) or not( data ) or not( param2_data ) ) then
-		vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
-		if( not( vm )) then 
-			return;
-		end
-
-		a = VoxelArea:new{
-			MinEdge={x=emin.x, y=emin.y, z=emin.z},
-			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
-		}
-
-		data = vm:get_data()
-		param2_data = vm:get_param2_data()
-	end
-
 	-- determine which coordinates are inside the village and which are not
 	local village_area = {};
 
@@ -226,6 +210,22 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
 	end
 
+
+	-- if no voxelmanip data was passed on, read the data here
+	if( not( vm ) or not( a) or not( data ) or not( param2_data ) ) then
+		vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
+		if( not( vm )) then 
+			return;
+		end
+
+		a = VoxelArea:new{
+			MinEdge={x=emin.x, y=emin.y, z=emin.z},
+			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
+		}
+
+		data = vm:get_data()
+		param2_data = vm:get_param2_data()
+	end
 
 --[[
 -- figuring out the height this way hardly works - because only a tiny part of the village may be contained in this chunk	
