@@ -1,22 +1,22 @@
-VILLAGE_CHECK_RADIUS = 2
-VILLAGE_CHECK_COUNT = 1
---VILLAGE_CHANCE = 28
---VILLAGE_MIN_SIZE = 20
---VILLAGE_MAX_SIZE = 40
-VILLAGE_CHANCE = 28
-VILLAGE_MIN_SIZE = 25
-VILLAGE_MAX_SIZE = 90 --55
-FIRST_ROADSIZE = 3
-BIG_ROAD_CHANCE = 0
+mg_villages.VILLAGE_CHECK_RADIUS = 2
+mg_villages.VILLAGE_CHECK_COUNT = 1
+--mg_villages.VILLAGE_CHANCE = 28
+--mg_villages.VILLAGE_MIN_SIZE = 20
+--mg_villages.VILLAGE_MAX_SIZE = 40
+mg_villages.VILLAGE_CHANCE = 28
+mg_villages.VILLAGE_MIN_SIZE = 25
+mg_villages.VILLAGE_MAX_SIZE = 90 --55
+mg_villages.FIRST_ROADSIZE = 3
+mg_villages.BIG_ROAD_CHANCE = 0
 
 -- Enable that for really big villages (there are also really slow to generate)
---[[VILLAGE_CHECK_RADIUS = 3
-VILLAGE_CHECK_COUNT = 3
-VILLAGE_CHANCE = 28
-VILLAGE_MIN_SIZE = 100
-VILLAGE_MAX_SIZE = 150
-FIRST_ROADSIZE = 5
-BIG_ROAD_CHANCE = 50]]
+--[[mg_villages.VILLAGE_CHECK_RADIUS = 3
+mg_villages.VILLAGE_CHECK_COUNT = 3
+mg_villages.VILLAGE_CHANCE = 28
+mg_villages.VILLAGE_MIN_SIZE = 100
+mg_villages.VILLAGE_MAX_SIZE = 150
+mg_villages.FIRST_ROADSIZE = 5
+mg_villages.BIG_ROAD_CHANCE = 50]]
 
 
 -- on average, every n.th node may be one of these trees - and it will be a relatively dense packed forrest
@@ -47,13 +47,13 @@ end
 
 local function is_village_block(minp)
 	local x, z = math.floor(minp.x/80), math.floor(minp.z/80)
-	local vcc = VILLAGE_CHECK_COUNT
+	local vcc = mg_villages.VILLAGE_CHECK_COUNT
 	return (x%vcc == 0) and (z%vcc == 0)
 end
 
 mg_villages.villages_at_point = function(minp, noise1)
 	if not is_village_block(minp) then return {} end
-	local vcr, vcc = VILLAGE_CHECK_RADIUS, VILLAGE_CHECK_COUNT
+	local vcr, vcc = mg_villages.VILLAGE_CHECK_RADIUS, mg_villages.VILLAGE_CHECK_COUNT
 	-- Check if there's another village nearby
 	for xi = -vcr, vcr, vcc do
 	for zi = -vcr, 0, vcc do
@@ -63,12 +63,12 @@ mg_villages.villages_at_point = function(minp, noise1)
 			local s = pi:next(1, 400)
 			local x = pi:next(mp.x, mp.x + 79)
 			local z = pi:next(mp.z, mp.z + 79)
-			if s <= VILLAGE_CHANCE and noise1:get2d({x = x, y = z}) >= -0.3 then return {} end
+			if s <= mg_villages.VILLAGE_CHANCE and noise1:get2d({x = x, y = z}) >= -0.3 then return {} end
 		end
 	end
 	end
 	local pr = PseudoRandom(mg_villages.get_bseed(minp))
-	if pr:next(1, 400) > VILLAGE_CHANCE then return {} end -- No village here
+	if pr:next(1, 400) > mg_villages.VILLAGE_CHANCE then return {} end -- No village here
 	local x = pr:next(minp.x, minp.x + 79)
 	local z = pr:next(minp.z, minp.z + 79)
 	if noise1:get2d({x = x, y = z}) < -0.3 then return {} end -- Deep in the ocean
@@ -83,7 +83,7 @@ mg_villages.villages_at_point = function(minp, noise1)
 	end
 
 	if( not( mg_villages.village_sizes[ village_type ] )) then
-		mg_villages.village_sizes[  village_type ] = { min = VILLAGE_MIN_SIZE, max = VILLAGE_MAX_SIZE };
+		mg_villages.village_sizes[  village_type ] = { min = mg_villages.VILLAGE_MIN_SIZE, max = mg_villages.VILLAGE_MAX_SIZE };
 	end
 	local size = pr:next(mg_villages.village_sizes[ village_type ].min, mg_villages.village_sizes[ village_type ].max) 
 --	local height = pr:next(5, 20)
@@ -334,7 +334,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 	
 	for _, i in ipairs(calls_to_do) do
 		local new_roadsize = roadsize - 1
-		if pr:next(1, 100) <= BIG_ROAD_CHANCE then
+		if pr:next(1, 100) <= mg_villages.BIG_ROAD_CHANCE then
 			new_roadsize = roadsize
 		end
 
@@ -414,7 +414,7 @@ local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	calls = {index = 1}
 	-- the function below is recursive; we need a way to count roads
 	mg_villages.road_nr = 0;
-	generate_road(village, l, pr, FIRST_ROADSIZE, rx, rz, 1, 0, vnoise, space_between_buildings)
+	generate_road(village, l, pr, mg_villages.FIRST_ROADSIZE, rx, rz, 1, 0, vnoise, space_between_buildings)
 	i = 1
 	while i < calls.index do
 		generate_road(unpack(calls[i]))

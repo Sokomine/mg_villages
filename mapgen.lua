@@ -32,7 +32,7 @@ end
 mg_villages.villages_in_mapchunk = function( minp )
 	local noise1raw = minetest.get_perlin(12345, 6, 0.5, 256)
 	
-	local vcr = VILLAGE_CHECK_RADIUS
+	local vcr = mg_villages.VILLAGE_CHECK_RADIUS
 	local villages = {}
 	local generate_new_villages = true;
 	for xi = -vcr, vcr do
