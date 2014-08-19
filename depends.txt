@@ -2,5 +2,6 @@ default
 farming
 wool
 stairs
+doors
 moretrees?
 moresnow?
