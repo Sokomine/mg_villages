@@ -489,7 +489,7 @@ mg_villages.generate_dirt_roads = function( village, vnoise, bpos, secondary_dir
 				z = pos.z-pos.side+2; 
 				sizex = 2;
 				sizez = pos.bsizez+1;
-				vx = 0;  vz = 1;  vsx = 0; vsz = 1;
+				vx = 0;  vz = -1; vsx = 0; vsz = 1;
 
 			elseif( pos.o == 3 ) then
 				x = pos.x-2;
