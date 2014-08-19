@@ -242,10 +242,7 @@ if(         minetest.get_modpath("cottages")) then
 	table.insert( mg_villages.village_types, 'charachoal' );
 	table.insert( mg_villages.village_types, 'lumberjack' );
 	table.insert( mg_villages.village_types, 'claytrader' ); 
-
-	if( minetest.get_modpath("glasspanes")) then
-		table.insert( mg_villages.village_types, 'logcabin' );
-	end
+	table.insert( mg_villages.village_types, 'logcabin' );
 end
 
 if( minetest.get_modpath( 'hdb' ) and minetest.get_modpath( 'nbu' )) then
