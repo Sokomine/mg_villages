@@ -264,7 +264,9 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	local c_pinesapling     = minetest.get_content_id( 'mg:pinesapling');
 	-- add farmland
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
+	local c_dirt            = minetest.get_content_id( 'default:dirt');
 	local c_desert_sand     = minetest.get_content_id( 'default:desert_sand' );
+	local c_desert_stone    = minetest.get_content_id( 'default:desert_stone' );
 	local c_wheat           = minetest.get_content_id( 'farming:wheat_8' );
 	local c_cotton          = minetest.get_content_id( 'farming:cotton_8' );
 	local c_shrub           = minetest.get_content_id( 'default:dry_shrub');
@@ -288,7 +290,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 			-- turn unused land (which is either dirt or desert sand) into a field that grows wheat
 			if( village_area[ x ][ z ][ 2 ]==1 ) then
 
-				local village = villages[ village_area[ x ][ z ][ 1 ] ];
+				local village_nr = village_area[ x ][ z ][ 1 ];
+				local village    = villages[ village_nr ];
 				local h = village.vh;
 				local g = data[a:index( x, h, z )];
 
@@ -328,17 +331,35 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_wet;
-					data[a:index( x,  h-1, z)] = c_water_source;
-					data[a:index( x,  h-2, z)] = c_clay;
+					-- avoid water spills if the neighbour nodes are not part of the field
+					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
+					   and z<maxp.z and village_area[ x   ][ z+1 ][ 2 ] == 1 and village_area[ x   ][ z+1 ][ 1 ]==village_nr 
+					   and x>minp.x and village_area[ x-1 ][ z   ][ 2 ] == 1 and village_area[ x-1 ][ z   ][ 1 ]==village_nr 
+					   and z>minp.z and village_area[ x   ][ z-1 ][ 2 ] == 1 and village_area[ x   ][ z-1 ][ 1 ]==village_nr ) then
+						data[a:index( x,  h-1, z)] = c_water_source;
+						data[a:index( x,  h-2, z)] = c_clay;
+					else
+						data[a:index( x,  h-1, z)] = c_dirt;
+						data[a:index( x,  h-2, z)] = c_dirt;
+					end
 
 				-- grow wheat and cotton on desert sand soil
 				elseif( on_soil and g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_sand;
-					data[a:index( x,  h-1, z)] = c_clay;      -- so that desert sand soil does not fall down
-					data[a:index( x,  h-2, z)] = c_water_source;
-					data[a:index( x,  h-3, z)] = c_clay;
+					-- avoid water spills if the neighbour nodes are not part of the field
+					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
+					   and z<maxp.z and village_area[ x   ][ z+1 ][ 2 ] == 1 and village_area[ x   ][ z+1 ][ 1 ]==village_nr 
+					   and x>minp.x and village_area[ x-1 ][ z   ][ 2 ] == 1 and village_area[ x-1 ][ z   ][ 1 ]==village_nr 
+					   and z>minp.z and village_area[ x   ][ z-1 ][ 2 ] == 1 and village_area[ x   ][ z-1 ][ 1 ]==village_nr ) then
+						data[a:index( x,  h-1, z)] = c_clay;      -- so that desert sand soil does not fall down
+						data[a:index( x,  h-2, z)] = c_water_source;
+						data[a:index( x,  h-3, z)] = c_clay;
+					else
+						data[a:index( x,  h-1, z)] = c_desert_stone;
+						data[a:index( x,  h-2, z)] = c_desert_stone;
+					end
 	
 				elseif( on_soil ) then
 					if( math.random(1,5)==1 ) then
