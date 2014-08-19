@@ -138,60 +138,55 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 end
 
 
-mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top )
+-- helper functions for mg_villages.place_villages_via_voxelmanip
+-- this one marks the positions of buildings plus a frame around them 
+mg_villages.village_area_mark_buildings = function( village_area, bpos)
 
-	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
-
-	-- determine which coordinates are inside the village and which are not
-	local village_area = {};
-
-	for village_nr, village in ipairs(villages) do
-
-		-- generate the village structure: determine positions of buildings and roads
-		mg_villages.generate_village( village, village_noise);
-
-		-- mark the roads and buildings and the area between buildings in the village_area table
-		-- 2: road
-		-- 3: border around a road 
-		-- 4: building
-		-- 5: border around a building
-		for _, pos in ipairs(village.to_add_data.bpos) do
-			local reserved_for = 4; -- a building will be placed here
-			if( pos.btype and pos.btype == 'road' ) then
-				reserved_for = 2; -- the building will be a road
-			end
-			-- the building + a border of 1 around it
-			for x = -1, pos.bsizex do
-				for z = -1, pos.bsizez do
-					local p = {x=pos.x+x, z=pos.z+z};
-					if( not( village_area[ p.x ] )) then
-						village_area[ p.x ] = {};
-					end
-					if( x==-1 or z==-1 or x==pos.bsizex or z==pos.bsizez ) then
-						village_area[ p.x ][ p.z ] = { village_nr, reserved_for+1}; -- border around a building
-					else
-						village_area[ p.x ][ p.z ] = { village_nr, reserved_for }; -- the actual building
-					end
+	-- mark the roads and buildings and the area between buildings in the village_area table
+	-- 2: road
+	-- 3: border around a road 
+	-- 4: building
+	-- 5: border around a building
+	for _, pos in ipairs( bpos ) do
+		local reserved_for = 4; -- a building will be placed here
+		if( pos.btype and pos.btype == 'road' ) then
+			reserved_for = 2; -- the building will be a road
+		end
+		-- the building + a border of 1 around it
+		for x = -1, pos.bsizex do
+			for z = -1, pos.bsizez do
+				local p = {x=pos.x+x, z=pos.z+z};
+				if( not( village_area[ p.x ] )) then
+					village_area[ p.x ] = {};
+				end
+				if( x==-1 or z==-1 or x==pos.bsizex or z==pos.bsizez ) then
+					village_area[ p.x ][ p.z ] = { village_nr, reserved_for+1}; -- border around a building
+				else
+					village_area[ p.x ][ p.z ] = { village_nr, reserved_for }; -- the actual building
 				end
 			end
 		end
-		-- mark the dirt roads
-		-- 8: dirt road
-		for _, pos in ipairs(village.to_add_data.dirt_roads) do
-			-- the building + a border of 1 around it
-			for x = 0, pos.bsizex-1 do
-				for z = 0, pos.bsizez-1 do
-					local p = {x=pos.x+x, z=pos.z+z};
-					if( not( village_area[ p.x ] )) then
-						village_area[ p.x ] = {};
-					end
-					village_area[ p.x ][ p.z ] = { village_nr, 8 }; -- the actual dirt road
+	end
+end
+
+mg_villages.village_area_mark_dirt_roads = function( village_area, dirt_roads )
+	-- mark the dirt roads
+	-- 8: dirt road
+	for _, pos in ipairs(dirt_roads) do
+		-- the building + a border of 1 around it
+		for x = 0, pos.bsizex-1 do
+			for z = 0, pos.bsizez-1 do
+				local p = {x=pos.x+x, z=pos.z+z};
+				if( not( village_area[ p.x ] )) then
+					village_area[ p.x ] = {};
 				end
+				village_area[ p.x ][ p.z ] = { village_nr, 8 }; -- the actual dirt road
 			end
 		end
-        end
+	end
+end
 
-
+mg_villages.village_area_mark_inside_village_area = function( village_area, villages, village_noise, minp, maxp )
 	-- mark the rest ( inside_village but not part of an actual building) as well		 
 	for x = minp.x, maxp.x do
 		if( not( village_area[ x ] )) then
@@ -209,25 +204,13 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			end
 		end
 	end
+end
 
 
-	-- if no voxelmanip data was passed on, read the data here
-	if( not( vm ) or not( a) or not( data ) or not( param2_data ) ) then
-		vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
-		if( not( vm )) then 
-			return;
-		end
+mg_villages.village_area_get_height = function( village_area, villages, minp, maxp, data, param2_data, a )
+	local c_air             = minetest.get_content_id( 'air');
+	local c_ignore          = minetest.get_content_id( 'ignore');
 
-		a = VoxelArea:new{
-			MinEdge={x=emin.x, y=emin.y, z=emin.z},
-			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
-		}
-
-		data = vm:get_data()
-		param2_data = vm:get_param2_data()
-	end
-
---[[
 -- figuring out the height this way hardly works - because only a tiny part of the village may be contained in this chunk	
 	local height_sum   = {};
 	local height_count = {};
@@ -266,21 +249,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
 		end
 	end
---]]
+	return { height_sum = height_sum, height_count = height_count };
+end
 
-	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area );
 
-	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
-	if( not( c_feldweg )) then
-		c_feldweg = minetest.get_content_id('default:cobble');
-	end
-
-	for _, village in ipairs(villages) do
-
-		village.to_add_data = mg_villages.place_buildings( village, minp, maxp, data, param2_data, a, village_noise);
-
-		mg_villages.place_dirt_roads(                      village, minp, maxp, data, param2_data, a, village_noise, c_feldweg);
-	end
+-- places trees and plants at empty spaces
+mg_villages.village_area_fill_with_plants = function( village_area, villages, minp, maxp, data, param2_data, a )
 
 	local c_air             = minetest.get_content_id( 'air');
 	-- trees which require grow functions to be called
@@ -377,7 +351,64 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 			end
 		end
 	end
+end
 
+
+
+
+mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top )
+
+	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
+
+	-- determine which coordinates are inside the village and which are not
+	local village_area = {};
+
+	for village_nr, village in ipairs(villages) do
+
+		-- generate the village structure: determine positions of buildings and roads
+		mg_villages.generate_village( village, village_noise);
+
+		mg_villages.village_area_mark_buildings(   village_area, village.to_add_data.bpos );
+		mg_villages.village_area_mark_dirt_roads(  village_area, village.to_add_data.dirt_roads );
+        end
+
+	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, minp, maxp );
+
+	-- if no voxelmanip data was passed on, read the data here
+	if( not( vm ) or not( a) or not( data ) or not( param2_data ) ) then
+		vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
+		if( not( vm )) then 
+			return;
+		end
+
+		a = VoxelArea:new{
+			MinEdge={x=emin.x, y=emin.y, z=emin.z},
+			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
+		}
+
+		data = vm:get_data()
+		param2_data = vm:get_param2_data()
+	end
+
+
+	-- TODO: make use of height_data
+--	local height_data = mg_villages.village_area_get_height( village_area, villages, minp, maxp, data, param2_data, a );
+
+	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area );
+
+	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
+	if( not( c_feldweg )) then
+		c_feldweg = minetest.get_content_id('default:cobble');
+	end
+
+	for _, village in ipairs(villages) do
+
+		village.to_add_data = mg_villages.place_buildings( village, minp, maxp, data, param2_data, a, village_noise);
+
+		mg_villages.place_dirt_roads(                      village, minp, maxp, data, param2_data, a, village_noise, c_feldweg);
+	end
+
+	mg_villages.village_area_fill_with_plants( village_area, villages, minp, maxp, data, param2_data, a );
 
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
