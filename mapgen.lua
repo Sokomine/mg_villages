@@ -199,7 +199,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		for _, pos in ipairs(village.to_add_data.dirt_roads) do
 			-- the building + a border of 1 around it
 			for x = 0, pos.bsizex-1 do
-				for z = 0, pos.bsizez-2 do
+				for z = 0, pos.bsizez-1 do
 					local p = {x=pos.x+x, z=pos.z+z};
 					if( not( village_area[ p.x ] )) then
 						village_area[ p.x ] = {};
@@ -277,7 +277,7 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 	if( not( c_feldweg )) then
 		c_feldweg = minetest.get_content_id('default:cobble');
 	end
-	local c_air = minetest.get_content_id('air');
+
 	for _, village in ipairs(villages) do
 
 		village.to_add_data = mg_villages.place_buildings( village, minp, maxp, data, param2_data, a, village_noise);
@@ -285,10 +285,18 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 		mg_villages.place_dirt_roads(                      village, minp, maxp, data, param2_data, a, village_noise, c_feldweg);
 	end
 
+	local c_air             = minetest.get_content_id( 'air');
+	-- trees which require grow functions to be called
+	local c_sapling         = minetest.get_content_id( 'default:sapling');
+	local c_junglesapling   = minetest.get_content_id( 'default:junglesapling');
+	local c_savannasapling  = minetest.get_content_id( 'mg:savannasapling');
+	local c_pinesapling     = minetest.get_content_id( 'mg:pinesapling');
 	-- add farmland
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 	local c_desert_sand     = minetest.get_content_id( 'default:desert_sand' );
 	local c_wheat           = minetest.get_content_id( 'farming:wheat_8' );
+	local c_cotton          = minetest.get_content_id( 'farming:cotton_8' );
+	local c_shrub           = minetest.get_content_id( 'default:dry_shrub');
 	local c_soil_wet        = minetest.get_content_id( 'farming:soil_wet' );
 	local c_soil_sand       = minetest.get_content_id( 'farming:desert_sand_soil_wet' );
 	-- desert sand soil is only available in minetest_next
@@ -302,26 +310,72 @@ print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ide
 		c_feldweg = c_dirt_with_grass;
 	end
 
+
+	local pr = PseudoRandom(mg_villages.get_bseed(minp));
 	for x = minp.x, maxp.x do
 		for z = minp.z, maxp.z do
 			-- turn unused land (which is either dirt or desert sand) into a field that grows wheat
 			if( village_area[ x ][ z ][ 2 ]==1 ) then
 
-				local h = villages[ village_area[ x ][ z ][ 1 ] ].vh;
+				local village = villages[ village_area[ x ][ z ][ 1 ] ];
+				local h = village.vh;
 				local g = data[a:index( x, h, z )];
-				if( g==c_dirt_with_grass ) then	
+
+				-- choose a plant/tree with a certain chance
+				-- Note: There are no checks weather the tree/plant will actually grow there or not;
+				--       Tree type is derived from wood type used in the village
+				local plant_id = data[a:index( x, h+1, z)];
+				local on_soil  = false;
+				for _,v in ipairs( village.to_add_data.plantlist ) do
+					-- select the first plant that fits; if the node is not air, keep what is currently inside
+					if( plant_id==c_air and (( v.p == 1 or pr:next( 1, v.p )==1 ))) then
+						-- TODO: check if the plant grows on that soil
+						plant_id = v.id;
+						-- wheat and cotton require soil
+						if( plant_id == c_wheat or plant_id == c_cotton ) then
+							on_soil = true;
+						end
+					end
+				end
+
+				local pos = {x=x, y=h+1, z=z};
+				-- a normal tree; sometimes comes with apples
+				if(     plant_id == c_sapling ) then
+					default.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
+				-- a normal jungletree
+				elseif( plant_id == c_junglesapling ) then
+					default.grow_jungletree( data, a, pos, math.random(1,100000))
+				-- a savannatree from the mg mod
+				elseif( plant_id == c_savannasapling and add_savannatree) then
+					add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+				-- a pine tree from the mg mod
+				elseif( plant_id == c_pinesapling    and add_pinetree   ) then
+					add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+	
+				-- grow wheat and cotton on normal wet soil
+				elseif( on_soil and g==c_dirt_with_grass ) then	
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
-					data[a:index( x,  h+1, z)] = c_wheat;
+					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_wet;
 					data[a:index( x,  h-1, z)] = c_water_source;
 					data[a:index( x,  h-2, z)] = c_clay;
-				elseif( g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
+
+				-- grow wheat and cotton on desert sand soil
+				elseif( on_soil and g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
-					data[a:index( x,  h+1, z)] = c_wheat;
+					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_sand;
 					data[a:index( x,  h-1, z)] = c_clay;      -- so that desert sand soil does not fall down
 					data[a:index( x,  h-2, z)] = c_water_source;
 					data[a:index( x,  h-3, z)] = c_clay;
+	
+				elseif( on_soil ) then
+					if( math.random(1,5)==1 ) then
+						data[a:index( pos.x,  pos.y, pos.z)] = c_shrub;
+					end
+
+				elseif( plant_id ) then -- place the sapling or plant (moretrees uses spawn_tree)
+					data[a:index( pos.x,  pos.y, pos.z)] = plant_id;
 				end
 			end
 		end

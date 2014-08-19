@@ -87,20 +87,6 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 end
 
 
-mg_villages.get_sapling_content_id = function( replacements )
-	for _,v in ipairs( replacements ) do
-		-- found the replacement for a sapling
-		if( v[1]=='default:sapling' ) then
-			return minetest.get_content_id( v[2] );
-		end
-	end
-	-- found no repalcement; has to be normal tree growth
-	return minetest.get_content_id( 'default:sapling' );
-end
-
-
-
-
 -- Note: This function is taken from the villages mod (by Sokomine)
 -- at least the cottages may come in a variety of building materials
 -- IMPORTANT: don't add any nodes which have on_construct here UNLESS they where in the original file already

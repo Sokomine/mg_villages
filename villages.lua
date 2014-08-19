@@ -18,6 +18,33 @@ VILLAGE_MAX_SIZE = 150
 FIRST_ROADSIZE = 5
 BIG_ROAD_CHANCE = 50]]
 
+
+-- on average, every n.th node may be one of these trees - and it will be a relatively dense packed forrest
+mg_villages.sapling_probability = {};
+
+mg_villages.sapling_probability[ minetest.get_content_id( 'default:sapling' )       ] = 25; -- suitable for a relatively dense forrest of normal trees
+mg_villages.sapling_probability[ minetest.get_content_id( 'default:junglesapling' ) ] = 40; -- jungletrees are a bit bigger and need more space
+if( minetest.get_modpath( 'mg' )) then
+	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:savannasapling'     ) ] = 30; 
+	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:pinesapling'        ) ] = 35; 
+end
+if( minetest.get_modpath( 'moretrees' )) then
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:birch_sapling_ongen'       ) ] = 200;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:spruce_sapling_ongen'      ) ] = 200;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:fir_sapling_ongen'         ) ] =  90;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:jungletree_sapling_ongen'  ) ] = 200;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:beech_sapling_ongen'       ) ] =  30;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:apple_sapling_ongen'       ) ] = 380;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:oak_sapling_ongen'         ) ] = 380; -- ca 20x20; height: 10
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:sequoia_sapling_ongen'     ) ] =  90; -- ca 10x10
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:palm_sapling_ongen'        ) ] =  90;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:pine_sapling_ongen'        ) ] = 200;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:willow_sapling_ongen'      ) ] = 380;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:rubber_tree_sapling_ongen' ) ] = 380;
+end
+
+
+
 local function is_village_block(minp)
 	local x, z = math.floor(minp.x/80), math.floor(minp.z/80)
 	local vcc = VILLAGE_CHECK_COUNT
@@ -928,7 +955,7 @@ mg_villages.generate_village = function(village, vnoise)
 	-- only generate a new village if the data is not already stored
 	-- (the algorithm is fast, but village types and houses which are available may change later on,
   	-- and that might easily cause chaos if the village is generated again with diffrent input)
-	if( village.to_add_data and village.to_add_data.bpos and village.to_add_data.replacements ) then
+	if( village.to_add_data and village.to_add_data.bpos and village.to_add_data.replacements and village.to_add_data.plantlist) then
 		--print('VILLAGE GENREATION: USING ALREADY GENERATED VILLAGE: Nr. '..tostring( village.nr )); 
 		return;
 	end
@@ -962,11 +989,51 @@ mg_villages.generate_village = function(village, vnoise)
 	-- if the village is new, replacement_list is nil and a new replacement list will be created
 	local replacements = mg_villages.get_replacement_table( village.village_type, p, nil );
 	
+	-- determine which plants will grow in the area around the village
+	local plantlist = {};
+	local sapling_id = replacements.table[ 'default:sapling' ];
+	if( not( sapling_id )) then
+		sapling_id = 'default:sapling';
+	end
+	sapling_id = minetest.get_content_id( sapling_id );
+	-- 1/sapling_p = probability of a sapling beeing placed
+	local sapling_p  = 25;
+	if( mg_villages.sapling_probability[ sapling_id ] ) then
+		sapling_p = mg_villages.sapling_probability[ sapling_id ];
+	end
+
+	-- medieval villages are sourrounded by wheat fields
+	if(     village_type == 'medieval' ) then
+		local c_wheat = minetest.get_content_id( 'farming:wheat_8');
+		plantlist = {
+			{ id=sapling_id, p=sapling_p*10 }, -- trees are rather rare
+			{ id=c_wheat,    p=1         }};
+	-- lumberjack camps have handy trees nearby
+	elseif( village_type == 'lumberjack' ) then
+		local c_junglegrass = minetest.get_content_id( 'default:junglegrass');
+		plantlist = {
+			{ id=sapling_id,    p=sapling_p },
+			{ id=c_junglegrass, p=25        }};
+	-- the villages of type taoki grow cotton
+	elseif( village_type == 'taoki' ) then
+		local c_cotton = minetest.get_content_id( 'farming:cotton_8');
+		plantlist = {
+			{ id=sapling_id, p=sapling_p*5 }, -- not too many trees
+			{ id=c_cotton,   p=1         }};
+	-- default/fallback: grassland
+	else
+		local c_grass = minetest.get_content_id( 'default:grass_5');
+		plantlist = {
+			{ id=sapling_id, p=sapling_p*10}, -- only few trees
+			{ id=c_grass,    p=3         }};
+	end
+
 	-- store the generated data in the village table 
 	village.to_add_data               = {};
 	village.to_add_data.bpos          = bpos;
 	village.to_add_data.replacements  = replacements.list;
 	village.to_add_data.dirt_roads    = dirt_roads;
+	village.to_add_data.plantlist     = plantlist;
 
 	--print('VILLAGE GENREATION: GENERATING NEW VILLAGE Nr. '..tostring( village.nr ));
 end
@@ -999,7 +1066,8 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	end
 
 	-- replacements are in list format for minetest.place_schematic(..) type spawning
-	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list, dirt_roads = village.to_add_data.dirt_roads };
+	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list, dirt_roads = village.to_add_data.dirt_roads,
+			plantlist = village.to_add_data.plantlist };
 end
 
 
@@ -1028,3 +1096,4 @@ mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, 
 		end
 	end
 end
+
