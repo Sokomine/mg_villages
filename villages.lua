@@ -88,6 +88,10 @@ mg_villages.villages_at_point = function(minp, noise1)
 	local size = pr:next(mg_villages.village_sizes[ village_type ].min, mg_villages.village_sizes[ village_type ].max) 
 --	local height = pr:next(5, 20)
 	local height = pr:next(1, 5)
+	-- villages of a size >= 40 are always placed at a height of 1
+	if( size >= 40 ) then
+		height = 1;
+	end
 
 --	print("A village of type \'"..tostring( village_type ).."\' of size "..tostring( size ).." spawned at: x = "..x..", z = "..z)
 	--print("A village spawned at: x = "..x..", z = "..z)
