@@ -140,7 +140,7 @@ end
 
 -- helper functions for mg_villages.place_villages_via_voxelmanip
 -- this one marks the positions of buildings plus a frame around them 
-mg_villages.village_area_mark_buildings = function( village_area, bpos)
+mg_villages.village_area_mark_buildings = function( village_area, village_nr, bpos)
 
 	-- mark the roads and buildings and the area between buildings in the village_area table
 	-- 2: road
@@ -169,7 +169,7 @@ mg_villages.village_area_mark_buildings = function( village_area, bpos)
 	end
 end
 
-mg_villages.village_area_mark_dirt_roads = function( village_area, dirt_roads )
+mg_villages.village_area_mark_dirt_roads = function( village_area, village_nr, dirt_roads )
 	-- mark the dirt roads
 	-- 8: dirt road
 	for _, pos in ipairs(dirt_roads) do
@@ -207,6 +207,7 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 end
 
 
+-- analyzes optimal height for villages which have their center inside this mapchunk
 mg_villages.village_area_get_height = function( village_area, villages, minp, maxp, data, param2_data, a )
 	local c_air             = minetest.get_content_id( 'air');
 	local c_ignore          = minetest.get_content_id( 'ignore');
@@ -214,28 +215,43 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 -- figuring out the height this way hardly works - because only a tiny part of the village may be contained in this chunk	
 	local height_sum   = {};
 	local height_count = {};
+	local height_statistic = {};
 	-- initialize the variables for counting
 	for village_nr, village in ipairs( villages ) do
-		height_sum[   village_nr ] = 0;
-		height_count[ village_nr ] = 0;
+		height_sum[       village_nr ] = 0;
+		height_count[     village_nr ] = 0;
+		height_statistic[ village_nr ] = {};
 	end
 	-- try to find the optimal village height by looking at the borders defined by inside_village
 	for x = minp.x+1, maxp.x-1 do
 		for z = minp.z+1, maxp.z-1 do
-			if(     village_area[ x ][ z ][ 2 ] ~= 0
-                            and village_area[ x ][ z ][ 1 ] ~= 0
+			if(     village_area[ x ][ z ][ 1 ] ~= 0
+                            and village_area[ x ][ z ][ 2 ] ~= 0
 			    and ( village_area[ x+1 ][ z   ][ 2 ] == 0
 			       or village_area[ x-1 ][ z   ][ 2 ] == 0 
 			       or village_area[  x  ][ z+1 ][ 2 ] == 0 
-			       or village_area[  x  ][ z-1 ][ 2 ] == 0 )) then
+			       or village_area[  x  ][ z-1 ][ 2 ] == 0 )
+			  -- if the corners of the mapblock are inside the village area, they may count as borders here as well
+			  or ( x==minp.x+1 and village_area[ x-1 ][ z   ][ 1 ] ~= 0 )
+			  or ( x==maxp.x-1 and village_area[ x+1 ][ z   ][ 1 ] ~= 0 )
+			  or ( z==minp.z-1 and village_area[ x   ][ z-1 ][ 1 ] ~= 0 )
+			  or ( z==maxp.z+1 and village_area[ x   ][ z+1 ][ 1 ] ~= 0 )) then
 
 				y = maxp.y;
 				while( y > minp.y and y >= 0) do
 					local ci = data[a:index(x, y, z)];
 					if( ci ~= c_air and ci ~= c_ignore and mg_villages.check_if_ground( ci ) == true) then
 						local village_nr = village_area[ x ][ z ][ 1 ];
-						height_sum[   village_nr ] = height_sum[   village_nr ] + y;
-						height_count[ village_nr ] = height_count[ village_nr ] + 1;
+						if( village_nr > 0 and height_sum[ village_nr ] ) then
+							height_sum[   village_nr ] = height_sum[   village_nr ] + y;
+							height_count[ village_nr ] = height_count[ village_nr ] + 1;
+			
+							if( not( height_statistic[ village_nr ][ y ] )) then
+								height_statistic[ village_nr ][ y ] = 1;
+							else
+								height_statistic[ village_nr ][ y ] = height_statistic[ village_nr ][ y ] + 1;
+							end
+						end
 						y = minp.y - 1;
 					end
 					y = y-1;
@@ -244,13 +260,57 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		end
 	end
 	for village_nr, village in ipairs( villages ) do
-		if( height_count[ village_nr ] > 0 ) then
+		-- villages above a size of 40 are *always* place at a convenient height of 1
+		if( village.vs >= 40 ) then
+			village.optimal_height = 1;
+		
+		-- if no border height was found, there'd be no point in calculating anything;
+		-- also, this is done only if the village has its center inside this mapchunk	
+		elseif( not( village.optimal_height )
+		    and height_count[ village_nr ] > 0 
+		    and village.vx >= minp.x and village.vx <= maxp.x
+--		    and village.vh >= minp.y and village.vh <= maxp.y  -- the height is what we're actually looking for here
+		    and village.vz >= minp.z and village.vz <= maxp.z ) then
+
 			local ideal_height = math.floor( height_sum[ village_nr ] / height_count[ village_nr ]);
 print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
+
+			local max    = 0;
+			local target = village.vh;
+			local qmw    = 0;
+			for k, v in pairs( height_statistic[ village_nr ] ) do
+				qmw = qmw + v * (k*k );
+				if( v > max ) then
+					target = k;
+					max    = v;
+				end
+			end
+			if( height_count[ village_nr ] > 5 ) then
+				qmw = math.floor( math.sqrt( qmw / height_count[ village_nr ]) +0.5); -- round the value
+			else
+				qmw = 0; -- if in doubt, a height of 0 usually works well
+			end
+
+			village.optimal_height = qmw;
+
+			print('Majority vote for '..tostring( village_nr )..' is: '..tostring( target )..' with '..tostring( max )..' counts. Details: '..minetest.serialize( height_statistic[ village_nr] ).." QMW: "..tostring( qmw ));
 		end
 	end
-	return { height_sum = height_sum, height_count = height_count };
 end
+
+
+
+mg_villages.change_village_height = function( village, new_height )
+print('CHANGING HEIGHT from '..tostring( village.vh )..' to '..tostring( new_height ));
+	for _, pos in ipairs(village.to_add_data.bpos) do
+		pos.y = new_height;
+	end
+	for _, pos in ipairs(village.to_add_data.dirt_roads) do
+		pos.y = new_height;
+	end
+	village.vh = new_height;
+end
+
 
 
 -- places trees and plants at empty spaces
@@ -270,8 +330,9 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	local c_wheat           = minetest.get_content_id( 'farming:wheat_8' );
 	local c_cotton          = minetest.get_content_id( 'farming:cotton_8' );
 	local c_shrub           = minetest.get_content_id( 'default:dry_shrub');
-	local c_soil_wet        = minetest.get_content_id( 'farming:soil_wet' );
-	local c_soil_sand       = minetest.get_content_id( 'farming:desert_sand_soil_wet' );
+	-- these extra nodes are used in order to avoid abms on the huge fields around the villages
+	local c_soil_wet        = minetest.get_content_id( 'mg_villages:soil' ); --'farming:soil_wet' );
+	local c_soil_sand       = minetest.get_content_id( 'mg_villages:desert_sand_soil'); --'farming:desert_sand_soil_wet' );
 	-- desert sand soil is only available in minetest_next
 	if( not( c_soil_sand )) then
 		c_soil_sand = c_soil_wet;
@@ -331,6 +392,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_wet;
+--[[
 					-- avoid water spills if the neighbour nodes are not part of the field
 					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
 					   and z<maxp.z and village_area[ x   ][ z+1 ][ 2 ] == 1 and village_area[ x   ][ z+1 ][ 1 ]==village_nr 
@@ -342,12 +404,14 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 						data[a:index( x,  h-1, z)] = c_dirt;
 						data[a:index( x,  h-2, z)] = c_dirt;
 					end
+--]]
 
 				-- grow wheat and cotton on desert sand soil
 				elseif( on_soil and g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_sand;
+--[[
 					-- avoid water spills if the neighbour nodes are not part of the field
 					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
 					   and z<maxp.z and village_area[ x   ][ z+1 ][ 2 ] == 1 and village_area[ x   ][ z+1 ][ 1 ]==village_nr 
@@ -360,6 +424,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 						data[a:index( x,  h-1, z)] = c_desert_stone;
 						data[a:index( x,  h-2, z)] = c_desert_stone;
 					end
+--]]
 	
 				elseif( on_soil ) then
 					if( math.random(1,5)==1 ) then
@@ -378,6 +443,23 @@ end
 
 
 mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top )
+	
+--[[
+	local centered_here = 0;
+	for _,village in ipairs( villages ) do
+		if(   village.vx >= minp.x and village.vx <= maxp.x 
+		  and village.vh >= minp.y and village.vh <= maxp.y 
+		  and village.vz >= minp.z and village.vz <= maxp.z ) then
+			village.center_in_this_mapchunk = true;
+			centered_here = centered_here + 1;
+		else
+			village.center_in_this_mapchunk = false;
+		end
+	end
+	if( centered_here < 1 ) then
+		return; -- TODO
+	end
+--]]
 
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
 
@@ -385,12 +467,11 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	local village_area = {};
 
 	for village_nr, village in ipairs(villages) do
-
 		-- generate the village structure: determine positions of buildings and roads
 		mg_villages.generate_village( village, village_noise);
 
-		mg_villages.village_area_mark_buildings(   village_area, village.to_add_data.bpos );
-		mg_villages.village_area_mark_dirt_roads(  village_area, village.to_add_data.dirt_roads );
+		mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
+		mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
         end
 
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, minp, maxp );
@@ -412,8 +493,15 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	end
 
 
-	-- TODO: make use of height_data
---	local height_data = mg_villages.village_area_get_height( village_area, villages, minp, maxp, data, param2_data, a );
+	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
+	mg_villages.village_area_get_height( village_area, villages, minp, maxp, data, param2_data, a );
+	-- change height of those villages where an optimal_height could be determined
+	for _,village in ipairs(villages) do
+		if( village.optimal_height and village.optimal_height >= 0 and village.optimal_height ~= village.vh ) then
+			mg_villages.change_village_height( village, village.optimal_height );
+		end
+	end
+
 
 	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area );
 
@@ -534,7 +622,7 @@ end)
 -- It only does changes if there is at least one village in the area that is to be generated.
 minetest.register_on_generated(function(minp, maxp, seed)
 	-- only generate village on the surface chunks
-	if( minp.y ~= -32 ) then
+	if( minp.y ~= -32 or minp.y < -32 or minp.y > 64) then
 		return;
 	end
 	local villages = mg_villages.villages_in_mapchunk( minp );
