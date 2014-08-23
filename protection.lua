@@ -5,7 +5,7 @@ mg_villages.get_town_id_at_pos = function( pos )
 		local size = v.vs * 3;
 		if(   ( math.abs( pos.x - v.vx ) < size )
 		  and ( math.abs( pos.z - v.vz ) < size )
-		  and ( math.abs( pos.y - v.vh ) < 40 )) then
+		  and ( pos.y - v.vh < 40 and v.vh - pos.y < 10 )) then
 			local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
 			if( mg_villages.inside_village_area( pos.x,  pos.z, v, village_noise)) then
 				return id;
