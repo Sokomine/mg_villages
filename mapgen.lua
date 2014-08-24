@@ -22,6 +22,10 @@ mg_villages.inside_village_area = function(x, z, village, vnoise)
         return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 80
 end
 
+mg_villages.get_vnoise = function(x, z, village, vnoise) -- PM v
+        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village)
+end -- PM ^
+
 mg_villages.get_vn = function(x, z, noise, village)
         local vx, vz, vs = village.vx, village.vz, village.vs
         return (noise - 2) * 20 +
@@ -84,10 +88,15 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 	local c_dirt   = minetest.get_content_id( 'default:dirt');
 	local c_snow   = minetest.get_content_id( 'default:snow');
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
+	local c_desert_sand = minetest.get_content_id( 'default:desert_sand' ); -- PM v
+	local c_desert_stone  = minetest.get_content_id( 'default:desert_stone');
+	local c_sand = minetest.get_content_id( 'default:sand' ); -- PM ^
+
 
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		for _, village in ipairs(villages) do
+			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
 			if( village_area[ x ][ z ][ 2 ] > 0 ) then -- inside a village
 --			if( mg_villages.inside_village(x, z, village, village_noise)) then
 				local buffer = {};
@@ -131,6 +140,40 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 				if( has_snow ) then
 					data[       a:index( x, village.vh+1, z)] = c_snow;
 				end
+			elseif n_village <= 160 then -- PM v
+				local blend = (n_village - 80) / 80 -- 0 at village edge, 1 at normal terrain
+				local ysurf = 1 -- y of surface
+				local surfnod -- surface node id
+				for y = maxp.y, 2, -1 do
+					local vi = a:index(x, y, z)
+					local nodid = data[vi]
+					if nodid == c_dirt
+					or nodid == c_dirt_with_grass
+					or nodid == c_stone
+					or nodid == c_desert_sand
+					or nodid == c_desert_stone
+					or nodid == c_sand then
+						ysurf = y
+						surfnod = nodid
+						break
+					else
+						data[vi] = c_air
+					end
+				end
+				if ysurf > village.vh then
+					local yblend = math.floor(village.vh + blend * (ysurf - village.vh))
+					for y = ysurf, yblend - 2, -1 do
+						local vi = a:index(x, y, z)
+						if y > yblend then
+							data[vi] = c_air
+						else
+							data[vi] = surfnod
+							if surfnod == c_dirt_with_grass then
+								surfnod = c_dirt
+							end
+						end
+					end
+				end -- PM ^
 			end
 		end
 	end
@@ -263,6 +306,10 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		-- villages above a size of 40 are *always* place at a convenient height of 1
 		if( village.vs >= 40 ) then
 			village.optimal_height = 1;
+		elseif( village.vs >= 30 ) then
+			village.optimal_height = 40 - village.vs;
+		elseif( village.vs >= 25 ) then
+			village.optimal_height = 35 - village.vs;
 		
 		-- if no border height was found, there'd be no point in calculating anything;
 		-- also, this is done only if the village has its center inside this mapchunk	

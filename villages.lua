@@ -89,8 +89,14 @@ mg_villages.villages_at_point = function(minp, noise1)
 --	local height = pr:next(5, 20)
 	local height = pr:next(1, 5)
 	-- villages of a size >= 40 are always placed at a height of 1
-	if( size >= 40 ) then
+	if(     size >= 40 ) then
 		height = 1;
+	-- slightly smaller but still relatively large villages have a deterministic height now as well
+	elseif( size >= 30 ) then
+		height = 40-height;
+	elseif( size >= 25 ) then
+		height = 35-height;
+	-- even smaller villages need to have a height depending on their sourroundings (at least they're pretty small!)
 	end
 
 --	print("A village of type \'"..tostring( village_type ).."\' of size "..tostring( size ).." spawned at: x = "..x..", z = "..z)
