@@ -90,14 +90,20 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 	local c_desert_sand = minetest.get_content_id( 'default:desert_sand' ); -- PM v
 	local c_desert_stone  = minetest.get_content_id( 'default:desert_stone');
-	local c_sand = minetest.get_content_id( 'default:sand' ); -- PM ^
+	local c_sand = minetest.get_content_id( 'default:sand' ); 
+	local c_tree = minetest.get_content_id( 'default:tree');
+	local c_sapling = minetest.get_content_id( 'default:sapling');
+	local c_jtree = minetest.get_content_id( 'default:jungletree');
+	local c_jsapling = minetest.get_content_id( 'default:junglesapling');
+	local c_water = minetest.get_content_id( 'default:water_source'); -- PM ^
+
 
 
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		for _, village in ipairs(villages) do
 			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
-			if( village_area[ x ][ z ][ 2 ] > 0 ) then -- inside a village
+			if( village_area[ x ][ z ][ 2 ] > 0 and data[a:index(x,village.vh,z)] ~= c_ignore) then -- inside a village
 --			if( mg_villages.inside_village(x, z, village, village_noise)) then
 				local buffer = {};
 				local buffer_param2 = {};
@@ -129,7 +135,7 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 					
 				-- apply the data found in the buffer
 				for i,v in ipairs( buffer ) do
-					if( village.vh - i + 1 >= minp.y ) then
+					if( village.vh - i + 1 >= minp.y and i==1) then
 						if( i==1 and buffer[i]==c_dirt ) then
 							buffer[i] = c_dirt_with_grass;
 						end
@@ -141,13 +147,21 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 					data[       a:index( x, village.vh+1, z)] = c_snow;
 				end
 			elseif n_village <= 160 then -- PM v
-				local blend = (n_village - 80) / 80 -- 0 at village edge, 1 at normal terrain
+				local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
 				local ysurf = 1 -- y of surface
 				local surfnod -- surface node id
-				for y = maxp.y, 2, -1 do
+				local tree = false -- bools for replanting trees as saplings
+				local jcount = 0 -- count jungle trunks to avoid planting saplings where roots were
+				local jtree = false
+				for y = maxp.y, minp.y, -1 do -- detect ground and trees, remove trees
 					local vi = a:index(x, y, z)
 					local nodid = data[vi]
-					if nodid == c_dirt
+					if nodid == c_tree then
+						tree = true
+					elseif nodid == c_jtree then
+						jcount = jcount + 1
+					end
+					if nodid == c_dirt -- if ground detected
 					or nodid == c_dirt_with_grass
 					or nodid == c_stone
 					or nodid == c_desert_sand
@@ -156,29 +170,112 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 						ysurf = y
 						surfnod = nodid
 						break
-					else
-						data[vi] = c_air
+					elseif y > 1 then
+						data[vi] = c_air -- remove trees but not water
 					end
 				end
-				if ysurf > village.vh then
-					local yblend = math.floor(village.vh + blend * (ysurf - village.vh))
-					for y = ysurf, yblend - 2, -1 do
-						local vi = a:index(x, y, z)
-						if y > yblend then
-							data[vi] = c_air
+				if jcount > 1 then -- if jungle trunk detected
+					jtree = true
+				end
+
+				local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
+				local yblend = ysurf
+				if n_rawnoise > 0 then -- leave some cliffs unblended
+					yblend = math.floor(village.vh + blend * (ysurf - village.vh))
+				end
+				if yblend > 3 and surfnod == c_sand then -- no beach above y = 3
+					surfnod = c_dirt_with_grass
+				end
+				for y = ysurf, yblend - 2, -1 do
+					local vi = a:index(x, y, z)
+					if y == yblend + 1 then -- plant saplngs to replace trees
+						if tree then
+							data[vi] = c_sapling
+						elseif jtree then
+							data[vi] = c_jsapling
 						else
-							data[vi] = surfnod
-							if surfnod == c_dirt_with_grass then
-								surfnod = c_dirt
-							end
+							data[vi] = c_air
+						end
+					elseif y > yblend then
+						if y <= 1 then
+							data[vi] = c_water
+						else
+							data[vi] = c_air
+						end
+					else
+						data[vi] = surfnod
+						if surfnod == c_dirt_with_grass then
+							surfnod = c_dirt
 						end
 					end
-				end -- PM ^
+				end
+			end -- PM ^
+		end
+	end
+	end
+end
+
+
+-- TODO: limit this function to the shell in order to speed things up
+-- repair mapgen griefings
+mg_villages.repair_outer_shell = function( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area )
+	local c_air             = minetest.get_content_id( 'air' );
+	local c_ignore          = minetest.get_content_id( 'ignore' );
+	local c_stone           = minetest.get_content_id( 'default:stone');
+	local c_dirt            = minetest.get_content_id( 'default:dirt');
+	local c_snow            = minetest.get_content_id( 'default:snow');
+	local c_water           = minetest.get_content_id( 'default:water_source');
+	local c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
+	local c_desert_sand     = minetest.get_content_id( 'default:desert_sand' );
+	local c_desert_stone    = minetest.get_content_id( 'default:desert_stone');
+	local c_sand            = minetest.get_content_id( 'default:sand' ); 
+
+
+	for z = minp.z, maxp.z do
+	for x = minp.x, maxp.x do
+		-- inside a village
+		if( village_area[ x ][ z ][ 2 ] > 0 ) then
+			local village = villages[ village_area[ x ][ z ][ 1 ]];
+			-- the current node at the ground
+			local node    = data[a:index(x,village.vh,z)];
+			-- there ought to be something - but there is air
+			if( village and village.vh and (node==c_air or node==c_water)) then 
+				y = village.vh-1;
+				-- search from village height downards for holes generated by cavegen and fill them up
+				while( y > minp.y ) do
+					local ci = data[a:index(x, y, z)];
+					if(     ci == c_desert_stone or ci == c_desert_sand ) then
+						data[a:index(x, village.vh, z)] = c_desert_sand;
+						y = minp.y-1;
+					elseif( ci == c_sand ) then
+						data[a:index(x, village.vh, z)] = c_sand;
+						y = minp.y-1;
+					-- use dirt_with_grass as a fallback
+					elseif( ci ~= c_air and ci ~= c_ignore and ci ~= c_water and mg_villages.check_if_ground( ci ) == true) then
+						data[a:index(x, village.vh, z)] = c_dirt_with_grass;
+						y = minp.y-1;
+					-- abort the search - there is no data available yet
+					elseif( ci == c_ignore ) then
+						y = minp.y-1;
+					end
+					y = y-1;
+				end
+			end
+					
+			-- remove mudflow
+			y = village.vh + 1;
+			while( y < village.vh+40 and y < maxp.y ) do
+				local ci = data[a:index(x, y, z)];
+				if( ci ~= c_ignore and (ci==c_dirt or ci==c_dirt_with_grass or ci==c_sand or ci==c_desert_sand)) then
+					data[a:index(x,y,z)] = c_air;
+				end
+				y = y+1;
 			end
 		end
 	end
 	end
 end
+
 
 
 -- helper functions for mg_villages.place_villages_via_voxelmanip
@@ -303,8 +400,9 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		end
 	end
 	for village_nr, village in ipairs( villages ) do
+		if( village.optimal_height ) then
 		-- villages above a size of 40 are *always* place at a convenient height of 1
-		if( village.vs >= 40 ) then
+		elseif( village.vs >= 40 ) then
 			village.optimal_height = 1;
 		elseif( village.vs >= 30 ) then
 			village.optimal_height = 40 - village.vs;
@@ -313,8 +411,7 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		
 		-- if no border height was found, there'd be no point in calculating anything;
 		-- also, this is done only if the village has its center inside this mapchunk	
-		elseif( not( village.optimal_height )
-		    and height_count[ village_nr ] > 0 
+		elseif(  height_count[ village_nr ] > 0 
 		    and village.vx >= minp.x and village.vx <= maxp.x
 --		    and village.vh >= minp.y and village.vh <= maxp.y  -- the height is what we're actually looking for here
 		    and village.vz >= minp.z and village.vz <= maxp.z ) then
@@ -434,8 +531,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				elseif( plant_id == c_pinesapling    and add_pinetree   ) then
 					add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
 	
-				-- grow wheat and cotton on normal wet soil
-				elseif( on_soil and g==c_dirt_with_grass ) then	
+				-- grow wheat and cotton on normal wet soil (and re-plant if it had been removed by mudslide)
+				elseif( on_soil and (g==c_dirt_with_grass or g==c_soil_wet)) then	
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_wet;
@@ -453,8 +550,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 					end
 --]]
 
-				-- grow wheat and cotton on desert sand soil
-				elseif( on_soil and g==c_desert_sand and c_soil_sand and c_soil_sand > 0) then
+				-- grow wheat and cotton on desert sand soil - or on soil previously placed (before mudslide overflew it; same as above)
+				elseif( on_soil and (g==c_desert_sand or g==c_soil_sand) and c_soil_sand and c_soil_sand > 0) then
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = c_soil_sand;
@@ -521,8 +618,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
         end
 
-	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, minp, maxp );
-
 	-- if no voxelmanip data was passed on, read the data here
 	if( not( vm ) or not( a) or not( data ) or not( param2_data ) ) then
 		vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
@@ -539,9 +634,19 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		param2_data = vm:get_param2_data()
 	end
 
+	-- all vm manipulation functions write their content to the *entire* volume/area - including those 16 nodes that
+	-- extend into neighbouring mapchunks; thus, cavegen griefing and mudflow can be repaired by placing everythiing again
+	local tmin = emin;
+	local tmax = emax;
+	-- if set to true, cavegen eating through houses and mudflow on roofs will NOT be repaired
+	if( false ) then
+		tmin = minp;
+		tmax = maxp;
+	end
+	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
-	mg_villages.village_area_get_height( village_area, villages, minp, maxp, data, param2_data, a );
+	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a );
 	-- change height of those villages where an optimal_height could be determined
 	for _,village in ipairs(villages) do
 		if( village.optimal_height and village.optimal_height >= 0 and village.optimal_height ~= village.vh ) then
@@ -551,6 +656,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 
 	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area );
+	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
+	mg_villages.repair_outer_shell(   villages, village_noise, tmin, tmax, vm, data, param2_data, a, village_area );
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
 	if( not( c_feldweg )) then
@@ -559,12 +666,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	for _, village in ipairs(villages) do
 
-		village.to_add_data = mg_villages.place_buildings( village, minp, maxp, data, param2_data, a, village_noise);
+		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, village_noise);
 
-		mg_villages.place_dirt_roads(                      village, minp, maxp, data, param2_data, a, village_noise, c_feldweg);
+		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, village_noise, c_feldweg);
 	end
 
-	mg_villages.village_area_fill_with_plants( village_area, villages, minp, maxp, data, param2_data, a );
+	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a );
 
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
