@@ -63,6 +63,15 @@ end
 mg_villages.node_is_ground = {}; -- store nodes which have previously been identified as ground
 
 mg_villages.check_if_ground = function( ci )
+
+	-- pre-generate a list of no-ground-nodes for caching
+	if( #mg_villages.node_is_ground < 1 ) then
+		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood'};
+		for _,name in ipairs( no_ground_nodes ) do
+			mg_villages.node_is_ground[ minetest.get_content_id( name )] = false;
+		end
+	end
+
 	if( not( ci )) then
 		return false;
 	end
@@ -75,7 +84,7 @@ mg_villages.check_if_ground = function( ci )
 	local def = minetest.registered_nodes[ node_name ];	
 	if( def and def.walkable == true and def.is_ground_content == true) then
 		-- store information about this node type for later use
-		mg_villages.node_is_ground[ ci ] = 1;
+		mg_villages.node_is_ground[ ci ] = true;
 		return true;
 	end
 end
@@ -96,6 +105,7 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 	local c_jtree = minetest.get_content_id( 'default:jungletree');
 	local c_jsapling = minetest.get_content_id( 'default:junglesapling');
 	local c_water = minetest.get_content_id( 'default:water_source'); -- PM ^
+	local c_stone_with_coal = minetest.get_content_id( 'default:stone_with_coal');
 
 
 
@@ -105,48 +115,72 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
 			if( village_area[ x ][ z ][ 2 ] > 0 and data[a:index(x,village.vh,z)] ~= c_ignore) then -- inside a village
 --			if( mg_villages.inside_village(x, z, village, village_noise)) then
-				local buffer = {};
-				local buffer_param2 = {};
-				local buffer_index  = 0;
+				local surface_node  = nil;
 				local has_snow      = false;
 				y = maxp.y;
-				while( y > minp.y ) do
+				while( y > minp.y) do
 					local ci = data[a:index(x, y, z)];
 					if(     ci == c_snow ) then
 						has_snow = true;
-					elseif( ci ~= c_air and ci ~= c_ignore and buffer_index == 0) then
-						if( mg_villages.check_if_ground( ci ) == true) then
-							-- from now on, save the nodes below
-							buffer_index = 1;
-						end
-					end
-					-- save found nodes for later use
-					if( buffer_index > 0 ) then
-						buffer[        buffer_index ] = ci;
-						buffer_param2[ buffer_index ] = param2_data[a:index(x, y, z)];
-						buffer_index = buffer_index + 1;
+					elseif( not( surface_node) and ci ~= c_air and ci ~= c_ignore and mg_villages.check_if_ground( ci ) == true) then
+						-- we have found a surface of some kind
+						surface_node = ci;
 					end
 					-- make sure there is air for the village
-					if( y > village.vh and ci ~= c_ignore and ci ~= c_air ) then
+					if( y > village.vh ) then
 						data[a:index( x, y, z)] = c_air;
+					-- abort search once we've reached village ground level and found a surface node
+					elseif( y <= village.vh and surface_node ) then
+						y = minp.y - 1;
 					end
 					y = y-1;
 				end
-					
-				-- apply the data found in the buffer
-				for i,v in ipairs( buffer ) do
-					if( village.vh - i + 1 >= minp.y and i==1) then
-						if( i==1 and buffer[i]==c_dirt ) then
-							buffer[i] = c_dirt_with_grass;
-						end
-						data[       a:index( x, village.vh - i +1, z)] = buffer[        i ];
-						param2_data[a:index( x, village.vh - i +1, z)] = buffer_param2[ i ];
-					end
+
+				if( not( surface_node ) or surface_node == c_dirt) then
+					surface_node = c_dirt_with_grass;
 				end
+				local below_1 = c_dirt;
+				local below_2 = c_stone;
+				if(     surface_node == c_desert_sand ) then
+					below_1 = c_desert_sand;
+					below_2 = c_desert_stone;
+				elseif( surface_node == c_sand ) then
+					below_1 = c_sand;
+					below_2 = c_stone;
+				else
+					below_1 = c_dirt;
+					below_2 = c_stone;
+				end
+				
 				if( has_snow ) then
 					data[       a:index( x, village.vh+1, z)] = c_snow;
 				end
-			elseif n_village <= 160 then -- PM v
+				data[               a:index( x, village.vh,   z)] = surface_node;
+				if( village.vh-1 >= minp.y ) then
+					data[       a:index( x, village.vh-1, z)] = below_1;
+				end
+
+				-- not every column will get a coal block; some may get two
+				local coal_height1 = math.random( minp.y, maxp.y );
+				local coal_height2 = math.random( minp.y, maxp.y );
+				y = village.vh-2;
+				while( y > minp.y and y > village.vh-40 ) do
+					local old_node = data[a:index( x, y, z)];
+					-- abort as soon as we hit anything other than air
+					if( old_node == c_air or old_node == c_water ) then
+						-- the occasional coal makes large stone cliffs slightly less boring
+						if( y == coal_height1 or y == coal_height2 ) then
+							data[a:index( x, y, z )] = c_stone_with_coal;
+						else
+							data[a:index( x, y, z)] = below_2;
+						end
+						y = y-1;
+					else
+						y = minp.y - 1;
+					end
+				end
+
+			elseif (mg_villages.ENABLE_TERRAIN_BLEND and n_village <= 160) then -- PM v
 				local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
 				local ysurf = 1 -- y of surface
 				local surfnod -- surface node id
@@ -186,13 +220,22 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 				if yblend > 3 and surfnod == c_sand then -- no beach above y = 3
 					surfnod = c_dirt_with_grass
 				end
-				for y = ysurf, yblend - 2, -1 do
+				local step = -1;
+				if( ysurf < yblend - 2 ) then
+					step = 1;
+					-- better blending for the farming land
+					yblend = yblend + 1;
+				end
+				-- this loop only does something if ysurf > village.vh
+				for y = ysurf, yblend + (2*step), step do
 					local vi = a:index(x, y, z)
 					if y == yblend + 1 then -- plant saplngs to replace trees
 						if tree then
 							data[vi] = c_sapling
 						elseif jtree then
 							data[vi] = c_jsapling
+						elseif y < 0 then
+							data[vi] = c_water
 						else
 							data[vi] = c_air
 						end
@@ -203,7 +246,18 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 							data[vi] = c_air
 						end
 					else
-						data[vi] = surfnod
+						-- when raising terrain, two nodes will remain the surface node type
+						if(     step == 1 and y < yblend-1 ) then
+							if(     surfnod == c_desert_sand ) then
+								data[vi] = c_desert_stone;
+							else 
+								data[vi] = c_stone;
+							end
+						elseif( step == 1 and y == yblend and surfnod == c_dirt ) then
+							data[vi] = c_dirt_with_grass;
+						else
+							data[vi] = surfnod
+						end
 						if surfnod == c_dirt_with_grass then
 							surfnod = c_dirt
 						end
@@ -639,16 +693,17 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	local tmin = emin;
 	local tmax = emax;
 	-- if set to true, cavegen eating through houses and mudflow on roofs will NOT be repaired
-	if( false ) then
+	if( not( mg_villages.UNDO_CAVEGEN_AND_MUDFLOW )) then
 		tmin = minp;
 		tmax = maxp;
 	end
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
-	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a );
+--TODO	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a );
 	-- change height of those villages where an optimal_height could be determined
 	for _,village in ipairs(villages) do
+village.optimal_height = village.vh; -- TODO
 		if( village.optimal_height and village.optimal_height >= 0 and village.optimal_height ~= village.vh ) then
 			mg_villages.change_village_height( village, village.optimal_height );
 		end

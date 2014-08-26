@@ -19,6 +19,11 @@ mg_villages.FIRST_ROADSIZE = 5
 mg_villages.BIG_ROAD_CHANCE = 50]]
 
 
+-- if set to false, villages will not be integrated into the terrain - which looks very bad
+mg_villages.ENABLE_TERRAIN_BLEND = true;
+-- if set to false, holes digged by cavegen and mudflow inside the village will not be repaired; houses will be destroyed
+mg_villages.UNDO_CAVEGEN_AND_MUDFLOW = true;
+
 -- on average, every n.th node may be one of these trees - and it will be a relatively dense packed forrest
 mg_villages.sapling_probability = {};
 
