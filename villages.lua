@@ -338,11 +338,37 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 		rxmax = rx + roadsize - 1
 		rzmin = math.min(rzz, mz)
 		rzmax = math.max(rzz, mz)
+		-- prolong the main road to the borders of the village
+		if( mg_villages.road_nr == 1 ) then	
+			while( mg_villages.inside_village_area(rxmin, rzmin, village, vnoise)) do
+				rzmin = rzmin-1;
+				rzmax = rzmax+1;
+			end
+			rzmin = rzmin-1;
+			rzmax = rzmax+1;
+			while( mg_villages.inside_village_area(rxmax, rzmax, village, vnoise)) do
+				rzmax = rzmax+1;
+			end
+			rzmax = rzmax+1;
+		end
 	else
 		rzmin = rz - roadsize + 1
 		rzmax = rz + roadsize - 1
 		rxmin = math.min(rxx, mx)
 		rxmax = math.max(rxx, mx)
+		-- prolong the main road to the borders of the village
+		if( mg_villages.road_nr == 1 ) then	
+			while( mg_villages.inside_village_area(rxmin, rzmin, village, vnoise)) do
+				rxmin = rxmin-1;
+				rxmax = rxmax+1;
+			end
+			rxmin = rxmin-1;
+			rxmax = rxmax+1;
+			while( mg_villages.inside_village_area(rxmax, rzmax, village, vnoise)) do
+				rxmax = rxmax+1;
+			end
+			rxmax = rxmax+1;
+		end
 	end
 	l[#l+1] = {x = rxmin, y = vh, z = rzmin, btype = "road",
 		bsizex = rxmax - rxmin + 1, bsizez = rzmax - rzmin + 1, brotate = 0, road_nr = mg_villages.road_nr}
