@@ -441,7 +441,7 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		if( village.optimal_height ) then
 		-- villages above a size of 40 are *always* place at a convenient height of 1
 		elseif( village.vs >= 40 ) then
-			village.optimal_height = 1;
+			village.optimal_height = 2;
 		elseif( village.vs >= 30 ) then
 			village.optimal_height = 40 - village.vs;
 		elseif( village.vs >= 25 ) then
@@ -449,10 +449,10 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		
 		-- if no border height was found, there'd be no point in calculating anything;
 		-- also, this is done only if the village has its center inside this mapchunk	
-		elseif(  height_count[ village_nr ] > 0 
-		    and village.vx >= minp.x and village.vx <= maxp.x
---		    and village.vh >= minp.y and village.vh <= maxp.y  -- the height is what we're actually looking for here
-		    and village.vz >= minp.z and village.vz <= maxp.z ) then
+		elseif(  height_count[ village_nr ] > 0 ) then
+--		    and village.vx >= minp.x and village.vx <= maxp.x
+----		    and village.vh >= minp.y and village.vh <= maxp.y  -- the height is what we're actually looking for here
+--		    and village.vz >= minp.z and village.vz <= maxp.z ) then
 
 			local ideal_height = math.floor( height_sum[ village_nr ] / height_count[ village_nr ]);
 print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
@@ -694,10 +694,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
---TODO	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
+	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	-- change height of those villages where an optimal_height could be determined
 	for _,village in ipairs(villages) do
-village.optimal_height = village.vh; -- TODO
 		if( village.optimal_height and village.optimal_height >= 0 and village.optimal_height ~= village.vh ) then
 			mg_villages.change_village_height( village, village.optimal_height );
 		end
