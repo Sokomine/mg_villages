@@ -144,6 +144,14 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	elseif( surface_node == cid.c_sand ) then
 		below_1 = cid.c_sand;
 		below_2 = cid.c_stone;
+	elseif( cid.c_ethereal_clay_read
+	    and (surface_node == cid.c_ethereal_clay_red
+	      or surface_node == cid.c_ethereal_clay_orange)) then
+		below_1 = cid.c_ethereal_clay_orange;
+		below_2 = cid.c_ethereal_clay_orange;
+	elseif( surface_node == cid.c_sandstone ) then
+		below_1 = cid.c_sandstone;
+		below_2 = cid.c_sandstone;
 	else
 		below_1 = cid.c_dirt;
 		below_2 = cid.c_stone;
@@ -585,8 +593,13 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_jsapling = minetest.get_content_id( 'default:junglesapling');
 	cid.c_water = minetest.get_content_id( 'default:water_source'); -- PM ^
 	cid.c_stone_with_coal = minetest.get_content_id( 'default:stone_with_coal');
+	cid.c_sandstone       = minetest.get_content_id( 'default:sandstone');
 
 
+	if( minetest.get_modpath('ethereal')) then
+		cid.c_ethereal_clay_red    = minetest.get_content_id( 'bakedclay:red' );
+		cid.c_ethereal_clay_orange = minetest.get_content_id( 'bakedclay:orange' );
+	end
 	
 --[[
 	local centered_here = 0;

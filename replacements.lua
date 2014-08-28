@@ -40,7 +40,15 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 		
 	if( wood_found and mg_villages.ethereal_trees ) then
 		for _,v in ipairs( mg_villages.ethereal_trees ) do
-			if( minetest.registered_nodes[ "ethereal:"..v.."_wood"] ) then
+			-- mushroom in ethereal is a pretty decorative material; increase its probability
+			if( v == 'mushroom' ) then
+				table.insert( known_materials, "ethereal:mushroom_pore" );
+				table.insert( known_materials, "ethereal:mushroom_pore" );
+				table.insert( known_materials, "ethereal:mushroom_pore" );
+				-- also increase probability for the decorative blueish wood
+				table.insert( known_materials, "ethereal:frost_wood" );
+				table.insert( known_materials, "ethereal:frost_wood" );
+			elseif( minetest.registered_nodes[ "ethereal:"..v.."_wood"] ) then
 				table.insert( known_materials, "ethereal:"..v.."_wood" );
 			end	
 		end
@@ -77,6 +85,9 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 
 	elseif( wood_type == 'ethereal:frost_wood' ) then
 		table.insert( replacements, {'default:tree', "ethereal:frost_tree"});
+
+	elseif( wood_type == "ethereal:mushroom_pore" ) then
+		table.insert( replacements, {'default:tree', "ethereal:mushroom_trunk"});
 
 	elseif( mg_villages.ethereal_trees ) then
 		for _,v in ipairs( mg_villages.ethereal_trees ) do
