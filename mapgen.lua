@@ -171,9 +171,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	
 	if( has_snow ) then
 		data[       a:index( x, target_height+1, z)] = cid.c_snow;
-	elseif tree then
+	elseif( tree  and not( mg_villages.ethereal_trees )) then
 		data[       a:index( x, target_height+1, z)] = cid.c_sapling
-	elseif jtree then
+	elseif( jtree and not( mg_villages.ethereal_trees )) then
 		data[       a:index( x, target_height+1, z)] = cid.c_jsapling
 	end
 	data[               a:index( x, target_height,   z)] = surface_node;

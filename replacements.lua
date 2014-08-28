@@ -1,4 +1,8 @@
 
+-- ethereal comes with some intresting trees
+if( minetest.get_modpath( 'ethereal' )) then
+	mg_villages.ethereal_trees = {'willow','redwood','frost','mushroom','yellow','palm','banana'};
+end
 
 -- only the function mg_villages.get_replacement_table(..) is called from outside this file
 
@@ -34,6 +38,14 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 		end
 	end
 		
+	if( wood_found and mg_villages.ethereal_trees ) then
+		for _,v in ipairs( mg_villages.ethereal_trees ) do
+			if( minetest.registered_nodes[ "ethereal:"..v.."_wood"] ) then
+				table.insert( known_materials, "ethereal:"..v.."_wood" );
+			end	
+		end
+	end
+
 	local new_material  = known_materials[ pr:next( 1, #known_materials )]; 
 
 	-- no replacement necessary if we did choose the same material as before
@@ -55,10 +67,21 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 		table.insert( replacements, {'default:tree',  'mg:savannatree'});
 	elseif( wood_type == 'mg:pinewood' ) then
 		table.insert( replacements, {'default:tree',  'mg:pinetree'});
+
  	elseif( moretrees and moretrees.treelist ) then
 		for _,v in ipairs( moretrees.treelist ) do
 			if( wood_type == "moretrees:"..v[1].."_planks" ) then
 				table.insert( replacements, {'default:tree', "moretrees:"..v[1].."_trunk"});
+			end
+		end
+
+	elseif( wood_type == 'ethereal:frost_wood' ) then
+		table.insert( replacements, {'default:tree', "ethereal:frost_tree"});
+
+	elseif( mg_villages.ethereal_trees ) then
+		for _,v in ipairs( mg_villages.ethereal_trees ) do
+			if( wood_type == "ethereal:"..v.."_wood" ) then
+				table.insert( replacements, {'default:tree', "ethereal:"..v.."_trunk"});
 			end
 		end
 	else
@@ -81,6 +104,12 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 		for _,v in ipairs( moretrees.treelist ) do
 			if( wood_type == "moretrees:"..v[1].."_planks" ) then
 				table.insert( replacements, {'default:sapling', "moretrees:"..v[1].."_sapling_ongen"});
+			end
+		end
+ 	elseif( mg_villages.ethereal_trees ) then
+		for _,v in ipairs( mg_villages.ethereal_trees ) do
+			if( wood_type == "moretrees:"..v.."_wood" ) then
+				table.insert( replacements, {'default:sapling', "moretrees:"..v.."_tree_sapling"});
 			end
 		end
 	end
