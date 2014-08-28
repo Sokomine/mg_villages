@@ -66,7 +66,8 @@ mg_villages.check_if_ground = function( ci )
 
 	-- pre-generate a list of no-ground-nodes for caching
 	if( #mg_villages.node_is_ground < 1 ) then
-		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood'};
+		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
+			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo'};
 		for _,name in ipairs( no_ground_nodes ) do
 			mg_villages.node_is_ground[ minetest.get_content_id( name )] = false;
 		end
@@ -75,24 +76,32 @@ mg_villages.check_if_ground = function( ci )
 	if( not( ci )) then
 		return false;
 	end
-	if( mg_villages.node_is_ground[ ci ]) then
-		return true;
+	if( mg_villages.node_is_ground[ ci ] ~= nil) then
+		return mg_villages.node_is_ground[ ci ];
 	end
 	-- analyze the node
 	-- only nodes on which walking is possible may be counted as ground
 	local node_name = minetest.get_name_from_content_id( ci );
 	local def = minetest.registered_nodes[ node_name ];	
-	if( def and def.walkable == true and def.is_ground_content == true) then
-		-- store information about this node type for later use
+	-- store information about this node type for later use
+	if(     not( def )) then
+		mg_villages.node_is_ground[ ci ] = false;
+	elseif( def.groups and def.groups.tree) then
+		mg_villages.node_is_ground[ ci ] = false;
+	elseif(	def.drop   and def.drop == 'default:dirt') then
 		mg_villages.node_is_ground[ ci ] = true;
-		return true;
+	elseif( def.walkable == true and def.is_ground_content == true ) then
+		mg_villages.node_is_ground[ ci ] = true;
+	else
+		mg_villages.node_is_ground[ ci ] = false;
 	end
+	return mg_villages.node_is_ground[ ci ];
 end
 
 
 -- sets evrything at x,z and above height target_height to air;
 -- the area below gets filled up in a suitable way (i.e. dirt with grss - dirt - stone)
-mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid )
+mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, village_noise, vh, n_village )
 
 	local surface_node  = nil;
 	local has_snow      = false;
@@ -139,9 +148,32 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		below_1 = cid.c_dirt;
 		below_2 = cid.c_stone;
 	end
+
+	if( target_height == maxp.y ) then
+		local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
+		local yblend = old_height;
+		local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
+		if n_rawnoise > 0 then -- leave some cliffs unblended
+			yblend = math.floor(vh + blend * (old_height - vh))
+			target_height = yblend+1;
+		else	
+			target_height = old_height;
+		end
+		for y = yblend, maxp.y do
+			if( y<=1 ) then
+				data[a:index( x, y, z)] = cid.c_water;
+			else
+				data[a:index( x, y, z)] = cid.c_air;
+			end
+		end
+	end
 	
 	if( has_snow ) then
 		data[       a:index( x, target_height+1, z)] = cid.c_snow;
+	elseif tree then
+		data[       a:index( x, target_height+1, z)] = cid.c_sapling
+	elseif jtree then
+		data[       a:index( x, target_height+1, z)] = cid.c_jsapling
 	end
 	data[               a:index( x, target_height,   z)] = surface_node;
 	if( target_height-1 >= minp.y ) then
@@ -177,10 +209,11 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 		for _, village in ipairs(villages) do
 			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
 			if( village_area[ x ][ z ][ 2 ] > 0 and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then -- inside a village
-				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid );
+				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village );
 
 			elseif (mg_villages.ENABLE_TERRAIN_BLEND and n_village <= 160) then -- PM v
-				local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
+				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village );
+--[[
 				local ysurf = 1 -- y of surface
 				local surfnod -- surface node id
 				local tree = false -- bools for replanting trees as saplings
@@ -213,6 +246,7 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 
 				local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
 				local yblend = ysurf
+				local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
 				if n_rawnoise > 0 then -- leave some cliffs unblended
 					yblend = math.floor(village.vh + blend * (ysurf - village.vh))
 				end
@@ -262,6 +296,7 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 						end
 					end
 				end
+--]]
 			end -- PM ^
 		end
 	end
@@ -443,9 +478,9 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		elseif( village.vs >= 40 ) then
 			village.optimal_height = 2;
 		elseif( village.vs >= 30 ) then
-			village.optimal_height = 40 - village.vs;
+			village.optimal_height = 41 - village.vs;
 		elseif( village.vs >= 25 ) then
-			village.optimal_height = 35 - village.vs;
+			village.optimal_height = 36 - village.vs;
 		
 		-- if no border height was found, there'd be no point in calculating anything;
 		-- also, this is done only if the village has its center inside this mapchunk	
