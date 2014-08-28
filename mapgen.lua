@@ -149,6 +149,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		below_2 = cid.c_stone;
 	end
 
+	-- do terrain blending; target_height has to be calculated based on old_height
 	if( target_height == maxp.y ) then
 		local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
 		local yblend = old_height;
@@ -213,90 +214,6 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 
 			elseif (mg_villages.ENABLE_TERRAIN_BLEND and n_village <= 160) then -- PM v
 				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village );
---[[
-				local ysurf = 1 -- y of surface
-				local surfnod -- surface node id
-				local tree = false -- bools for replanting trees as saplings
-				local jcount = 0 -- count jungle trunks to avoid planting saplings where roots were
-				local jtree = false
-				for y = maxp.y, minp.y, -1 do -- detect ground and trees, remove trees
-					local vi = a:index(x, y, z)
-					local nodid = data[vi]
-					if nodid == cid.c_tree then
-						tree = true
-					elseif nodid == cid.c_jtree then
-						jcount = jcount + 1
-					end
-					if nodid == cid.c_dirt -- if ground detected
-					or nodid == cid.c_dirt_with_grass
-					or nodid == cid.c_stone
-					or nodid == cid.c_desert_sand
-					or nodid == cid.c_desert_stone
-					or nodid == cid.c_sand then
-						ysurf = y
-						surfnod = nodid
-						break
-					elseif y > 1 then
-						data[vi] = cid.c_air -- remove trees but not water
-					end
-				end
-				if jcount > 1 then -- if jungle trunk detected
-					jtree = true
-				end
-
-				local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
-				local yblend = ysurf
-				local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
-				if n_rawnoise > 0 then -- leave some cliffs unblended
-					yblend = math.floor(village.vh + blend * (ysurf - village.vh))
-				end
-				if yblend > 3 and surfnod == cid.c_sand then -- no beach above y = 3
-					surfnod = cid.c_dirt_with_grass
-				end
-				local step = -1;
-				if( ysurf < yblend - 2 ) then
-					step = 1;
-					-- better blending for the farming land
-					yblend = yblend + 1;
-				end
-				-- this loop only does something if ysurf > village.vh
-				for y = ysurf, yblend + (2*step), step do
-					local vi = a:index(x, y, z)
-					if y == yblend + 1 then -- plant saplngs to replace trees
-						if tree then
-							data[vi] = cid.c_sapling
-						elseif jtree then
-							data[vi] = cid.c_jsapling
-						elseif y < 0 then
-							data[vi] = cid.c_water
-						else
-							data[vi] = cid.c_air
-						end
-					elseif y > yblend then
-						if y <= 1 then
-							data[vi] = cid.c_water
-						else
-							data[vi] = cid.c_air
-						end
-					else
-						-- when raising terrain, two nodes will remain the surface node type
-						if(     step == 1 and y < yblend-1 ) then
-							if(     surfnod == cid.c_desert_sand ) then
-								data[vi] = cid.c_desert_stone;
-							else 
-								data[vi] = cid.c_stone;
-							end
-						elseif( step == 1 and y == yblend and surfnod == cid.c_dirt ) then
-							data[vi] = cid.c_dirt_with_grass;
-						else
-							data[vi] = surfnod
-						end
-						if surfnod == cid.c_dirt_with_grass then
-							surfnod = cid.c_dirt
-						end
-					end
-				end
---]]
 			end -- PM ^
 		end
 	end
