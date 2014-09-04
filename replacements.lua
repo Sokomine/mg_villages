@@ -150,7 +150,11 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		{'default:wood', 'default:junglewood', 'mg:pinewood', 'mg:savannawood',
 		'default:clay', 'default:brick', 'default:sandstone', 
 		'default:stonebrick', 'default:desert_stonebrick','default:sandstonebrick', 'default:sandstone','default:stone','default:desert_stone',
-		'default:coalblock','default:steelblock','default:goldblock', 'default:bronzeblock', 'default:copperblock', 'wool:white'},
+		'default:coalblock','default:steelblock','default:goldblock', 'default:bronzeblock', 'default:copperblock', 'wool:white',
+		'darkage:adobe', 'darkage:basalt', 'darkage:basalt_cobble', 'darkage:chalk',
+		'darkage:gneiss', 'darkage:gneiss_cobble', 'darkage:marble', 'darkage:marble_tile',
+		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble',
+		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate'},
 		'default:wood');
       -- tree trunks are seldom used in these houses; let's change them anyway
       mg_villages.replace_tree_trunk( replacements, wood_type );
@@ -375,7 +379,14 @@ mg_villages.get_replacement_list = function( housetype, pr )
 
    -- some poor cottage owners cannot afford glass
    if( pr:next( 1, 2 ) == 2 ) then
-      table.insert( replacements, {'cottages:glass_pane',    'default:fence_wood'});
+--      table.insert( replacements, {'cottages:glass_pane',    'default:fence_wood'});
+      local gp = mg_villages.replace_materials( replacements, pr,
+	{'cottages:glass_pane'},
+	{''},
+	{'xpanes:pane', 'default:glass', 'default:obsidian_glass', 'default:fence_wood',
+	 'darkage:medieval_glass', 'darkage:iron_bars', 'darkage:iron_grille', 'darkage:wood_bars',
+	 'darkage:wood_frame', 'darkage:wood_grille'},
+	'cottages:glass_pane');
    end
 
    -- 'glass' is admittedly debatable; yet it may represent modernized old houses where only the tree-part was left standing
@@ -386,7 +397,13 @@ mg_villages.get_replacement_list = function( housetype, pr )
                       'default:desert_stone','default:brick','default:cobble','default:stonebrick',
                       'default:desert_stonebrick','default:sandstonebrick','default:stone',
                       'mg:savannawood', 'mg:savannawood', 'mg:savannawood', 'mg:savannawood',
-                      'mg:pinewood',    'mg:pinewood',    'mg:pinewood',    'mg:pinewood' };
+                      'mg:pinewood',    'mg:pinewood',    'mg:pinewood',    'mg:pinewood',
+		'darkage:adobe', 'darkage:basalt', 'darkage:basalt_cobble', 'darkage:chalk',
+		'darkage:gneiss', 'darkage:gneiss_cobble', 'darkage:marble', 'darkage:marble_tile',
+		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble', 'darkage:reinforced_chalk',
+		'darkage:reinforced_wood', 'darkage:reinforced_wood_left', 'darkage:reinforced_wood_right',
+		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate',
+		'darkage:slate_cobble', 'darkage:slate_tile', 'darkage:stone_brick' };
 
    -- what is sandstone (the floor) may be turned into something else
    local mfs = mg_villages.replace_materials( replacements, pr,
