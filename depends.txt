@@ -10,3 +10,4 @@ cavestuff?
 moresnow?
 ethereal?
 darkage?
+deco?

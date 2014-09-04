@@ -37,6 +37,15 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 			end	
 		end
 	end
+
+	if( wood_found and minetest.get_modpath('deco')) then
+		local bfd_treelist = {'birch', 'cherry', 'evergreen', 'oak' };
+		for _,v in ipairs( bfd_treelist ) do
+			if( minetest.registered_nodes[ "deco:"..v.."_plank"] ) then
+				table.insert( known_materials, "deco:"..v.."_plank" );
+			end	
+		end
+	end
 		
 	if( wood_found and mg_villages.ethereal_trees ) then
 		for _,v in ipairs( mg_villages.ethereal_trees ) do
@@ -83,6 +92,15 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 			end
 		end
 
+	elseif( wood_type == 'deco:birch_plank' ) then
+		table.insert( replacements, {'default:tree', "mapgen:birch_log"});
+	elseif( wood_type == 'deco:cherry_plank' ) then
+		table.insert( replacements, {'default:tree', "mapgen:cherry_log"});
+	elseif( wood_type == 'deco:evergreen_plank' ) then
+		table.insert( replacements, {'default:tree', "mapgen:evergreen_log"});
+	elseif( wood_type == 'deco:oak_plank' ) then
+		table.insert( replacements, {'default:tree', "mapgen:oak_log"});
+
 	elseif( wood_type == 'ethereal:frost_wood' ) then
 		table.insert( replacements, {'default:tree', "ethereal:frost_tree"});
 
@@ -123,6 +141,15 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 				table.insert( replacements, {'default:sapling', "moretrees:"..v.."_tree_sapling"});
 			end
 		end
+
+	elseif( wood_type == 'deco:birch_plank' ) then
+		table.insert( replacements, {'default:sapling', "mapgen:birch_sapling"});
+	elseif( wood_type == 'deco:cherry_plank' ) then
+		table.insert( replacements, {'default:sapling', "mapgen:cherry_sapling"});
+	elseif( wood_type == 'deco:evergreen_plank' ) then
+		table.insert( replacements, {'default:sapling', "mapgen:evergreen_sapling"});
+	elseif( wood_type == 'deco:oak_plank' ) then
+		table.insert( replacements, {'default:sapling', "mapgen:oak_sapling"});
 	end
 end
 
@@ -154,7 +181,8 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'darkage:adobe', 'darkage:basalt', 'darkage:basalt_cobble', 'darkage:chalk',
 		'darkage:gneiss', 'darkage:gneiss_cobble', 'darkage:marble', 'darkage:marble_tile',
 		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble',
-		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate'},
+		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate',
+		'mapgen:mese_stone', 'mapgen:soap_stone'},
 		'default:wood');
       -- tree trunks are seldom used in these houses; let's change them anyway
       mg_villages.replace_tree_trunk( replacements, wood_type );
@@ -403,7 +431,8 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble', 'darkage:reinforced_chalk',
 		'darkage:reinforced_wood', 'darkage:reinforced_wood_left', 'darkage:reinforced_wood_right',
 		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate',
-		'darkage:slate_cobble', 'darkage:slate_tile', 'darkage:stone_brick' };
+		'darkage:slate_cobble', 'darkage:slate_tile', 'darkage:stone_brick',
+		'mapgen:mese_stone', 'mapgen:soap_stone'};
 
    -- what is sandstone (the floor) may be turned into something else
    local mfs = mg_villages.replace_materials( replacements, pr,
@@ -468,7 +497,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
    if( mcs ~= 'mossycobble' and mcs ~= 'cobble') then
 
       -- if no slab exists, use sandstone slabs
-      if( not( minetest.registered_nodes[ 'stairs:slab_'..mcs ])) then
+      if( not( mcs ) or not( minetest.registered_nodes[ 'stairs:slab_'..mcs ])) then
          mcs = 'sandstone';
       end
       table.insert( replacements, {'stairs:slab_cobble',      'stairs:slab_'..mcs});

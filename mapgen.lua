@@ -509,10 +509,10 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 
 				local pos = {x=x, y=h+1, z=z};
 				-- a normal tree; sometimes comes with apples
-				if(     plant_id == cid.c_sapling ) then
+				if(     plant_id == cid.c_sapling and default.grow_tree ) then
 					default.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
 				-- a normal jungletree
-				elseif( plant_id == cid.c_jsapling ) then
+				elseif( plant_id == cid.c_jsapling and default.grow_jungletree ) then
 					default.grow_jungletree( data, a, pos, math.random(1,100000))
 				-- a savannatree from the mg mod
 				elseif( plant_id == cid.c_savannasapling and add_savannatree) then
