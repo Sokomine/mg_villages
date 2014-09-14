@@ -122,6 +122,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 			-- we have found a surface of some kind
 			surface_node = ci;
 			old_height   = y;
+			if( surface_node == cid.c_dirt_with_snow ) then
+				has_snow = true;
+			end
 		end
 		-- make sure there is air for the village
 		if( y > target_height ) then
@@ -133,6 +136,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		y = y-1;
 	end
 
+	if( not( surface_node ) and old_height == maxp.y and data[a:index( x, minp.y, z)]==c_air) then
+		old_height = vh - 2;	
+	end
 	if( not( surface_node ) or surface_node == cid.c_dirt) then
 		surface_node = cid.c_dirt_with_grass;
 	end
@@ -583,6 +589,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_stone  = minetest.get_content_id( 'default:stone');
 	cid.c_dirt   = minetest.get_content_id( 'default:dirt');
 	cid.c_snow   = minetest.get_content_id( 'default:snow');
+	cid.c_dirt_with_snow  = minetest.get_content_id( 'default:dirt_with_snow' );
 	cid.c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 	cid.c_desert_sand = minetest.get_content_id( 'default:desert_sand' ); -- PM v
 	cid.c_desert_stone  = minetest.get_content_id( 'default:desert_stone');
