@@ -106,7 +106,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	local surface_node  = nil;
 	local has_snow      = false;
 	local tree          = false;
-	local jree          = false;
+	local jtree         = false;
 	local old_height    = maxp.y;
 	y = maxp.y;
 	-- search for a surface and set everything above target_height to air
