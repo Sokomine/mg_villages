@@ -13,11 +13,11 @@ handle_schematics.analyze_mts_file = function( path )
 	if (file == nil) then
 		return nil
 	end
-print('[mg_villages] Analyzing .mts file '..tostring( path..'.mts' ));
-if( not( string.byte )) then
-	print( '[mg_villages] Error: string.byte undefined.');
-	return nil;
-end
+--print('[mg_villages] Analyzing .mts file '..tostring( path..'.mts' ));
+--if( not( string.byte )) then
+--	print( '[mg_villages] Error: string.byte undefined.');
+--	return nil;
+--end
 
 	-- thanks to sfan5 for this advanced code that reads the size from schematic files
 	local read_s16 = function(fi)
