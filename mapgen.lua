@@ -184,7 +184,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		end
 	end
 	
-	if( has_snow ) then
+	if( target_height < 1 ) then
+		-- no trees or snow below water level
+	elseif( has_snow ) then
 		data[       a:index( x, target_height+1, z)] = cid.c_snow;
 	elseif( tree  and not( mg_villages.ethereal_trees ) and treepos) then
 		data[       a:index( x, target_height+1, z)] = cid.c_sapling
