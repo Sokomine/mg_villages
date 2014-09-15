@@ -545,6 +545,8 @@ mg_villages.get_replacement_table = function( housetype, pr, replacements )
 	if( not( replacements )) then
 		replacements = mg_villages.get_replacement_list( housetype, pr );
 	end
+	-- it is very problematic if the torches on houses melt snow and cause flooding; thus, we use a torch that is not hot
+	table.insert( replacements, {'default:torch', 'mg_villages:torch'});
 	for i,v in ipairs( replacements ) do
 		if( v and #v == 2 ) then
 			rtable[ v[1] ] = v[2];
