@@ -143,6 +143,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	if( not( surface_node ) or surface_node == cid.c_dirt) then
 		surface_node = cid.c_dirt_with_grass;
 	end
+	if( has_snow and surface_node == cid.c_dirt_with_grass and target_height > 1) then
+		surface_node = cid.c_dirt_with_snow;
+	end
 	local below_1 = cid.c_dirt;
 	local below_2 = cid.c_stone;
 	if(     surface_node == cid.c_desert_sand ) then
@@ -291,6 +294,13 @@ mg_villages.repair_outer_shell = function( villages, village_noise, minp, maxp, 
 				local ci = data[a:index(x, y, z)];
 				if( ci ~= cid.c_ignore and (ci==cid.c_dirt or ci==cid.c_dirt_with_grass or ci==cid.c_sand or ci==cid.c_desert_sand)) then
 					data[a:index(x,y,z)] = cid.c_air;
+				-- if there was a moresnow cover, add a snow on top of the new floor node
+				elseif( moresnow and (ci==cid.c_msnow_1 or ci==cid.c_msnow_2 or ci==cid.c_msnow_3 or ci==cid.c_msnow_4 or
+					              ci==cid.c_msnow_5 or ci==cid.c_msnow_6 or ci==cid.c_msnow_7 or ci==cid.c_msnow_8 or
+					              ci==cid.c_msnow_9 or ci==cid.c_msnow_10 or ci==cid.c_msnow_11)) then
+					data[a:index(x, village.vh+1, z)] = cid.c_snow;
+					data[a:index(x, village.vh,   z)] = cid.c_dirt_with_snow;
+
 				end
 				y = y+1;
 			end
@@ -617,6 +627,18 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_water = minetest.get_content_id( 'default:water_source'); -- PM ^
 	cid.c_stone_with_coal = minetest.get_content_id( 'default:stone_with_coal');
 	cid.c_sandstone       = minetest.get_content_id( 'default:sandstone');
+
+	cid.c_msnow_1  = minetest.get_content_id( 'moresnow:snow_top' );
+	cid.c_msnow_2  = minetest.get_content_id( 'moresnow:snow_fence_top');
+	cid.c_msnow_3  = minetest.get_content_id( 'moresnow:snow_stair_top');
+	cid.c_msnow_4  = minetest.get_content_id( 'moresnow:snow_slab_top');
+	cid.c_msnow_5  = minetest.get_content_id( 'moresnow:snow_panel_top');
+	cid.c_msnow_6  = minetest.get_content_id( 'moresnow:snow_micro_top');
+	cid.c_msnow_7  = minetest.get_content_id( 'moresnow:snow_outer_stair_top');
+	cid.c_msnow_8  = minetest.get_content_id( 'moresnow:snow_inner_stair_top');
+	cid.c_msnow_9  = minetest.get_content_id( 'moresnow:snow_ramp_top');	
+	cid.c_msnow_10 = minetest.get_content_id( 'moresnow:snow_ramp_outer_top');
+	cid.c_msnow_11 = minetest.get_content_id( 'moresnow:snow_ramp_inner_top');
 
 
 	if( minetest.get_modpath('ethereal')) then
