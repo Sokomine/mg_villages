@@ -101,7 +101,7 @@ end
 
 -- sets evrything at x,z and above height target_height to air;
 -- the area below gets filled up in a suitable way (i.e. dirt with grss - dirt - stone)
-mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, village_noise, vh, n_village )
+mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, village_noise, vh, n_village, treepos )
 
 	local surface_node  = nil;
 	local has_snow      = false;
@@ -116,7 +116,8 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 			has_snow = true;
 		elseif( ci == cid.c_tree ) then
 			tree  = true;
-		elseif( ci == cid.c_jtree ) then
+		-- no jungletrees for branches
+		elseif( ci == cid.c_jtree and data[a:index( x, y-1, z)]==cid.c_jtree) then
 			jtree = true;
 		elseif( not( surface_node) and ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) then
 			-- we have found a surface of some kind
@@ -185,10 +186,12 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	
 	if( has_snow ) then
 		data[       a:index( x, target_height+1, z)] = cid.c_snow;
-	elseif( tree  and not( mg_villages.ethereal_trees )) then
+	elseif( tree  and not( mg_villages.ethereal_trees ) and treepos) then
 		data[       a:index( x, target_height+1, z)] = cid.c_sapling
-	elseif( jtree and not( mg_villages.ethereal_trees )) then
+		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=0});
+	elseif( jtree and not( mg_villages.ethereal_trees ) and treepos) then
 		data[       a:index( x, target_height+1, z)] = cid.c_jsapling
+		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=1});
 	end
 	data[               a:index( x, target_height,   z)] = surface_node;
 	if( target_height-1 >= minp.y ) then
@@ -219,19 +222,30 @@ end
 
 -- adjust the terrain level to the respective height of the village
 mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid )
+	local treepos = {};
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
-		for _, village in ipairs(villages) do
+		for village_nr, village in ipairs(villages) do
 			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
-			if( village_area[ x ][ z ][ 2 ] > 0 and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then -- inside a village
-				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village );
+			if( village_area[ x ][ z ][ 1 ] > 0 and village_area[ x ][ z ][ 1 ]==village_nr and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then -- inside a village
+				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village, nil   );
 
 			elseif (mg_villages.ENABLE_TERRAIN_BLEND and n_village <= 160) then -- PM v
-				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village );
+				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village,treepos);
 			end -- PM ^
 		end
 	end
 	end
+
+	-- grow normal trees and jungletrees in those parts of the terrain where height blending occours
+	for _, tree in ipairs(treepos) do
+		if( tree.typ == 0 and default and default.grow_tree) then
+			default.grow_tree(       data, a, {x=tree.x, y=tree.y, z=tree.z}, math.random(1, 4) == 1, math.random(1,100000))
+		elseif( default and default.grow_jungletree ) then
+			default.grow_jungletree( data, a, {x=tree.x, y=tree.y, z=tree.z}, math.random(1,100000))
+		end
+	end
+
 end
 
 
@@ -668,12 +682,13 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
 	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	-- change height of those villages where an optimal_height could be determined
+	local village_data_updated = false;
 	for _,village in ipairs(villages) do
 		if( village.optimal_height and village.optimal_height >= 0 and village.optimal_height ~= village.vh ) then
 			mg_villages.change_village_height( village, village.optimal_height );
+			village_data_updated = true;
 		end
 	end
-
 
 	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
@@ -757,8 +772,11 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			mg_villages.all_villages[ village_id ] = minetest.deserialize( minetest.serialize( village ));
 
 			print("Village No. "..tostring( count ).." of type \'"..tostring( village.village_type ).."\' of size "..tostring( village.vs ).." spawned at: x = "..village.vx..", z = "..village.vz)
-			save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
+			village_data_updated = true;
 		end
+	end
+	if( village_data_updated ) then
+		save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
 	end
 end
 
