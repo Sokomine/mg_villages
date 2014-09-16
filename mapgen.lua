@@ -295,7 +295,8 @@ mg_villages.repair_outer_shell = function( villages, village_noise, minp, maxp, 
 				if( ci ~= cid.c_ignore and (ci==cid.c_dirt or ci==cid.c_dirt_with_grass or ci==cid.c_sand or ci==cid.c_desert_sand)) then
 					data[a:index(x,y,z)] = cid.c_air;
 				-- if there was a moresnow cover, add a snow on top of the new floor node
-				elseif( moresnow and (ci==cid.c_msnow_1 or ci==cid.c_msnow_2 or ci==cid.c_msnow_3 or ci==cid.c_msnow_4 or
+				elseif( moresnow and ci ~= cid.c_ignore
+					         and (ci==cid.c_msnow_1 or ci==cid.c_msnow_2 or ci==cid.c_msnow_3 or ci==cid.c_msnow_4 or
 					              ci==cid.c_msnow_5 or ci==cid.c_msnow_6 or ci==cid.c_msnow_7 or ci==cid.c_msnow_8 or
 					              ci==cid.c_msnow_9 or ci==cid.c_msnow_10 or ci==cid.c_msnow_11)) then
 					data[a:index(x, village.vh+1, z)] = cid.c_snow;
@@ -529,7 +530,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				local on_soil  = false;
 				for _,v in ipairs( village.to_add_data.plantlist ) do
 					-- select the first plant that fits; if the node is not air, keep what is currently inside
-					if( plant_id==cid.c_air and (( v.p == 1 or pr:next( 1, v.p )==1 ))) then
+					if( (plant_id==cid.c_air or plant_id==cid.c_snow) and (( v.p == 1 or pr:next( 1, v.p )==1 ))) then
 						-- TODO: check if the plant grows on that soil
 						plant_id = v.id;
 						-- wheat and cotton require soil
@@ -554,10 +555,16 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 					add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
 	
 				-- grow wheat and cotton on normal wet soil (and re-plant if it had been removed by mudslide)
-				elseif( on_soil and (g==cid.c_dirt_with_grass or g==cid.c_soil_wet)) then	
+				elseif( on_soil and (g==cid.c_dirt_with_grass or g==cid.c_soil_wet or g==cid.c_dirt_with_snow)) then	
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = cid.c_soil_wet;
+
+					-- put a snow cover on plants where needed
+					if( g==cid.c_dirt_with_snow and moresnow ) then
+						data[a:index( x,  h+2, z)] = cid.c_msnow_1;
+					end
+				
 --[[
 					-- avoid water spills if the neighbour nodes are not part of the field
 					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
