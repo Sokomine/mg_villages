@@ -49,6 +49,11 @@ mg_villages.villages_in_mapchunk = function( minp )
 		local v_nr = 1;
 		for v_nr, village in ipairs(villages) do
 			local village_id = tostring( village.vx )..':'..tostring( village.vz );
+
+			if( not( village.name ) or village.name == '') then
+				village.name = 'unknown';
+			end
+
 			if( mg_villages.all_villages and mg_villages.all_villages[ village_id ]) then
 				villages[ v_nr ] = mg_villages.all_villages[ village_id ];
 				generate_new_villages = false;

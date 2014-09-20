@@ -993,6 +993,9 @@ mg_villages.generate_village = function(village, vnoise)
 	local seed = mg_villages.get_bseed({x=vx, z=vz})
 	local pr_village = PseudoRandom(seed)
 
+	-- generate a name for the village
+	village.name = namegen.generate_village_name( pr_village );
+
 	-- only generate a new village if the data is not already stored
 	-- (the algorithm is fast, but village types and houses which are available may change later on,
   	-- and that might easily cause chaos if the village is generated again with diffrent input)

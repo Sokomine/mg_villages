@@ -28,6 +28,9 @@ dofile(mg_villages.modpath.."/buildings.lua")
 -- replace some materials for entire villages randomly
 dofile(mg_villages.modpath.."/replacements.lua")
 
+-- generate village names
+dofile(mg_villages.modpath.."/name_gen.lua");
+
 dofile(mg_villages.modpath.."/villages.lua")
 
 -- adds a command that allows to teleport to a known village

@@ -41,7 +41,7 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 			formspec = formspec..
 				v.nr..','..
 				tostring( math.floor( dist ))..','..
-				tostring( k )..','..	-- TODO: use real village name
+				tostring( village.name or 'unknown' )..','..
 				v.village_type..','..
 				tostring( v.vx )..','..
 				tostring( v.vh )..','..
@@ -89,8 +89,7 @@ minetest.register_chatcommand( 'visit', {
 			-- we have found the village
 			if( v and v.nr == nr ) then
 
--- TODO: print village name here (once they got one...)
-				minetest.chat_send_player( name, "Initiating transfer to village no. "..tostring( v.nr )..", called "..( tostring( id ))..".");
+				minetest.chat_send_player( name, "Initiating transfer to village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown'))..".");
 				local player =  minetest.get_player_by_name( name );
 				player:moveto( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
 				return;

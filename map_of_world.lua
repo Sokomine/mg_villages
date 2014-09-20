@@ -117,7 +117,7 @@ mg_villages.map_of_world = function( pname )
 			formspec = formspec..
 				"label["..x..",".. z ..";"..tostring( data.nr ).."]"..mg_villages.draw_tile( nil,  mg_villages.village_sizes[ data.village_type ].texture, x, z, dx, dz );
 
-			shown_villages[ #shown_villages+1 ] = tostring( data.nr )..". "..tostring( name ).."]"; -- TODO: use real village name
+			shown_villages[ #shown_villages+1 ] = tostring( data.nr )..". "..tostring( v.name or 'unknown' ).."]"; 
 		end
 	end
 

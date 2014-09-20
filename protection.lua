@@ -30,8 +30,7 @@ minetest.register_on_protection_violation( function(pos, name)
 		minetest.chat_send_player( name, 'Error: This area does not belong to a village.');
 		return;
 	end
-	-- TODO: use real village name
-	minetest.chat_send_player( name, "You are inside of the area of village \'"..tostring( found ).."\'. The inhabitants do not allow you any modifications.");
+	minetest.chat_send_player( name, "You are inside of the area of the village "..tostring( mg_villages.all_villages[ found ].name )..". The inhabitants do not allow you any modifications.");
 end );
 
 -- TODO: add a limited griefing liscence/buying of houses or plots for players
