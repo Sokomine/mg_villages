@@ -104,11 +104,15 @@ mg_villages.import_scm = function(scm)
 		else
 			if paramtype2 ~= "facedir" and paramtype2 ~= "wallmounted" then
 				scm[ent.y][ent.x][ent.z] = {extranode = true,
-					node = {name = ent.name, param2 = ent.param2},
+					node = {
+						content = minetest.get_content_id(ent.name),
+						name = ent.name, param2 = ent.param2},
 					meta = ent.meta}
 			else
 				scm[ent.y][ent.x][ent.z] = {extranode = true,
-					node = {name = ent.name, param2 = ent.param2},
+					node = {
+						content = minetest.get_content_id(ent.name),
+						name = ent.name, param2 = ent.param2},
 					meta = ent.meta,
 					rotation = paramtype2}
 			end

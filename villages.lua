@@ -759,7 +759,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 						end
 						-- in case such a node is replaced with dirt, just proceed
 						if( t.node.name == 'default:dirt' or t.node.name == 'default:dirt_with_grass' ) then
-							data[a:index(ax, ay, az)] = ground_type;
+							t.node.content = ground_type;
 						-- else the data will be stored and added later on
 						else
 							table.insert(extranodes, {node = t.node, meta = t.meta, pos = {x = ax, y = ay, z = az}})
@@ -774,9 +774,9 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 						if( t.node.content == c_dirt or t.node.content == c_dirt_with_grass ) then
 							t.node.content = ground_type;
 						end
-						data[       a:index(ax, ay, az)] = t.node.content;
-						param2_data[a:index(ax, ay, az)] = t.node.param2;
 					end
+					data[       a:index(ax, ay, az)] = t.node.content;
+					param2_data[a:index(ax, ay, az)] = t.node.param2;
 				-- air and gravel
 				elseif t ~= c_ignore then
 	
@@ -936,7 +936,7 @@ mg_villages.place_one_schematic = function( bpos, replacements, pos, mts_path )
 		for _,p in ipairs( dirt_nodes ) do
 			local new_type = ground_types[ tostring( p.x )..':'..tostring( p.z ) ];
 			if( new_type ) then
-				minetest.set_node( p, { name = new_type } );
+--				minetest.set_node( p, { name = new_type } );
 			end
 		end
 

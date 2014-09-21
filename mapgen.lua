@@ -759,7 +759,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	local meta
 	for _, village in ipairs(villages) do
 		for _, n in pairs(village.to_add_data.extranodes) do
-			minetest.set_node(n.pos, n.node)
+--			minetest.set_node(n.pos, n.node)
 			if n.meta ~= nil then
 				meta = minetest.get_meta(n.pos)
 				meta:from_table(n.meta)
