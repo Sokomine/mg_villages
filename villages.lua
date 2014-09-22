@@ -699,6 +699,7 @@ end
 
 
 local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements)
+tgb = minetest.get_us_time();
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
@@ -707,17 +708,11 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 		return;
 	end
 
-	if( type(binfo.scm) == "string" and binfo.scm_data_cache and type(binfo.scm_data_cache)=="string" )then
-		scm = minetest.deserialize( binfo.scm_data_cache ); --mg_villages.import_scm(binfo.scm, replacements)
-	-- at first time of spawning, all nodes ought to be defined; thus, we can cache the data
-	elseif( type( binfo.scm ) == "string" ) then
-		scm = mg_villages.import_scm( mg_villages.BUILDINGS[ pos.btype ].scm );
-		mg_villages.BUILDINGS[ pos.btype ].scm_data_cache = minetest.serialize( scm )
+	if( binfo.scm_data_cache )then
+		scm = binfo.scm_data_cache;
 	else
 		scm = binfo.scm
 	end
-	scm = mg_villages.rotate_scm(scm, pos.brotate)
-
 
 	-- the fruit is set per building, not per village as the other replacements
 	if( binfo.farming_plus and binfo.farming_plus == 1 and pos.fruit ) then
@@ -730,15 +725,40 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 	local c_dirt                 = minetest.get_content_id( "default:dirt" );
 	local c_dirt_with_grass      = minetest.get_content_id( "default:dirt_with_grass" );
 	local c_dirt_with_snow       = minetest.get_content_id( "default:dirt_with_snow" );
+
+	local scm_x = 0;
+	local scm_z = 0;
+	local step_x = 1;
+	local step_z = 1;
+	local scm_z_start = 0;
+
+	if(     pos.brotate == 2 ) then
+		scm_x  = pos.bsizex+1;
+		step_x = -1;
+	end
+	if(     pos.brotate == 1 ) then
+		scm_z  = pos.bsizez+1;
+		step_z = -1;
+		scm_z_start = scm_z;
+	end
+		
 	for x = 0, pos.bsizex-1 do
+	scm_x = scm_x + step_x;
+	scm_z = scm_z_start;
 	for z = 0, pos.bsizez-1 do
+	scm_z = scm_z + step_z;
 		local has_snow    = false;
 		local ground_type = c_dirt_with_grass; 
 		for y = 0, binfo.ysize-1 do
 			ax, ay, az = pos.x+x, pos.y+y+binfo.yoff, pos.z+z
 			if (ax >= minp.x and ax <= maxp.x) and (ay >= minp.y and ay <= maxp.y) and (az >= minp.z and az <= maxp.z) then
 	
-				t = scm[y+1][x+1][z+1]
+				local new_content = c_air;
+				if( pos.brotate == 0 or pos.brotate == 2 ) then
+					t = scm[y+1][scm_x][scm_z]
+				else -- swap parameters
+					t = scm[y+1][scm_z][scm_x]
+				end
 	
 				if( binfo.yoff+y == 0 ) then
 					local node_content = data[a:index(ax, ay, az)];
@@ -751,42 +771,55 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 				end
 	
 				if type(t) == "table" then
-					-- handle extranodes
-					if t.extranode then
-						-- do replacements for extranodes; those are name-based
-						if( replacements.table[ t.node.name ]) then
-							t.node.name    = replacements.table[ t.node.name ];
-						end
-						-- in case such a node is replaced with dirt, just proceed
-						if( t.node.name == 'default:dirt' or t.node.name == 'default:dirt_with_grass' ) then
-							t.node.content = ground_type;
-						-- else the data will be stored and added later on
-						else
-							table.insert(extranodes, {node = t.node, meta = t.meta, pos = {x = ax, y = ay, z = az}})
-						end
-					else
-						-- do replacements for normal nodes with facedir or wallmounted
-						if( replacements.ids[ t.node.content ]) then
-							t.node.content = replacements.ids[   t.node.content ];
-						end
-						-- replace all dirt and dirt with grass at that x,z coordinate with the stored ground grass node;
-						-- this case here applies only to nodes which where facedir/wallmounted prior to their above replacement
-						if( t.node.content == c_dirt or t.node.content == c_dirt_with_grass ) then
-							t.node.content = ground_type;
-						end
+					new_content = t.node.content;
+					-- replace unkown nodes by name
+					if( new_content == c_ignore 
+					    and t.node.name
+					    and replacements.table[ t.node.name ]) then
+						new_content = minetest.get_content_id(  replacements.table[ t.node.name ] );
+
+					-- do replacements for normal nodes with facedir or wallmounted
+					elseif( new_content ~= c_ignore and replacements.ids[ new_content ]) then
+						new_content = replacements.ids[ new_content ];
 					end
-					data[       a:index(ax, ay, az)] = t.node.content;
-					param2_data[a:index(ax, ay, az)] = t.node.param2;
+
+					-- replace all dirt and dirt with grass at that x,z coordinate with the stored ground grass node;
+					if( new_content == c_dirt or new_content == c_dirt_with_grass ) then
+						new_content = ground_type;
+					end
+
+					-- handle extranodes
+					if( t.extranode and t.meta) then
+						-- TODO: t.node.* may not contain relevant information here	
+						table.insert(extranodes, {node = t.node, meta = t.meta, pos = {x = ax, y = ay, z = az}})
+					end
+					data[       a:index(ax, ay, az)] = new_content;
+					if( t.rotation and t.node.param2 ) then
+					-- TODO: this needs optimization as well
+						local new_param2  = t.node.param2;
+						if(     t.rotation == 'wallmounted' ) then
+							for r=1, pos.brotate do
+								new_param2 = mg_villages.rotate_wallmounted( new_param2 );
+							end
+						elseif( t.rotation == 'facedir' ) then
+							for r=1, pos.brotate do
+								new_param2 = mg_villages.rotate_facedir( new_param2 );
+							end
+						end
+						param2_data[a:index(ax, ay, az)] = new_param2;
+					end
 				-- air and gravel
 				elseif t ~= c_ignore then
 	
+					new_content = t;
 					if( t and replacements.ids[ t ] ) then
-						t = replacements.ids[ t ];
+						new_content = replacements.ids[ t ];
 					end
 					if( t and t==c_dirt or t==c_dirt_with_grass ) then
-						t = ground_type;
+						new_content = ground_type;
 					end
-					data[a:index(ax, ay, az)] = t
+					data[a:index(ax, ay, az)] = new_content;
+					-- param2 is not set here
 				end
 			end
 		end

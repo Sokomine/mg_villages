@@ -310,6 +310,8 @@ mg_villages.buildings_init = function()
 
 			mg_villages.BUILDINGS[ i ].is_mts = 0;
 
+			-- cache the data for later placement
+			mg_villages.BUILDINGS[ i ].scm_data_cache = res;
 			-- deep copy the schematics data here so that the file does not have to be read again
 			-- caching cannot be done here as not all nodes from other mods have been registered yet!
 			--buildings[ i ].scm_data_cache = minetest.serialize( res );
