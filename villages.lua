@@ -699,7 +699,6 @@ end
 
 
 local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements)
-tgb = minetest.get_us_time();
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
@@ -746,7 +745,20 @@ tgb = minetest.get_us_time();
 	scm_x = scm_x + step_x;
 	scm_z = scm_z_start;
 	for z = 0, pos.bsizez-1 do
-	scm_z = scm_z + step_z;
+		scm_z = scm_z + step_z;
+
+		local xoff = scm_x;
+		local zoff = scm_z;
+		if(     pos.brotate == 2 ) then
+			zoff = pos.bsizez - scm_z + 1;
+		elseif( pos.brotate == 1 ) then
+			xoff = scm_z;
+			zoff = scm_x;
+		elseif( pos.brotate == 3 ) then
+			xoff = scm_z;
+			zoff = pos.bsizex - scm_x + 1;
+		end
+
 		local has_snow    = false;
 		local ground_type = c_dirt_with_grass; 
 		for y = 0, binfo.ysize-1 do
@@ -754,12 +766,8 @@ tgb = minetest.get_us_time();
 			if (ax >= minp.x and ax <= maxp.x) and (ay >= minp.y and ay <= maxp.y) and (az >= minp.z and az <= maxp.z) then
 	
 				local new_content = c_air;
-				if( pos.brotate == 0 or pos.brotate == 2 ) then
-					t = scm[y+1][scm_x][scm_z]
-				else -- swap parameters
-					t = scm[y+1][scm_z][scm_x]
-				end
-	
+				t = scm[y+1][xoff][zoff];
+
 				if( binfo.yoff+y == 0 ) then
 					local node_content = data[a:index(ax, ay, az)];
 					-- no snow on the gravel roads
@@ -770,7 +778,7 @@ tgb = minetest.get_us_time();
 					ground_type = node_content;
 				end
 	
-				if type(t) == "table" then
+				if (type(t) == "table" and t.node) then
 					new_content = t.node.content;
 					-- replace unkown nodes by name
 					if( new_content == c_ignore 
@@ -794,19 +802,10 @@ tgb = minetest.get_us_time();
 						table.insert(extranodes, {node = t.node, meta = t.meta, pos = {x = ax, y = ay, z = az}})
 					end
 					data[       a:index(ax, ay, az)] = new_content;
-					if( t.rotation and t.node.param2 ) then
-					-- TODO: this needs optimization as well
-						local new_param2  = t.node.param2;
-						if(     t.rotation == 'wallmounted' ) then
-							for r=1, pos.brotate do
-								new_param2 = mg_villages.rotate_wallmounted( new_param2 );
-							end
-						elseif( t.rotation == 'facedir' ) then
-							for r=1, pos.brotate do
-								new_param2 = mg_villages.rotate_facedir( new_param2 );
-							end
-						end
-						param2_data[a:index(ax, ay, az)] = new_param2;
+					if(     t.node.param2list ) then
+						param2_data[a:index(ax, ay, az)] = t.node.param2list[ pos.brotate + 1];
+					elseif( t.node.param2 ) then
+						param2_data[a:index(ax, ay, az)] = t.node.param2;
 					end
 				-- air and gravel
 				elseif t ~= c_ignore then

@@ -98,7 +98,7 @@ mg_villages.import_scm = function(scm)
 				scm[ent.y][ent.x][ent.z] = {
 					node = {
 						content = minetest.get_content_id(ent.name),
-						name   = ent.name,param2 = ent.param2},
+						name   = ent.name,param2 = ent.param2, param2list = mg_villages.get_param2_rotated( paramtype2, ent.param2 )},
 					rotation = paramtype2}
 			end
 		else
@@ -112,7 +112,7 @@ mg_villages.import_scm = function(scm)
 				scm[ent.y][ent.x][ent.z] = {extranode = true,
 					node = {
 						content = minetest.get_content_id(ent.name),
-						name = ent.name, param2 = ent.param2},
+						name = ent.name, param2 = ent.param2, param2list = mg_villages.get_param2_rotated( paramtype2, ent.param2 )},
 					meta = ent.meta,
 					rotation = paramtype2}
 			end
