@@ -122,7 +122,7 @@ handle_schematics.analyze_mts_file = function( path )
 		end
 		local id = string.byte( data_string, i ) * 256 + string.byte( data_string, i+1 );
 		i = i + 2;
-		local p2 = string.byte( data_string, p2offset + (i%2));
+		local p2 = string.byte( data_string, p2offset + math.floor(i/2));
 		id = id+1;
 
 		-- unkown node
