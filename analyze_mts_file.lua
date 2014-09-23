@@ -72,8 +72,6 @@ handle_schematics.analyze_mts_file = function( path )
 		end
 	end
 
-	file.close(file)
-
 	local rotated = 0;
 	local burried = 0;
 	local parts = path:split('_');
@@ -86,6 +84,71 @@ handle_schematics.analyze_mts_file = function( path )
 			end
 		end
 	end
-	return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried };
+
+	-- decompression was recently added; if it is not yet present, we need to use normal place_schematic
+	if( false and not( minetest.decompress )) then
+		file.close(file);
+		return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = nil };
+	end
+
+	local compressed_data = file:read( "*all" );
+	local data_string = minetest.decompress(compressed_data, "deflate" );
+	file.close(file)
+
+	local c_ignore = minetest.get_content_id( 'ignore' );
+
+	local ids = {};
+	local needs_on_constr = {};
+	-- translate nodenames to ids
+	for i,v in ipairs( nodenames ) do
+		ids[ i ] = minetest.get_content_id( v );
+		needs_on_constr[ i ] = false;
+		if( minetest.registered_nodes[ v ] and minetest.registered_nodes[ v ].on_construct ) then
+			needs_on_constr[ i ] = true;
+		end
+	end
+
+	local p2offset = (size.x*size.y*size.z)*3;
+	local i = 1;
+	local scm = {};
+	for z = 1, size.z do
+	for y = 1, size.y do
+	for x = 1, size.x do
+		if( not( scm[y] )) then
+			scm[y] = {};
+		end
+		if( not( scm[y][x] )) then
+			scm[y][x] = {};
+		end
+		local id = string.byte( data_string, i ) * 256 + string.byte( data_string, i+1 );
+		i = i + 2;
+		local p2 = string.byte( data_string, p2offset + (i%2));
+		id = id+1;
+
+		-- unkown node
+		local regnode = minetest.registered_nodes[ nodenames[ id ]];
+		local paramtype2 = minetest.registered_nodes[ nodenames[ id ]] and minetest.registered_nodes[ nodenames[ id ]].paramtype2
+		if(     not( regnode ) and not( nodenames[ id ] )) then
+			scm[y][x][z] = c_ignore;
+		elseif( not( regnode )) then
+			scm[y][x][z] = { node = {
+					content    = c_ignore,
+					name       = nodenames[ id ],
+					param2     = p2} };
+		elseif( paramtype2 ~= 'facedir' and paramtype2 ~= 'wallmounted' ) then
+			scm[y][x][z] = ids[ id ];
+		else
+			scm[y][x][z] = { node = {
+					content    = ids[ id ],
+					--name       = nodenames[ id ],
+					--param2     = p2,
+                                        --rotation   = paramtype2}
+					param2list = mg_villages.get_param2_rotated( paramtype2, p2 )} };
+		end
+	end
+	end
+	end
+
+	return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = scm };
 end
 

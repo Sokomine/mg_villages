@@ -300,6 +300,10 @@ mg_villages.buildings_init = function()
 			mg_villages.BUILDINGS[ i ].on_constr        = res.on_constr;
 			mg_villages.BUILDINGS[ i ].after_place_node = res.after_place_node;
 
+			if( res.scm_data_cache ) then
+				mg_villages.BUILDINGS[ i ].scm_data_cache   = res.scm_data_cache;
+				mg_villages.BUILDINGS[ i ].is_mts = 0;
+			end
 		-- determine size of worldedit schematics
 		elseif( res and #res and #res>0 and #res[1] and #res[1][1]) then
 
