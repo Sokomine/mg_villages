@@ -249,11 +249,11 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 
 	-- grow normal trees and jungletrees in those parts of the terrain where height blending occours
 	for _, tree in ipairs(treepos) do
-		if( tree.typ == 0 and default and default.grow_tree) then
-			default.grow_tree(       data, a, {x=tree.x, y=tree.y, z=tree.z}, math.random(1, 4) == 1, math.random(1,100000))
-		elseif( default and default.grow_jungletree ) then
-			default.grow_jungletree( data, a, {x=tree.x, y=tree.y, z=tree.z}, math.random(1,100000))
+		local plant_id = cid.c_jsapling;
+		if( tree.typ == 0 ) then
+			plant_id = cid.c_sapling;
 		end
+		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, plant_id, minp, maxp, data, a, cid, nil ) -- no pseudorandom present
 	end
 
 end
@@ -493,6 +493,28 @@ end
 
 
 
+mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr )
+	-- a normal tree; sometimes comes with apples
+	if(     plant_id == cid.c_sapling and default.grow_tree ) then
+		default.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
+		return true;
+	-- a normal jungletree
+	elseif( plant_id == cid.c_jsapling and default.grow_jungletree ) then
+		default.grow_jungletree( data, a, pos, math.random(1,100000))
+		return true;
+	-- a savannatree from the mg mod
+	elseif( plant_id == cid.c_savannasapling and add_savannatree) then
+		add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+		return true;
+	-- a pine tree from the mg mod
+	elseif( plant_id == cid.c_pinesapling    and add_pinetree   ) then
+		add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+		return true;
+	end
+	return false;
+end
+
+
 -- places trees and plants at empty spaces
 mg_villages.village_area_fill_with_plants = function( village_area, villages, minp, maxp, data, param2_data, a, cid )
 	-- trees which require grow functions to be called
@@ -546,18 +568,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				end
 
 				local pos = {x=x, y=h+1, z=z};
-				-- a normal tree; sometimes comes with apples
-				if(     plant_id == cid.c_sapling and default.grow_tree ) then
-					default.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
-				-- a normal jungletree
-				elseif( plant_id == cid.c_jsapling and default.grow_jungletree ) then
-					default.grow_jungletree( data, a, pos, math.random(1,100000))
-				-- a savannatree from the mg mod
-				elseif( plant_id == cid.c_savannasapling and add_savannatree) then
-					add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
-				-- a pine tree from the mg mod
-				elseif( plant_id == cid.c_pinesapling    and add_pinetree   ) then
-					add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+				if( mg_villages.grow_a_tree( pos, plant_id, minp, maxp, data, a, cid, pr )) then
+					-- nothing to do; the function has grown the tree already
 	
 				-- grow wheat and cotton on normal wet soil (and re-plant if it had been removed by mudslide)
 				elseif( on_soil and (g==cid.c_dirt_with_grass or g==cid.c_soil_wet or g==cid.c_dirt_with_snow)) then	
@@ -616,6 +628,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 		end
 	end
 end
+
+
 
 
 time_elapsed = function( t_last, msg )
