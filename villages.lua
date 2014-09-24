@@ -1184,8 +1184,10 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	-- call on_oncstruct for all nodes that need it
 	for k, v in pairs( extra_calls.on_constr ) do
 		local node_name = minetest.get_name_from_content_id( k );
-		for _, pos in ipairs(v) do
-			minetest.registered_nodes[ node_name ].on_construct( pos );
+		if( minetest.registered_nodes[ node_name ].on_construct ) then
+			for _, pos in ipairs(v) do
+				minetest.registered_nodes[ node_name ].on_construct( pos );
+			end
 		end
 	end
 
