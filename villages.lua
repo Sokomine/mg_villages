@@ -786,6 +786,13 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 						if( replacements.table[ t.node.name ] and minetest.registered_nodes[ replacements.table[ t.node.name ]]) then
 							
 							new_content = minetest.get_content_id(  replacements.table[ t.node.name ] );
+							if( minetest.registered_nodes[ replacements.table[ t.node.name ]].on_construct ) then
+								if( not( extra_calls.on_constr[ new_content ] )) then
+									extra_calls.on_constr[ new_content ] = { {x=ax, y=ay, z=az}};
+								else
+									table.insert( extra_calls.on_constr[ new_content ], {x=ax, y=ay, z=az});
+								end
+							end
 						-- we tried our best, but the replacement node is not defined	
 						else
 							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( t.node.name )..' (suggested but inexistant: '..tostring( replacements.table[ t.node.name ] )..').');
@@ -1187,25 +1194,9 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls )
 	end
 
-	-- call on_oncstruct for all nodes that need it
-	for k, v in pairs( extra_calls.on_constr ) do
-		local node_name = minetest.get_name_from_content_id( k );
-		if( minetest.registered_nodes[ node_name ].on_construct ) then
-			for _, pos in ipairs(v) do
-				minetest.registered_nodes[ node_name ].on_construct( pos );
-			end
-		end
-	end
-
-	-- grow trees into saplings
-	for _,v in ipairs( extra_calls.trees ) do
-		mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, pr );
-	end
-		
-
 	-- replacements are in list format for minetest.place_schematic(..) type spawning
 	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list, dirt_roads = village.to_add_data.dirt_roads,
-			plantlist = village.to_add_data.plantlist };
+			plantlist = village.to_add_data.plantlist, extra_calls = extra_calls };
 end
 
 

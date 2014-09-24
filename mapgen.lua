@@ -781,6 +781,11 @@ t1 = time_elapsed( t1, 'place_buildings' );
 
 		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, village_noise, c_feldweg);
 t1 = time_elapsed( t1, 'place_dirt_roads' );
+
+		-- grow trees which are part of buildings into saplings
+		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do
+			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, pr );
+		end
 	end
 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
@@ -798,6 +803,20 @@ t1 = time_elapsed( t1, 'vm calc lighting' );
 
 	vm:write_to_map(data)
 t1 = time_elapsed( t1, 'vm data written' );
+
+	-- do on_construct calls AFTER the map data has been written - else i.e. realtest fences can not update themshevles
+	for _, village in ipairs(villages) do
+		for k, v in pairs( village.to_add_data.extra_calls.on_constr ) do
+			local node_name = minetest.get_name_from_content_id( k );
+			if( minetest.registered_nodes[ node_name ].on_construct ) then
+				for _, pos in ipairs(v) do
+					minetest.registered_nodes[ node_name ].on_construct( pos );
+				end
+			end
+		end
+	end
+
+	-- TODO: extra_calls.chests, extra_calls.signs
 
 	-- initialize the pseudo random generator so that the chests will be filled in a reproducable pattern
 	local pr = PseudoRandom(mg_villages.get_bseed(minp));
