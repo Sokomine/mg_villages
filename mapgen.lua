@@ -679,6 +679,14 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		cid.c_ethereal_clay_orange = minetest.get_content_id( 'bakedclay:orange' );
 	end
 	
+	cid.c_chest            = minetest.get_content_id( 'default:chest' );
+	cid.c_chest_locked     = minetest.get_content_id( 'default:chest_locked' );
+	cid.c_chest_private    = minetest.get_content_id( 'cottages:chest_private' );
+	cid.c_chest_work       = minetest.get_content_id( 'cottages:chest_work' );
+	cid.c_chest_storage    = minetest.get_content_id( 'cottages:chest_storage' );
+	cid.c_chest_shelf      = minetest.get_content_id( 'cottages:shelf' );
+	cid.c_sign             = minetest.get_content_id( 'default:sign_wall' );
+
 t1 = time_elapsed( t1, 'defines' );
 --[[
 	local centered_here = 0;
@@ -768,7 +776,7 @@ t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	for _, village in ipairs(villages) do
 
-		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, village_noise);
+		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, village_noise, cid);
 t1 = time_elapsed( t1, 'place_buildings' );
 
 		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, village_noise, c_feldweg);

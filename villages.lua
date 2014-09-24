@@ -698,7 +698,7 @@ end
 
 
 
-local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements)
+local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements, cid, extra_calls)
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
@@ -759,7 +759,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 			zoff = pos.bsizex - scm_x + 1;
 		end
 
-		local has_snow    = false;
+		local has_snow    = false; -- TODO: make some villages snow covered if moresnow is installed
 		local ground_type = c_dirt_with_grass; 
 		for y = 0, binfo.ysize-1 do
 			ax, ay, az = pos.x+x, pos.y+y+binfo.yoff, pos.z+z
@@ -807,6 +807,15 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 					elseif( t.node.param2 ) then
 						param2_data[a:index(ax, ay, az)] = t.node.param2;
 					end
+
+					-- for this node, we need to call on_construct
+					if( t.node.on_constr and t.node.on_constr==true ) then
+						if( not( extra_calls.on_constr[ new_content ] )) then
+							extra_calls.on_constr[ new_content ] = { {x=ax, y=ay, z=az}};
+						else
+							table.insert( extra_calls.on_constr[ new_content ], {x=ax, y=ay, z=az});
+						end
+					end
 				-- air and gravel
 				elseif t ~= c_ignore then
 	
@@ -819,6 +828,36 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 					end
 					data[a:index(ax, ay, az)] = new_content;
 					-- param2 is not set here
+				end
+
+				-- some nodes may require additional actions after placing them
+				if( not( new_content ) or new_content == cid.c_air or new_content == cid.c_ignore ) then
+					-- do nothing
+
+				elseif( new_content == cid.c_sapling
+				     or new_content == cid.c_jsapling
+				     or new_content == cid.c_savannasapling
+				     or new_content == cid.c_pinesapling ) then
+					-- store that a tree is to be grown there
+					table.insert( extra_calls.trees, {x=ax, y=ay, z=az, typ=new_content});
+
+				elseif( new_content == cid.c_chest
+				   or   new_content == cid.c_chest_locked 
+				   or   new_content == cid.c_chest_shelf ) then
+					-- we're dealing with a chest that might need filling
+					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content});
+
+				elseif( new_content == cid.c_chest_private
+				   or   new_content == cid.c_chest_work
+				   or   new_content == cid.c_chest_storage ) then
+					-- we're dealing with a chest that might need filling
+					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content});
+					-- place a normal chest here
+					data[a:index(ax, ay, az)] = cid.c_chest;
+
+				elseif( new_content == cid.c_sign ) then
+					-- the sign may require some text to be written on it
+					table.insert( extra_calls.signs,  {x=ax, y=ay, z=az, typ=new_content});
 				end
 			end
 		end
@@ -1117,7 +1156,7 @@ end
 
 -- actually place the buildings (at least those which came as .we files; .mts files are handled later on)
 -- this code is also responsible for tree placement
-mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, vnoise)
+mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, vnoise, cid)
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
 	local seed = mg_villages.get_bseed({x=vx, z=vz})
@@ -1136,10 +1175,25 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	local replacements = mg_villages.get_replacement_table( village.village_type, p, village.to_add_data.replacements );
 
 	local extranodes = {}
+	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
 	for _, pos in ipairs(bpos) do
 		-- replacements are in table format for mapgen-based building spawning
-		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements )
+		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls )
 	end
+
+	-- call on_oncstruct for all nodes that need it
+	for k, v in pairs( extra_calls.on_constr ) do
+		local node_name = minetest.get_name_from_content_id( k );
+		for _, pos in ipairs(v) do
+			minetest.registered_nodes[ node_name ].on_construct( pos );
+		end
+	end
+
+	-- grow trees into saplings
+	for _,v in ipairs( extra_calls.trees ) do
+		mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, pr );
+	end
+		
 
 	-- replacements are in list format for minetest.place_schematic(..) type spawning
 	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list, dirt_roads = village.to_add_data.dirt_roads,

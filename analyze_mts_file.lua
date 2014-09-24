@@ -127,7 +127,6 @@ handle_schematics.analyze_mts_file = function( path )
 
 		-- unkown node
 		local regnode = minetest.registered_nodes[ nodenames[ id ]];
-		local paramtype2 = minetest.registered_nodes[ nodenames[ id ]] and minetest.registered_nodes[ nodenames[ id ]].paramtype2
 		if(     not( regnode ) and not( nodenames[ id ] )) then
 			scm[y][x][z] = c_ignore;
 		elseif( not( regnode )) then
@@ -135,15 +134,29 @@ handle_schematics.analyze_mts_file = function( path )
 					content    = c_ignore,
 					name       = nodenames[ id ],
 					param2     = p2} };
-		elseif( paramtype2 ~= 'facedir' and paramtype2 ~= 'wallmounted' ) then
-			scm[y][x][z] = ids[ id ];
 		else
-			scm[y][x][z] = { node = {
+			local paramtype2      = regnode.paramtype2;
+			local needs_on_constr = regnode.on_construct;
+
+			if( paramtype2 ~= 'facedir' and paramtype2 ~= 'wallmounted' and not( regnode.on_construct)) then
+				scm[y][x][z] = ids[ id ];
+			elseif( not( regnode.on_construct )) then
+				scm[y][x][z] = { node = {
 					content    = ids[ id ],
 					--name       = nodenames[ id ],
 					--param2     = p2,
                                         --rotation   = paramtype2}
 					param2list = mg_villages.get_param2_rotated( paramtype2, p2 )} };
+			elseif( paramtype2 ~= 'facedir' and paramtype2 ~= 'wallmounted' ) then
+				scm[y][x][z] = { node = {
+					content    = ids[ id ],
+					on_constr  = true }};
+			else
+				scm[y][x][z] = { node = {
+					content    = ids[ id ],
+					param2list = mg_villages.get_param2_rotated( paramtype2, p2 ),
+					on_constr  = true }};
+			end
 		end
 	end
 	end

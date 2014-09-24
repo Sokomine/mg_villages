@@ -88,16 +88,38 @@ mg_villages.import_scm = function(scm)
 			ent.meta = {fields={}, inventory={}}
 		end
 		local paramtype2 = minetest.registered_nodes[ent.name] and minetest.registered_nodes[ent.name].paramtype2
+		local on_constr  = minetest.registered_nodes[ent.name] and minetest.registered_nodes[ent.name].on_construct
+		if( on_constr ) then
+			on_constr = true;
+		end
 		-- unkown nodes are discarded here!
 		if ent.name == "mg:ignore" or not paramtype2 then
-				scm[ent.y][ent.x][ent.z] = c_ignore
+				if( on_constr ) then
+					scm[ent.y][ent.x][ent.z] = {
+						node = {
+							content = minetest.get_content_id(ent.name),
+							name    = ent.name,
+							on_constr = true
+						}}
+				else
+					scm[ent.y][ent.x][ent.z] = c_ignore
+				end
 		elseif numk(ent.meta.fields) == 0 and numk(ent.meta.inventory) == 0 then
 			if paramtype2 ~= "facedir" and paramtype2 ~= "wallmounted" then
-				scm[ent.y][ent.x][ent.z] = minetest.get_content_id(ent.name)
+				if( not( on_constr )) then
+					scm[ent.y][ent.x][ent.z] = minetest.get_content_id(ent.name)
+				else
+					scm[ent.y][ent.x][ent.z] = {
+						node = {
+							content = minetest.get_content_id(ent.name),
+							on_constr = true
+						}}
+				end
 			else
 				scm[ent.y][ent.x][ent.z] = {
 					node = {
 						content = minetest.get_content_id(ent.name),
+						on_constr = on_constr,
 						name   = ent.name,param2 = ent.param2, param2list = mg_villages.get_param2_rotated( paramtype2, ent.param2 )},
 					rotation = paramtype2}
 			end
@@ -106,12 +128,14 @@ mg_villages.import_scm = function(scm)
 				scm[ent.y][ent.x][ent.z] = {extranode = true,
 					node = {
 						content = minetest.get_content_id(ent.name),
+						on_constr = on_constr,
 						name = ent.name, param2 = ent.param2},
 					meta = ent.meta}
 			else
 				scm[ent.y][ent.x][ent.z] = {extranode = true,
 					node = {
 						content = minetest.get_content_id(ent.name),
+						on_constr = on_constr,
 						name = ent.name, param2 = ent.param2, param2list = mg_villages.get_param2_rotated( paramtype2, ent.param2 )},
 					meta = ent.meta,
 					rotation = paramtype2}
