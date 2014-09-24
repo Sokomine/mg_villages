@@ -92,8 +92,14 @@ mg_villages.import_scm = function(scm)
 		if( on_constr ) then
 			on_constr = true;
 		end
-		-- unkown nodes are discarded here!
-		if ent.name == "mg:ignore" or not paramtype2 then
+		-- unkown nodes have to be treated specially; they are not allowed to be of type wallmounted or facedir or to need on_construct
+		if( not( minetest.registered_nodes[ ent.name ] )) then
+			scm[ent.y][ent.x][ent.z] = {
+				node = {
+					name    = ent.name,
+					param2  = ent.param2,
+				}}
+		elseif ent.name == "mg:ignore" or not paramtype2 then
 				if( on_constr ) then
 					scm[ent.y][ent.x][ent.z] = {
 						node = {
