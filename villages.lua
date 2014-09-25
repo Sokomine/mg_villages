@@ -782,7 +782,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 					new_content = t.node.content;
 					-- replace unkown nodes by name
 					if( not( new_content) or new_content == c_ignore 
-					    and t.node.name ) then
+					    and t.node.name and t.node.name ~= 'mg:ignore') then
 						if( replacements.table[ t.node.name ] and minetest.registered_nodes[ replacements.table[ t.node.name ]]) then
 							
 							new_content = minetest.get_content_id(  replacements.table[ t.node.name ] );
@@ -794,11 +794,13 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 								end
 							end
 						-- we tried our best, but the replacement node is not defined	
-						else
+						elseif (t.node.name ~= 'mg:ignore' ) then
 							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( t.node.name )..' (suggested but inexistant: '..tostring( replacements.table[ t.node.name ] )..').');
 							new_content = cid.c_air;
 						end
 
+					elseif( new_content == c_ignore or (t.node.name and t.node.name == 'mg:ignore' )) then
+						-- no change; keep the old content
 					-- do replacements for normal nodes with facedir or wallmounted
 					elseif( new_content ~= c_ignore and replacements.ids[ new_content ]) then
 						new_content = replacements.ids[ new_content ];

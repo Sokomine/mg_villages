@@ -119,6 +119,8 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 		table.insert( replacements, { original_materials[ 1 ], new_material..'_stair' } );
 		table.insert( replacements, { original_materials[ 2 ], new_material..'_slab' } );
 		table.insert( replacements, { original_materials[ 3 ], new_material } );
+		table.insert( replacements, { original_materials[ 1 ]..'upside_down', new_material..'_stair_upside_down' } );
+		table.insert( replacements, { original_materials[ 2 ]..'upside_down', new_material..'_slab_upside_down' } );
 		return new_material;
 	end
 
@@ -202,6 +204,8 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 				-- stairs and slabs made out of default wood
 				table.insert( replacements, {'stairs:stair_wood',    'trees:'..v..'_planks_stair'});
 				table.insert( replacements, {'stairs:slab_wood',     'trees:'..v..'_planks_slab'});
+				table.insert( replacements, {'stairs:stair_woodupside_down','trees:'..v..'_planks_stair_upside_down' } );
+				table.insert( replacements, {'stairs:slab_woodupside_down', 'trees:'..v..'_planks_slab_upside_down' } );
 			end
 		end
 	else
@@ -339,8 +343,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
    if( housetype == 'nore' ) then
 
       mg_villages.replace_materials( replacements, pr,
-		{'stonebrick'},
-		{'default:'},
+--		{'default:stonebrick'},
+--		{'default:'},
+		{'stairs:stair_stonebrick',  'stairs:slab_stonebrick', 'default:stonebrick'},
+		{'stairs:stair_',       'stairs:slab_',      'default:'     },
 		{'stonebrick', 'desert_stonebrick','sandstonebrick', 'sandstone','stone','desert_stone','stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks'},
 		'stonebrick');
 

@@ -94,12 +94,24 @@ mg_villages.import_scm = function(scm)
 		end
 		-- unkown nodes have to be treated specially; they are not allowed to be of type wallmounted or facedir or to need on_construct
 		if( not( minetest.registered_nodes[ ent.name ] )) then
-			scm[ent.y][ent.x][ent.z] = {
-				node = {
-					name    = ent.name,
-					param2  = ent.param2,
-				}}
-		elseif ent.name == "mg:ignore" or not paramtype2 then
+			-- stairs are always of type facedir
+			if( string.sub( ent.name, 1, 7 ) == 'stairs:' ) then
+				scm[ent.y][ent.x][ent.z] = {
+					node = {
+						name    = ent.name,
+						param2  = ent.param2,
+						param2list = mg_villages.get_param2_rotated( 'facedir', ent.param2 ),
+					}}
+			else
+				scm[ent.y][ent.x][ent.z] = {
+					node = {
+						name    = ent.name,
+						param2  = ent.param2,
+					}}
+			end
+		elseif ent.name == "mg:ignore" then
+				scm[ent.y][ent.x][ent.z] = minetest.get_content_id('ignore');
+		elseif not paramtype2 then
 				if( on_constr ) then
 					scm[ent.y][ent.x][ent.z] = {
 						node = {

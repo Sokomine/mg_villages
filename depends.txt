@@ -1,7 +1,7 @@
 default
 farming
 wool
-stairs
+stairs?
 doors
 cottages?
 moretrees?
@@ -13,3 +13,5 @@ darkage?
 deco?
 snow?
 trees?
+metals?
+grounds?
