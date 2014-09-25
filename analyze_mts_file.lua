@@ -131,7 +131,6 @@ handle_schematics.analyze_mts_file = function( path )
 			scm[y][x][z] = c_ignore;
 		elseif( not( regnode )) then
 			scm[y][x][z] = { node = {
-					content    = c_ignore,
 					name       = nodenames[ id ],
 					param2     = p2} };
 		else
@@ -150,10 +149,12 @@ handle_schematics.analyze_mts_file = function( path )
 			elseif( paramtype2 ~= 'facedir' and paramtype2 ~= 'wallmounted' ) then
 				scm[y][x][z] = { node = {
 					content    = ids[ id ],
+					name       = nodenames[ id ],
 					on_constr  = true }};
 			else
 				scm[y][x][z] = { node = {
 					content    = ids[ id ],
+					name       = nodenames[ id ],
 					param2list = mg_villages.get_param2_rotated( paramtype2, p2 ),
 					on_constr  = true }};
 			end
