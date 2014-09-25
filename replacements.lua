@@ -4,29 +4,59 @@ if( minetest.get_modpath( 'ethereal' )) then
 	mg_villages.ethereal_trees = {'willow','redwood','frost','mushroom','yellow','palm','banana'};
 end
 
+-- The trees modname is not unique; there are other mods which bear that name.
+-- If all the other mods are present as well, it's a strong indication for realtest beeing the game.
+if(	    minetest.get_modpath( 'trees' )
+	and minetest.get_modpath( 'anvil')
+	and minetest.get_modpath( 'joiner_table')
+	and minetest.get_modpath( 'scribing_table' )) then
+	mg_villages.realtest_trees = {'ash','aspen','birch','maple','chestnut','pine','spruce'};
+	--print('REALTEST trees will be used.'); else print( 'NO REALTEST trees');
+end
+
+
 -- only the function mg_villages.get_replacement_table(..) is called from outside this file
 
 mg_villages.replace_materials = function( replacements, pr, original_materials, prefixes, materials, old_material )
 	
+	local postfixes = {};
+	-- handle realtest stairs/slabs
+	if( mg_villages.realtest_trees 
+		and #prefixes==3
+		and prefixes[1]=='stairs:stair_' and prefixes[2]=='stairs:slab_' and prefixes[2]=='default:' ) then
+
+		prefixes  = {'default:','default:','default:'};
+		materials = {'stone', 'stone_flat', 'desert_stone', 'desert_stone_flat', 'cobbleblock_flat', 'brick', 'stone_bricks', 'desert_stone_bricks' };
+		postfixes = {'_stair', '_slab', ''};
+
+	elseif( mg_villages.realtest_trees 
+		and #prefixes==1 
+		and prefixes[1]=='stairs:stair_') then
+	
+		prefixes = {'trees:'};
+		materials = mg_villages.realtest_trees;
+		postfixes = {'_planks_stair'};
+
+	else
+		for i,v in ipairs( prefixes ) do
+			postfixes[i] = '';
+		end
+	end
+
 	local known_materials = {};
 	local wood_found = false;
 	-- for all alternate materials
 	for i,m in ipairs( materials ) do
 		-- check if that material exists for each supplied prefix
 		for j,p in ipairs( prefixes ) do
-			if( minetest.registered_nodes[ p..m ] ) then
-				table.insert( known_materials, m );
-				-- if wood is present, later on try moretrees wood as well
-				if( 'default:wood' == m ) then
-					wood_found = true;
-				end
+			-- if wood is present, later on try moretrees wood as well
+			if( 'default:wood' == m ) then
+				wood_found = true;
+			end
+			if( minetest.registered_nodes[ p..m..postfixes[j] ] ) then
+				table.insert( known_materials, m..postfixes[j] );
 			end
 		end	
-	end
-
-	-- nothing found which could be used
-	if( #known_materials < 1 ) then
-		return;
 	end
 	
 	-- support wooden planks from moretrees
@@ -63,6 +93,19 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 		end
 	end
 
+	if( wood_found and mg_villages.realtest_trees ) then
+		for _,v in ipairs( mg_villages.realtest_trees ) do
+			if( minetest.registered_nodes[ 'trees:'..v..'_planks'] ) then
+				table.insert( known_materials, 'trees:'..v..'_planks' );
+			end	
+		end
+	end
+
+
+	-- nothing found which could be used
+	if( #known_materials < 1 ) then
+		return;
+	end
 	local new_material  = known_materials[ pr:next( 1, #known_materials )]; 
 
 	-- no replacement necessary if we did choose the same material as before
@@ -113,6 +156,38 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 				table.insert( replacements, {'default:tree', "ethereal:"..v.."_trunk"});
 			end
 		end
+
+	elseif( mg_villages.realtest_trees ) then
+		for _,v in ipairs( mg_villages.realtest_trees ) do
+			if( wood_type == 'trees:'..v..'_planks' ) then
+				table.insert( replacements, {'default:tree', "trees:"..v..'_log'});
+				-- realtest does not have most of the nodes from default, so we need to replace them as well
+				table.insert( replacements, {'default:wood',         'trees:'..v..'_planks'});
+				table.insert( replacements, {'default:ladder',       'trees:'..v..'_ladder'});
+				table.insert( replacements, {'default:chest',        'trees:'..v..'_chest'});
+				table.insert( replacements, {'default:chest_locked', 'trees:'..v..'_chest_locked'});
+				table.insert( replacements, {'default:fence_wood',   'fences:'..v..'_fence'});
+				table.insert( replacements, {'doors:door_wood_t_1',  'doors:door_'..v..'_t_1'});
+				table.insert( replacements, {'doors:door_wood_b_1',  'doors:door_'..v..'_b_1'});
+				table.insert( replacements, {'doors:door_wood_t_2',  'doors:door_'..v..'_t_2'});
+				table.insert( replacements, {'doors:door_wood_b_2',  'doors:door_'..v..'_b_2'});
+				-- not really wood-realted, but needs to be replaced as well
+				table.insert( replacements, {'default:furnace',      'oven:oven'});
+				-- farming is also handled diffrently
+				table.insert( replacements, {'farming:soil_wet',     'farming:soil'});
+				table.insert( replacements, {'farming:cotton_1',     'farming:flax_1'});
+				table.insert( replacements, {'farming:cotton_2',     'farming:flax_1'});
+				table.insert( replacements, {'farming:cotton_3',     'farming:flax_2'});
+				table.insert( replacements, {'farming:cotton_4',     'farming:flax_2'});
+				table.insert( replacements, {'farming:cotton_5',     'farming:flax_3'});
+				table.insert( replacements, {'farming:cotton_6',     'farming:flax_3'});
+				table.insert( replacements, {'farming:cotton_7',     'farming:flax_4'});
+				table.insert( replacements, {'farming:cotton_8',     'farming:flax_4'});
+				-- stairs and slabs made out of default wood
+				table.insert( replacements, {'stairs:stair_wood',    'trees:'..v..'_planks_stair'});
+				table.insert( replacements, {'stairs:slab_wood',     'trees:'..v..'_planks_slab'});
+			end
+		end
 	else
 		return nil;
 	end
@@ -142,6 +217,13 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 			end
 		end
 
+ 	elseif( mg_villages.realtest_trees ) then
+		for _,v in ipairs( mg_villages.realtest_trees ) do
+			if( wood_type == 'trees:'..v..'_planks' ) then
+				table.insert( replacements, {'default:sapling', "trees:"..v.."_sapling"});
+			end
+		end
+
 	elseif( wood_type == 'deco:birch_plank' ) then
 		table.insert( replacements, {'default:sapling', "mapgen:birch_sapling"});
 	elseif( wood_type == 'deco:cherry_plank' ) then
@@ -167,23 +249,33 @@ mg_villages.get_replacement_list = function( housetype, pr )
 --   table.insert( replacements, {'default:dirt_with_grass', dirt_with_grass_replacement });
    table.insert( replacements, {'default:dirt',            'default:dirt_with_grass' });
 
+   local wood_type = 'default:wood';
    -- Taokis houses from structure i/o
    if( housetype == 'taoki' ) then  
 
+      if( mg_villages.realtest_trees ) then
+         wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{'default:wood'},
+ 		'default:wood');
+      else    
       -- the main body of the houses in the .mts files is made out of wood
-      local wood_type = mg_villages.replace_materials( replacements, pr,
+         wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
 		{''},
 		{'default:wood', 'default:junglewood', 'mg:pinewood', 'mg:savannawood',
 		'default:clay', 'default:brick', 'default:sandstone', 
 		'default:stonebrick', 'default:desert_stonebrick','default:sandstonebrick', 'default:sandstone','default:stone','default:desert_stone',
 		'default:coalblock','default:steelblock','default:goldblock', 'default:bronzeblock', 'default:copperblock', 'wool:white',
+		'default:stone_flat', 'default:desert_stone_flat', -- realtest
 		'darkage:adobe', 'darkage:basalt', 'darkage:basalt_cobble', 'darkage:chalk',
 		'darkage:gneiss', 'darkage:gneiss_cobble', 'darkage:marble', 'darkage:marble_tile',
 		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble',
 		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate',
 		'mapgen:mese_stone', 'mapgen:soap_stone'},
 		'default:wood');
+      end
       -- tree trunks are seldom used in these houses; let's change them anyway
       mg_villages.replace_tree_trunk( replacements, wood_type );
 		
@@ -322,6 +414,18 @@ mg_villages.get_replacement_list = function( housetype, pr )
          table.insert( replacements, {'stairs:slab_junglewood',           'cottages:roof_flat_'..roof_type });
          table.insert( replacements, {'cottages:roof_connector_wood',     'cottages:roof_connector_'..roof_type });
          table.insert( replacements, {'cottages:roof_flat_wood',          'cottages:roof_flat_'..roof_type });
+      -- realtest does not have normal stairs
+      elseif( mg_villages.realtest_trees ) then
+         table.insert( replacements, {'stairs:stair_junglewood',          'trees:aspen_planks_stair' });
+         table.insert( replacements, {'stairs:slab_junglewood',           'trees:aspen_planks_slab' });
+
+         local wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{ 'default:wood' },
+		'default:wood');
+         mg_villages.replace_tree_trunk( replacements, wood_type );
+         mg_villages.replace_saplings(   replacements, wood_type );
       end
       return replacements;
    end
@@ -364,7 +468,9 @@ mg_villages.get_replacement_list = function( housetype, pr )
       mg_villages.replace_materials( replacements, pr,
 		{'default:stone'},
 		{'default:'},
-		{ 'brick', 'stone', 'sandstone', 'sandstonebrick', 'clay', 'desert_stone', 'desert_cobble', 'desert_stonebrick' },
+		{ 'brick', 'stone', 'sandstone', 'sandstonebrick', 'clay', 'desert_stone', 'desert_cobble', 'desert_stonebrick',
+		'default:stone_flat', 'default:desert_stone_flat', -- realtest
+		},
 		'stone');
 
       -- the clay trader homes come with stone stair roofs; slabs are used in other places as well (but those replacements here are ok)
@@ -426,6 +532,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
                       'default:desert_stonebrick','default:sandstonebrick','default:stone',
                       'mg:savannawood', 'mg:savannawood', 'mg:savannawood', 'mg:savannawood',
                       'mg:pinewood',    'mg:pinewood',    'mg:pinewood',    'mg:pinewood',
+		'default:stone_flat', 'default:desert_stone_flat', -- realtest
 		'darkage:adobe', 'darkage:basalt', 'darkage:basalt_cobble', 'darkage:chalk',
 		'darkage:gneiss', 'darkage:gneiss_cobble', 'darkage:marble', 'darkage:marble_tile',
 		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble', 'darkage:reinforced_chalk',
@@ -450,7 +557,12 @@ mg_villages.get_replacement_list = function( housetype, pr )
       end
 
       if( mfs and mfs ~= '' ) then      
-         table.insert( replacements, {'stairs:slab_sandstone',   'stairs:slab_'..string.sub( mfs, 9 )});
+         -- realtest needs special treatment
+         if( mg_villages.realtest_trees ) then
+            table.insert( replacements, {'stairs:slab_sandstone',   'default:stone_slab'});
+         else
+            table.insert( replacements, {'stairs:slab_sandstone',   'stairs:slab_'..string.sub( mfs, 9 )});
+         end
       end
    end
    -- except for the floor, everything else may be glass
@@ -478,6 +590,14 @@ mg_villages.get_replacement_list = function( housetype, pr )
    if( not( uses_wood ) and replace_loam ) then
          mg_villages.replace_tree_trunk( replacements, replace_loam );
          mg_villages.replace_saplings(   replacements, replace_loam );
+   elseif( mg_villages.realtest_trees ) then
+      local wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{ 'default:wood' },
+		'default:wood');
+      mg_villages.replace_tree_trunk( replacements, wood_type );
+      mg_villages.replace_saplings(   replacements, wood_type );
    end
 
 
@@ -500,7 +620,12 @@ mg_villages.get_replacement_list = function( housetype, pr )
       if( not( mcs ) or not( minetest.registered_nodes[ 'stairs:slab_'..mcs ])) then
          mcs = 'sandstone';
       end
-      table.insert( replacements, {'stairs:slab_cobble',      'stairs:slab_'..mcs});
+      -- special handling for realtest
+      if( mg_villages.realtest_trees ) then
+         table.insert( replacements, {'stairs:slab_cobble',      'default:stone_slab'});
+      else
+         table.insert( replacements, {'stairs:slab_cobble',      'stairs:'..mcs..'_slab'});
+      end
    end
  
 
@@ -518,6 +643,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
                            'black'},
 		'straw');
 
+--print('REPLACEMENTS used: '..minetest.serialize( replacements )); 
    return replacements;
 end
 

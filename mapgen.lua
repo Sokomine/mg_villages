@@ -538,6 +538,13 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 		c_feldweg = cid.c_dirt_with_grass;
 	end
 
+	if( mg_villages.realtest_trees ) then
+		cid.c_soil_wet        = minetest.get_content_id( 'farming:soil' ); -- TODO: the one from mg_villages would be better...but that one lacks textures
+		cid.c_soil_sand       = minetest.get_content_id( 'farming:soil' ); -- TODO: the one from mg_villages would be better...but that one lacks textures
+		cid.c_wheat           = minetest.get_content_id( 'farming:spelt_4' );
+		cid.c_cotton          = minetest.get_content_id( 'farming:flax_4' );
+--		cid.c_shrub           = minetest.get_content_id( 'default:dry_shrub');
+	end
 
 	local pr = PseudoRandom(mg_villages.get_bseed(minp));
 	for x = minp.x, maxp.x do

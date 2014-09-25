@@ -1133,24 +1133,36 @@ mg_villages.generate_village = function(village, vnoise)
 	-- medieval villages are sourrounded by wheat fields
 	if(     village_type == 'medieval' ) then
 		local c_wheat = minetest.get_content_id( 'farming:wheat_8');
+		if( mg_villages.realtest_trees ) then
+			c_wheat = minetest.get_content_id( 'farming:spelt_4');
+		end
 		plantlist = {
 			{ id=sapling_id, p=sapling_p*10 }, -- trees are rather rare
 			{ id=c_wheat,    p=1         }};
 	-- lumberjack camps have handy trees nearby
 	elseif( village_type == 'lumberjack' ) then
 		local c_junglegrass = minetest.get_content_id( 'default:junglegrass');
+		if( mg_villages.realtest_trees ) then
+			c_wheat = minetest.get_content_id( 'default:dry_shrub');
+		end
 		plantlist = {
 			{ id=sapling_id,    p=sapling_p },
 			{ id=c_junglegrass, p=25        }};
 	-- the villages of type taoki grow cotton
 	elseif( village_type == 'taoki' ) then
 		local c_cotton = minetest.get_content_id( 'farming:cotton_8');
+		if( mg_villages.realtest_trees ) then
+			c_wheat = minetest.get_content_id( 'farming:flax_4');
+		end
 		plantlist = {
 			{ id=sapling_id, p=sapling_p*5 }, -- not too many trees
 			{ id=c_cotton,   p=1         }};
 	-- default/fallback: grassland
 	else
 		local c_grass = minetest.get_content_id( 'default:grass_5');
+		if( mg_villages.realtest_trees ) then
+			c_wheat = minetest.get_content_id( 'default:dry_shrub');
+		end
 		plantlist = {
 			{ id=sapling_id, p=sapling_p*10}, -- only few trees
 			{ id=c_grass,    p=3         }};
