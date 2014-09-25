@@ -865,6 +865,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 				   or   new_content == cid.c_chest_storage ) then
 					-- we're dealing with a chest that might need filling
 					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content});
+					-- TODO: perhaps use a locked chest owned by the mob living there?
 					-- place a normal chest here
 					data[a:index(ax, ay, az)] = cid.c_chest;
 
@@ -1069,6 +1070,7 @@ local function generate_walls(bpos, data, a, minp, maxp, vh, vx, vz, vs, vnoise)
 	end
 end
 
+
 -- determine which building is to be placed where
 -- also choose which blocks to replace with which other blocks (to make villages more intresting)
 mg_villages.generate_village = function(village, vnoise)
@@ -1119,11 +1121,7 @@ mg_villages.generate_village = function(village, vnoise)
 	
 	-- determine which plants will grow in the area around the village
 	local plantlist = {};
-	local sapling_id = replacements.table[ 'default:sapling' ];
-	if( not( sapling_id )) then
-		sapling_id = 'default:sapling';
-	end
-	sapling_id = minetest.get_content_id( sapling_id );
+	sapling_id = mg_villages.get_content_id_replaced( 'default:sapling', replacements );
 	-- 1/sapling_p = probability of a sapling beeing placed
 	local sapling_p  = 25;
 	if( mg_villages.sapling_probability[ sapling_id ] ) then
@@ -1132,37 +1130,25 @@ mg_villages.generate_village = function(village, vnoise)
 
 	-- medieval villages are sourrounded by wheat fields
 	if(     village_type == 'medieval' ) then
-		local c_wheat = minetest.get_content_id( 'farming:wheat_8');
-		if( mg_villages.realtest_trees ) then
-			c_wheat = minetest.get_content_id( 'farming:spelt_4');
-		end
+		local c_wheat = mg_villages.get_content_id_replaced( 'farming:wheat_8', replacements);
 		plantlist = {
 			{ id=sapling_id, p=sapling_p*10 }, -- trees are rather rare
 			{ id=c_wheat,    p=1         }};
 	-- lumberjack camps have handy trees nearby
 	elseif( village_type == 'lumberjack' ) then
-		local c_junglegrass = minetest.get_content_id( 'default:junglegrass');
-		if( mg_villages.realtest_trees ) then
-			c_wheat = minetest.get_content_id( 'default:dry_shrub');
-		end
+		local c_junglegrass = mg_villages.get_content_id_replaced( 'default:junglegrass', replacements);
 		plantlist = {
 			{ id=sapling_id,    p=sapling_p },
 			{ id=c_junglegrass, p=25        }};
 	-- the villages of type taoki grow cotton
 	elseif( village_type == 'taoki' ) then
-		local c_cotton = minetest.get_content_id( 'farming:cotton_8');
-		if( mg_villages.realtest_trees ) then
-			c_wheat = minetest.get_content_id( 'farming:flax_4');
-		end
+		local c_cotton = mg_villages.get_content_id_replaced( 'farming:cotton_8', replacements);
 		plantlist = {
 			{ id=sapling_id, p=sapling_p*5 }, -- not too many trees
 			{ id=c_cotton,   p=1         }};
 	-- default/fallback: grassland
 	else
-		local c_grass = minetest.get_content_id( 'default:grass_5');
-		if( mg_villages.realtest_trees ) then
-			c_wheat = minetest.get_content_id( 'default:dry_shrub');
-		end
+		local c_grass = mg_villages.get_content_id_replaced( 'default:grass_5', replacements);
 		plantlist = {
 			{ id=sapling_id, p=sapling_p*10}, -- only few trees
 			{ id=c_grass,    p=3         }};
@@ -1198,6 +1184,15 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	end
 
 	local replacements = mg_villages.get_replacement_table( village.village_type, p, village.to_add_data.replacements );
+
+	cid.c_chest            = mg_villages.get_content_id_replaced( 'default:chest',          replacements );
+	cid.c_chest_locked     = mg_villages.get_content_id_replaced( 'default:chest_locked',   replacements );
+	cid.c_chest_private    = mg_villages.get_content_id_replaced( 'cottages:chest_private', replacements );
+	cid.c_chest_work       = mg_villages.get_content_id_replaced( 'cottages:chest_work',    replacements );
+	cid.c_chest_storage    = mg_villages.get_content_id_replaced( 'cottages:chest_storage', replacements );
+	cid.c_chest_shelf      = mg_villages.get_content_id_replaced( 'cottages:shelf',         replacements );
+	cid.c_sign             = mg_villages.get_content_id_replaced( 'default:sign_wall',      replacements );
+print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..tostring( minetest.get_name_from_content_id( cid.c_chest ))); -- TODO
 
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };

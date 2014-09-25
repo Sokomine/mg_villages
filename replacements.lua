@@ -12,6 +12,14 @@ if(	    minetest.get_modpath( 'trees' )
 	and minetest.get_modpath( 'scribing_table' )) then
 	mg_villages.realtest_trees = {'ash','aspen','birch','maple','chestnut','pine','spruce'};
 	--print('REALTEST trees will be used.'); else print( 'NO REALTEST trees');
+
+	-- realtest is very special as far as stairs are concerned
+	mg_villages.realtest_stairs = {'default:stone','default:stone_flat','default:stone_bricks',
+	                               'default:desert_stone','default:desert_stone_flat','default:desert_stone_bricks'};
+	for i,v in ipairs(metals.list) do
+		table.insert( mg_villages.realtest_stairs, 'metals:'..v..'_block' );
+	end
+	-- the list of minteral names is local; so we can't add "decorations:"..mineral[1].."_block"
 end
 
 
@@ -20,23 +28,22 @@ end
 mg_villages.replace_materials = function( replacements, pr, original_materials, prefixes, materials, old_material )
 	
 	local postfixes = {};
+	local use_realtest_stairs = false;
 	-- handle realtest stairs/slabs
 	if( mg_villages.realtest_trees 
 		and #prefixes==3
-		and prefixes[1]=='stairs:stair_' and prefixes[2]=='stairs:slab_' and prefixes[2]=='default:' ) then
+		and prefixes[1]=='stairs:stair_' and prefixes[2]=='stairs:slab_' and prefixes[3]=='default:' ) then 
 
-		prefixes  = {'default:','default:','default:'};
-		materials = {'stone', 'stone_flat', 'desert_stone', 'desert_stone_flat', 'cobbleblock_flat', 'brick', 'stone_bricks', 'desert_stone_bricks' };
-		postfixes = {'_stair', '_slab', ''};
+		prefixes  = {''};
+		materials = mg_villages.realtest_stairs;
+		postfixes = {''};
+		use_realtest_stairs = true;	
 
 	elseif( mg_villages.realtest_trees 
 		and #prefixes==1 
 		and prefixes[1]=='stairs:stair_') then
 	
-		prefixes = {'trees:'};
-		materials = mg_villages.realtest_trees;
-		postfixes = {'_planks_stair'};
-
+		return;
 	else
 		for i,v in ipairs( prefixes ) do
 			postfixes[i] = '';
@@ -108,6 +115,13 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 	end
 	local new_material  = known_materials[ pr:next( 1, #known_materials )]; 
 
+	if( use_realtest_stairs == true	) then
+		table.insert( replacements, { original_materials[ 1 ], new_material..'_stair' } );
+		table.insert( replacements, { original_materials[ 2 ], new_material..'_slab' } );
+		table.insert( replacements, { original_materials[ 3 ], new_material } );
+		return new_material;
+	end
+
 	-- no replacement necessary if we did choose the same material as before
 	if( new_material == old_material or old_material == (prefixes[1]..new_material)) then
 		return old_material;
@@ -163,10 +177,12 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 				table.insert( replacements, {'default:tree', "trees:"..v..'_log'});
 				-- realtest does not have most of the nodes from default, so we need to replace them as well
 				table.insert( replacements, {'default:wood',         'trees:'..v..'_planks'});
+				table.insert( replacements, {'default:leaves',       'trees:'..v..'_leaves'});
 				table.insert( replacements, {'default:ladder',       'trees:'..v..'_ladder'});
 				table.insert( replacements, {'default:chest',        'trees:'..v..'_chest'});
 				table.insert( replacements, {'default:chest_locked', 'trees:'..v..'_chest_locked'});
 				table.insert( replacements, {'default:fence_wood',   'fences:'..v..'_fence'});
+				table.insert( replacements, {'default:bookshelf',    'decorations:bookshelf_'..v});
 				table.insert( replacements, {'doors:door_wood_t_1',  'doors:door_'..v..'_t_1'});
 				table.insert( replacements, {'doors:door_wood_b_1',  'doors:door_'..v..'_b_1'});
 				table.insert( replacements, {'doors:door_wood_t_2',  'doors:door_'..v..'_t_2'});
@@ -249,6 +265,21 @@ mg_villages.get_replacement_list = function( housetype, pr )
 --   table.insert( replacements, {'default:dirt_with_grass', dirt_with_grass_replacement });
    table.insert( replacements, {'default:dirt',            'default:dirt_with_grass' });
 
+   -- realtest lacks quite a lot from default
+   if( mg_villages.realtest_trees ) then
+	for i=1,8 do
+   		table.insert( replacements, {'farming:wheat_'..i,       'farming:spelt_'..tostring( math.floor( (i+0.5)/2 )) });
+   		table.insert( replacements, {'farming:cotton_'..i,      'farming:flax_' ..tostring( math.floor( (i+0.5)/2 )) });
+	end
+	for i=1,5 do
+   		table.insert( replacements, {'default:grass_'..i,       'air' });
+	end
+  	table.insert(         replacements, {'default:apple',           'air' });
+  	table.insert(         replacements, {'default:cobble',          'default:stone_macadam' });
+  	table.insert(         replacements, {'default:obsidian_glass',  'default:glass' });
+   end
+
+
    local wood_type = 'default:wood';
    -- Taokis houses from structure i/o
    if( housetype == 'taoki' ) then  
@@ -310,7 +341,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
       mg_villages.replace_materials( replacements, pr,
 		{'stonebrick'},
 		{'default:'},
-		{'stonebrick', 'desert_stonebrick','sandstonebrick', 'sandstone','stone','desert_stone'},
+		{'stonebrick', 'desert_stonebrick','sandstonebrick', 'sandstone','stone','desert_stone','stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks'},
 		'stonebrick');
 
       -- replace the wood as well
@@ -322,7 +353,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
       mg_villages.replace_tree_trunk( replacements, wood_type );
       mg_villages.replace_saplings(   replacements, wood_type );
 
-      if( pr:next(1,3)==1 ) then
+      if( pr:next(1,3)==1 and not( mg_villages.realtest_trees)) then
          table.insert( replacements, {'default:glass', 'default:obsidian_glass'});
       end
 
@@ -681,3 +712,15 @@ mg_villages.get_replacement_table = function( housetype, pr, replacements )
 	end
         return { table = rtable, list = replacements, ids = ids };
 end
+
+mg_villages.get_content_id_replaced = function( node_name, replacements )
+	if( not( node_name ) or not( replacements ) or not(replacements.table )) then
+		return minetest.get_content_id( 'ignore' );
+	end
+	if( replacements.table[ node_name ]) then
+		return minetest.get_content_id( replacements.table[ node_name ] );
+	else
+		return minetest.get_content_id( node_name );
+	end
+end
+
