@@ -147,7 +147,8 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
  	elseif( moretrees and moretrees.treelist ) then
 		for _,v in ipairs( moretrees.treelist ) do
 			if( wood_type == "moretrees:"..v[1].."_planks" ) then
-				table.insert( replacements, {'default:tree', "moretrees:"..v[1].."_trunk"});
+				table.insert( replacements, {'default:tree',   "moretrees:"..v[1].."_trunk"});
+				table.insert( replacements, {'default:leaves', "moretrees:"..v[1].."_leaves"});
 			end
 		end
 
@@ -232,8 +233,8 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 		end
  	elseif( mg_villages.ethereal_trees ) then
 		for _,v in ipairs( mg_villages.ethereal_trees ) do
-			if( wood_type == "moretrees:"..v.."_wood" ) then
-				table.insert( replacements, {'default:sapling', "moretrees:"..v.."_tree_sapling"});
+			if( wood_type == "ethereal:"..v.."_wood" ) then
+				table.insert( replacements, {'default:sapling', "ethereal"..v.."_sapling"});
 			end
 		end
 
