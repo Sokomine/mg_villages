@@ -811,6 +811,7 @@ t1 = time_elapsed( t1, 'vm data written' );
 			if( minetest.registered_nodes[ node_name ].on_construct ) then
 				for _, pos in ipairs(v) do
 					minetest.registered_nodes[ node_name ].on_construct( pos );
+print('calling on_construct for '..minetest.pos_to_string( pos )..' for '..tostring( node_name ));
 				end
 			end
 		end
@@ -869,6 +870,7 @@ t1 = time_elapsed( t1, 'place_schematics' );
 			for _,v in pairs( mg_villages.all_villages ) do
 				count = count + 1;
 			end
+			village.extra_calls = {}; -- do not save these values
 			village.nr = count;
 			mg_villages.anz_villages = count;
 			mg_villages.all_villages[ village_id ] = minetest.deserialize( minetest.serialize( village ));
