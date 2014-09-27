@@ -92,10 +92,29 @@ mg_villages.import_scm = function(scm)
 		if( on_constr ) then
 			on_constr = true;
 		end
+		-- realtest rotates some nodes diffrently
+		if( ent.name and not( minetest.registered_nodes[ent.name] )) then
+			if( ent.name == 'default:ladder' ) then
+				paramtype2 = 'facedir';
+				if(     ent.param2 == 2 ) then
+					ent.param2 =  1;
+				elseif( ent.param2 == 5 ) then
+					ent.param2 =  2;
+				elseif( ent.param2 == 3 ) then
+					ent.param2 =  3;
+				elseif( ent.param2 == 4 ) then
+					ent.param2 =  0;
+				else
+					-- do not rotate the ladder at all
+					paramtype2 = nil;
+				end
+			end
+		end
+
 		-- unkown nodes have to be treated specially; they are not allowed to be of type wallmounted or facedir or to need on_construct
 		if( not( minetest.registered_nodes[ ent.name ] )) then
 			-- stairs are always of type facedir
-			if( string.sub( ent.name, 1, 7 ) == 'stairs:' ) then
+			if( ent.name == 'default:ladder' or string.sub( ent.name, 1, 7 ) == 'stairs:' ) then
 				scm[ent.y][ent.x][ent.z] = {
 					node = {
 						name    = ent.name,

@@ -125,8 +125,28 @@ handle_schematics.analyze_mts_file = function( path )
 		local p2 = string.byte( data_string, p2offset + math.floor(i/2));
 		id = id+1;
 
-		-- unkown node
 		local regnode = minetest.registered_nodes[ nodenames[ id ]];
+		local paramtype2      = regnode and regnode.paramtype2;
+
+		-- realtest rotates some nodes diffrently
+		if( nodenames[ id ] and mg_villages.realtest_trees ) then
+			if( nodenames[ id ] == 'default:ladder' ) then
+				paramtype2 = 'facedir';
+				if(     p2 == 2 ) then
+					p2 =  1;
+				elseif( p2 == 5 ) then
+					p2 =  2;
+				elseif( p2 == 3 ) then
+					p2 =  3;
+				elseif( p2 == 4 ) then
+					p2 =  0;
+				else
+					paramtype2 = nil;
+				end
+			end
+		end
+
+		-- unkown node
 		if(     not( regnode ) and not( nodenames[ id ] )) then
 			scm[y][x][z] = c_ignore;
 		elseif( not( regnode )) then
@@ -134,7 +154,6 @@ handle_schematics.analyze_mts_file = function( path )
 					name       = nodenames[ id ],
 					param2     = p2} };
 		else
-			local paramtype2      = regnode.paramtype2;
 			local needs_on_constr = regnode.on_construct;
 
 			if( paramtype2 ~= 'facedir' and paramtype2 ~= 'wallmounted' and not( regnode.on_construct)) then
