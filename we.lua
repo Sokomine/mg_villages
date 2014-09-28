@@ -87,97 +87,9 @@ mg_villages.import_scm = function(scm)
 		if ent.meta == nil then
 			ent.meta = {fields={}, inventory={}}
 		end
-		local paramtype2 = minetest.registered_nodes[ent.name] and minetest.registered_nodes[ent.name].paramtype2
-		local on_constr  = minetest.registered_nodes[ent.name] and minetest.registered_nodes[ent.name].on_construct
-		if( on_constr ) then
-			on_constr = true;
-		end
-		-- realtest rotates some nodes diffrently
-		if( ent.name and not( minetest.registered_nodes[ent.name] )) then
-			if( ent.name == 'default:ladder' ) then
-				paramtype2 = 'facedir';
-				if(     ent.param2 == 2 ) then
-					ent.param2 =  1;
-				elseif( ent.param2 == 5 ) then
-					ent.param2 =  2;
-				elseif( ent.param2 == 3 ) then
-					ent.param2 =  3;
-				elseif( ent.param2 == 4 ) then
-					ent.param2 =  0;
-				else
-					-- do not rotate the ladder at all
-					paramtype2 = nil;
-				end
-			end
-		end
 
-		-- unkown nodes have to be treated specially; they are not allowed to be of type wallmounted or facedir or to need on_construct
-		if( not( minetest.registered_nodes[ ent.name ] )) then
-			-- stairs are always of type facedir
-			if( ent.name == 'default:ladder' or string.sub( ent.name, 1, 7 ) == 'stairs:' ) then
-				scm[ent.y][ent.x][ent.z] = {
-					node = {
-						name    = ent.name,
-						param2  = ent.param2,
-						param2list = mg_villages.get_param2_rotated( 'facedir', ent.param2 ),
-					}}
-			else
-				scm[ent.y][ent.x][ent.z] = {
-					node = {
-						name    = ent.name,
-						param2  = ent.param2,
-					}}
-			end
-		elseif ent.name == "mg:ignore" then
-				scm[ent.y][ent.x][ent.z] = minetest.get_content_id('ignore');
-		elseif not paramtype2 then
-				if( on_constr ) then
-					scm[ent.y][ent.x][ent.z] = {
-						node = {
-							content = minetest.get_content_id(ent.name),
-							name    = ent.name,
-							on_constr = true
-						}}
-				else
-					scm[ent.y][ent.x][ent.z] = c_ignore
-				end
-		elseif numk(ent.meta.fields) == 0 and numk(ent.meta.inventory) == 0 then
-			if paramtype2 ~= "facedir" and paramtype2 ~= "wallmounted" then
-				if( not( on_constr )) then
-					scm[ent.y][ent.x][ent.z] = minetest.get_content_id(ent.name)
-				else
-					scm[ent.y][ent.x][ent.z] = {
-						node = {
-							content = minetest.get_content_id(ent.name),
-							on_constr = true
-						}}
-				end
-			else
-				scm[ent.y][ent.x][ent.z] = {
-					node = {
-						content = minetest.get_content_id(ent.name),
-						on_constr = on_constr,
-						name   = ent.name,param2 = ent.param2, param2list = mg_villages.get_param2_rotated( paramtype2, ent.param2 )},
-					rotation = paramtype2}
-			end
-		else
-			if paramtype2 ~= "facedir" and paramtype2 ~= "wallmounted" then
-				scm[ent.y][ent.x][ent.z] = {extranode = true,
-					node = {
-						content = minetest.get_content_id(ent.name),
-						on_constr = on_constr,
-						name = ent.name, param2 = ent.param2},
-					meta = ent.meta}
-			else
-				scm[ent.y][ent.x][ent.z] = {extranode = true,
-					node = {
-						content = minetest.get_content_id(ent.name),
-						on_constr = on_constr,
-						name = ent.name, param2 = ent.param2, param2list = mg_villages.get_param2_rotated( paramtype2, ent.param2 )},
-					meta = ent.meta,
-					rotation = paramtype2}
-			end
-		end
+		scm[ent.y][ent.x][ent.z] = mg_villages.decode_one_node( ent.name, ent.param2, ent.meta );
+
 	end
 	local c_air = minetest.get_content_id("air")
 	for x = 1, maxx do
