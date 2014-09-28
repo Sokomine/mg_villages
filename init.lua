@@ -40,6 +40,8 @@ dofile(mg_villages.modpath.."/protection.lua")
 -- create and show a map of the world
 dofile(mg_villages.modpath.."/map_of_world.lua")
 
+dofile(mg_villages.modpath.."/fill_chest.lua")
+
 -- the interface for the mapgen;
 -- also takes care of spawning the player
 dofile(mg_villages.modpath.."/mapgen.lua")

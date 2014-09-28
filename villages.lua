@@ -698,7 +698,7 @@ end
 
 
 
-local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements, cid, extra_calls)
+local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements, cid, extra_calls, building_nr_in_bpos)
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
@@ -860,20 +860,20 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 				   or   new_content == cid.c_chest_locked 
 				   or   new_content == cid.c_chest_shelf ) then
 					-- we're dealing with a chest that might need filling
-					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content});
+					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
 
 				elseif( new_content == cid.c_chest_private
 				   or   new_content == cid.c_chest_work
 				   or   new_content == cid.c_chest_storage ) then
 					-- we're dealing with a chest that might need filling
-					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content});
+					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
 					-- TODO: perhaps use a locked chest owned by the mob living there?
 					-- place a normal chest here
 					data[a:index(ax, ay, az)] = cid.c_chest;
 
 				elseif( new_content == cid.c_sign ) then
 					-- the sign may require some text to be written on it
-					table.insert( extra_calls.signs,  {x=ax, y=ay, z=az, typ=new_content});
+					table.insert( extra_calls.signs,  {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
 				end
 			end
 		end
@@ -1198,9 +1198,9 @@ print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..to
 
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
-	for _, pos in ipairs(bpos) do
+	for i, pos in ipairs(bpos) do
 		-- replacements are in table format for mapgen-based building spawning
-		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls )
+		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls, i )
 	end
 
 	-- replacements are in list format for minetest.place_schematic(..) type spawning

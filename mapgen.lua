@@ -811,16 +811,22 @@ t1 = time_elapsed( t1, 'vm data written' );
 			if( minetest.registered_nodes[ node_name ].on_construct ) then
 				for _, pos in ipairs(v) do
 					minetest.registered_nodes[ node_name ].on_construct( pos );
-print('calling on_construct for '..minetest.pos_to_string( pos )..' for '..tostring( node_name ));
 				end
 			end
 		end
 	end
 
-	-- TODO: extra_calls.chests, extra_calls.signs
+	local pr = PseudoRandom(mg_villages.get_bseed(minp));
+	for _, village in ipairs(villages) do
+		for _,v in ipairs( village.to_add_data.extra_calls.chests ) do
+			local building_nr  = village.to_add_data.bpos[ v.bpos_i ];
+			local building_typ = mg_villages.BUILDINGS[ building_nr.btype ].scm;
+			mg_villages.fill_chest_random( v, pr, building_nr, building_typ );
+		end
+	end
+	-- TODO: extra_calls.signs
 
 	-- initialize the pseudo random generator so that the chests will be filled in a reproducable pattern
-	local pr = PseudoRandom(mg_villages.get_bseed(minp));
 	local meta
 	for _, village in ipairs(villages) do
 		for _, n in pairs(village.to_add_data.extranodes) do
