@@ -662,7 +662,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
       if( mg_villages.realtest_trees ) then
          table.insert( replacements, {'stairs:slab_cobble',      'default:stone_slab'});
       else
-         table.insert( replacements, {'stairs:slab_cobble',      'stairs:'..mcs..'_slab'});
+         table.insert( replacements, {'stairs:slab_cobble',      'stairs:slab_'..mcs});
       end
    end
  
