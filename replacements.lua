@@ -273,8 +273,8 @@ mg_villages.get_replacement_list = function( housetype, pr )
    -- realtest lacks quite a lot from default
    if( mg_villages.realtest_trees ) then
 	for i=1,8 do
-   		table.insert( replacements, {'farming:wheat_'..i,       'farming:spelt_'..tostring( math.floor( (i+0.5)/2 )) });
-   		table.insert( replacements, {'farming:cotton_'..i,      'farming:flax_' ..tostring( math.floor( (i+0.5)/2 )) });
+   		table.insert( replacements, {'farming:wheat_'..i,       'farming:spelt_'..tostring( (i+(i%2))/2) });
+   		table.insert( replacements, {'farming:cotton_'..i,      'farming:flax_' ..tostring( (i+(i%2))/2) });
 	end
 	for i=1,5 do
    		table.insert( replacements, {'default:grass_'..i,       'air' });
