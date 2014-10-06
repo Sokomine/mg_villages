@@ -95,7 +95,7 @@ mg_villages.check_if_ground = function( ci )
 		mg_villages.node_is_ground[ ci ] = false;
 	elseif(	def.drop   and def.drop == 'default:dirt') then
 		mg_villages.node_is_ground[ ci ] = true;
-	elseif( def.walkable == true and def.is_ground_content == true ) then
+	elseif( def.walkable == true and def.is_ground_content == true and not(def.node_box)) then
 		mg_villages.node_is_ground[ ci ] = true;
 	else
 		mg_villages.node_is_ground[ ci ] = false;
