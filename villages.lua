@@ -842,7 +842,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 							end
 						-- we tried our best, but the replacement node is not defined	
 						elseif (t.node.name ~= 'mg:ignore' ) then
-							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( t.node.name )..' (suggested but inexistant: '..tostring( replacements.table[ t.node.name ] )..').');
+							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( t.node.name )..' (suggested but inexistant: '..tostring( replacements.table[ t.node.name ] )..'). Building: '..tostring( binfo.scm )..'.');
 							new_content = cid.c_air;
 						end
 
@@ -1261,7 +1261,7 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	cid.c_chest_storage    = mg_villages.get_content_id_replaced( 'cottages:chest_storage', replacements );
 	cid.c_chest_shelf      = mg_villages.get_content_id_replaced( 'cottages:shelf',         replacements );
 	cid.c_sign             = mg_villages.get_content_id_replaced( 'default:sign_wall',      replacements );
-print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..tostring( minetest.get_name_from_content_id( cid.c_chest ))); -- TODO
+--print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..tostring( minetest.get_name_from_content_id( cid.c_chest ))); -- TODO
 
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };

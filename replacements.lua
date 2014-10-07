@@ -15,7 +15,7 @@ if(	    minetest.get_modpath( 'trees' )
 
 	-- realtest is very special as far as stairs are concerned
 	mg_villages.realtest_stairs = {'default:stone','default:stone_flat','default:stone_bricks',
-	                               'default:desert_stone','default:desert_stone_flat','default:desert_stone_bricks'};
+	                               'default:desert_stone_flat','default:desert_stone_bricks'};
 	for i,v in ipairs(metals.list) do
 		table.insert( mg_villages.realtest_stairs, 'metals:'..v..'_block' );
 	end
@@ -242,6 +242,7 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 		for _,v in ipairs( mg_villages.realtest_trees ) do
 			if( wood_type == 'trees:'..v..'_planks' ) then
 				table.insert( replacements, {'default:sapling', "trees:"..v.."_sapling"});
+				table.insert( replacements, {'default:junglesapling', "trees:"..v.."_sapling"});
 			end
 		end
 
@@ -295,6 +296,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		{''},
 		{'default:wood'},
  		'default:wood');
+         table.insert( replacements, {'stairs:stair_cobble', 'default:stone_bricks_stair' }); 
+         table.insert( replacements, {'stairs:slab_cobble',  'default:stone_bricks_slab' }); 
+         table.insert( replacements, {'stairs:stair_stone',  'default:stone_flat_stair' }); 
+         table.insert( replacements, {'stairs:slab_stone',   'default:stone_flat_slab' }); 
       else    
       -- the main body of the houses in the .mts files is made out of wood
          wood_type = mg_villages.replace_materials( replacements, pr,
@@ -364,6 +369,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
          table.insert( replacements, {'default:glass', 'default:obsidian_glass'});
       end
 
+      if( mg_villages.realtest_trees ) then
+         table.insert( replacements, {'stairs:stair_cobble', 'default:stone_bricks_stair' }); 
+         table.insert( replacements, {'stairs:slab_cobble',  'default:stone_bricks_slab' }); 
+      end
       return replacements;
    end
 
@@ -379,6 +388,9 @@ mg_villages.get_replacement_list = function( housetype, pr )
       mg_villages.replace_tree_trunk( replacements, wood_type );
       mg_villages.replace_saplings(   replacements, wood_type );
 
+      if( not( minetest.get_modpath('bell' ))) then
+         table.insert( replacements, {'bell:bell',               'default:goldblock' });
+      end
       return replacements;
    end
 
@@ -456,7 +468,9 @@ mg_villages.get_replacement_list = function( housetype, pr )
       elseif( mg_villages.realtest_trees ) then
          table.insert( replacements, {'stairs:stair_junglewood',          'trees:aspen_planks_stair' });
          table.insert( replacements, {'stairs:slab_junglewood',           'trees:aspen_planks_slab' });
+      end
 
+      if( mg_villages.realtest_trees ) then
          local wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
 		{''},
@@ -464,6 +478,15 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'default:wood');
          mg_villages.replace_tree_trunk( replacements, wood_type );
          mg_villages.replace_saplings(   replacements, wood_type );
+         table.insert( replacements, {'default:stonebrick',      'default:stone_bricks' }); -- used for chimneys
+         table.insert( replacements, {'stairs:stair_stonebrick', 'default:stone_bricks_stair' }); 
+         -- table.insert( replacements, {'default:junglewood', wood_type }); -- replace the floor
+         -- replace the floor with another type of wood (looks better than the same type as above)
+         mg_villages.replace_materials( replacements, pr,
+		{'default:junglewood'},
+		{''},
+		{ 'default:wood' },
+		'default:junglewood');
       end
       return replacements;
    end
@@ -540,7 +563,9 @@ mg_villages.get_replacement_list = function( housetype, pr )
       return replacements;
    end
 
-   table.insert( replacements, {'bell:bell',               'default:goldblock' });
+   if( not( minetest.get_modpath('bell' ))) then
+      table.insert( replacements, {'bell:bell',               'default:goldblock' });
+   end
 
    -- glass that served as a marker got copied accidently; there's usually no glass in cottages
    table.insert( replacements, {'default:glass',           'air'});
@@ -585,7 +610,14 @@ mg_villages.get_replacement_list = function( housetype, pr )
 	{''},
 	materials,
 	'default:sandstone');
-   if( mfs and mfs ~= 'default:sandstone' ) then
+   if( mg_villages.realtest_trees ) then
+       table.insert( replacements, {'stairs:slab_sandstone',   'default:stone_slab'});
+       local mfs2 = mg_villages.replace_materials( replacements, pr,
+		{'stairs:stair_sandstone',  'stairs:slab_sandstone', 'default:sandstone'},
+		{'stairs:stair_',           'stairs:slab_',          'default:'         },
+		{ 'stone' }, -- will be replaced by mg_villages.realtest_stairs
+		'sandstone');
+   elseif( mfs and mfs ~= 'default:sandstone' ) then
 
       if( mfs == 'cottages:loam' or mfs == 'default:clay' or mfs == 'mg:savannawood' or mfs == 'mg:pinewood') then
          mfs = 'default:wood';
@@ -596,11 +628,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
 
       if( mfs and mfs ~= '' ) then      
          -- realtest needs special treatment
-         if( mg_villages.realtest_trees ) then
-            table.insert( replacements, {'stairs:slab_sandstone',   'default:stone_slab'});
-         else
-            table.insert( replacements, {'stairs:slab_sandstone',   'stairs:slab_'..string.sub( mfs, 9 )});
-         end
+         table.insert( replacements, {'stairs:slab_sandstone',   'stairs:slab_'..string.sub( mfs, 9 )});
       end
    end
    -- except for the floor, everything else may be glass
@@ -652,18 +680,20 @@ mg_villages.get_replacement_list = function( housetype, pr )
                       'desert_stonebrick','sandstonebrick'},
 		'cobble');
    -- set a fitting material for the slabs; mossycobble uses the default cobble slabs
-   if( mcs ~= 'mossycobble' and mcs ~= 'cobble') then
+   if( mg_villages.realtest_trees ) then
+      local mcs2 = mg_villages.replace_materials( replacements, pr,
+		{'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
+		{'stairs:stair_',        'stairs:slab_',       'default:'          },
+		{ 'stone' }, -- will be replaced by mg_villages.realtest_stairs
+		'cobble');
+      table.insert( replacements, {'moreblocks:slab_cobble',   'default:'..mcs..'_slab'});
+   elseif( mcs ~= 'mossycobble' and mcs ~= 'cobble') then
 
       -- if no slab exists, use sandstone slabs
       if( not( mcs ) or not( minetest.registered_nodes[ 'stairs:slab_'..mcs ])) then
          mcs = 'sandstone';
       end
-      -- special handling for realtest
-      if( mg_villages.realtest_trees ) then
-         table.insert( replacements, {'stairs:slab_cobble',      'default:stone_slab'});
-      else
-         table.insert( replacements, {'stairs:slab_cobble',      'stairs:slab_'..mcs});
-      end
+      table.insert( replacements, {'stairs:slab_cobble',      'stairs:slab_'..mcs});
    end
  
 
