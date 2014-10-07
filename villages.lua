@@ -183,7 +183,12 @@ local function choose_building_rot(l, pr, orient, village_type)
 	if rotation%2 == 1 then
 		bsizex, bsizez = bsizez, bsizex
 	end
-	return btype, rotation, bsizex, bsizez
+	-- some buildings are mirrored
+	local mirror = nil;
+	if( pr:next( 1,2 )==1 ) then
+		mirror = true;
+	end
+	return btype, rotation, bsizex, bsizez, mirror
 end
 
 local function placeable(bx, bz, bsizex, bsizez, l, exclude_roads, orientation)
@@ -255,7 +260,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 				if( mg_villages.medieval_subtype and village_type_sub == 'medieval' and math.abs(village.vx-rx)>20 and math.abs(village.vz-rz)>20) then
 					village_type_sub = 'fields';
 				end
-				btype, rotation, bsizex, bsizez = choose_building_rot(l, pr, orient1, village_type_sub)
+				btype, rotation, bsizex, bsizez, mirror = choose_building_rot(l, pr, orient1, village_type_sub)
 				bx = rx + math.abs(rdz)*(roadsize+1) - when(rdx==-1, bsizex-1, 0)
 				bz = rz + math.abs(rdx)*(roadsize+1) - when(rdz==-1, bsizez-1, 0)
 				if placeable(bx, bz, bsizex, bsizez, l) and inside_village2(bx, bsizex, bz, bsizez, village, vnoise) then
@@ -275,7 +280,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 			rz = rz + (bsizez+space_between_buildings)*rdz
 			mx = rx - 2*rdx
 			mz = rz - 2*rdz
-			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = mg_villages.road_nr, side=1, o=orient1 }
+			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = mg_villages.road_nr, side=1, o=orient1, mirror=mirror }
 		--end
 	end
 	rx = rxx
@@ -304,7 +309,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 				if( mg_villages.medieval_subtype and village_type_sub == 'medieval' and math.abs(village.vx-rx)>(village.vs/3) and math.abs(village.vz-rz)>(village.vs/3)) then
 					village_type_sub = 'fields';
 				end
-				btype, rotation, bsizex, bsizez = choose_building_rot(l, pr, orient2, village_type_sub)
+				btype, rotation, bsizex, bsizez, mirror = choose_building_rot(l, pr, orient2, village_type_sub)
 				bx = rx - math.abs(rdz)*(bsizex+roadsize) - when(rdx==-1, bsizex-1, 0)
 				bz = rz - math.abs(rdx)*(bsizez+roadsize) - when(rdz==-1, bsizez-1, 0)
 				if placeable(bx, bz, bsizex, bsizez, l) and inside_village2(bx, bsizex, bz, bsizez, village, vnoise) then
@@ -324,7 +329,7 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 			rz = rz + (bsizez+space_between_buildings)*rdz
 			m2x = rx - 2*rdx
 			m2z = rz - 2*rdz
-			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = mg_villages.road_nr, side=2, o=orient2}
+			l[#l+1] = {x=bx, y=vh, z=bz, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = mg_villages.road_nr, side=2, o=orient2, mirror=mirror}
 		--end
 	end
 	if road_in_building(rx, rz, rdx, rdz, roadsize, l) then
@@ -741,6 +746,18 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 		scm_z_start = scm_z;
 	end
 		
+	local mirror_x = false;
+	local mirror_z = false;
+	if( pos.mirror ) then
+		if( binfo.axis and binfo.axis == 1 ) then
+			mirror_x = true;
+			mirror_z = false;
+		else
+			mirror_x = false;
+			mirror_z = true;
+		end
+	end
+
 	for x = 0, pos.bsizex-1 do
 	scm_x = scm_x + step_x;
 	scm_z = scm_z_start;
@@ -750,13 +767,43 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 		local xoff = scm_x;
 		local zoff = scm_z;
 		if(     pos.brotate == 2 ) then
-			zoff = pos.bsizez - scm_z + 1;
+			if( mirror_x ) then
+				xoff = pos.bsizex - scm_x + 1;
+			end
+			if( mirror_z ) then
+				zoff = scm_z;
+			else
+				zoff = pos.bsizez - scm_z + 1;
+			end
 		elseif( pos.brotate == 1 ) then
-			xoff = scm_z;
-			zoff = scm_x;
+			if( mirror_x ) then
+				xoff = pos.bsizez - scm_z + 1;
+			else
+				xoff = scm_z;
+			end
+			if( mirror_z ) then
+				zoff = pos.bsizex - scm_x + 1;
+			else
+				zoff = scm_x;
+			end
 		elseif( pos.brotate == 3 ) then
-			xoff = scm_z;
-			zoff = pos.bsizex - scm_x + 1;
+			if( mirror_x ) then
+				xoff = pos.bsizez - scm_z + 1;
+			else
+				xoff = scm_z;
+			end
+			if( mirror_z ) then
+				zoff = scm_x;
+			else
+				zoff = pos.bsizex - scm_x + 1;
+			end
+		elseif( pos.brotate == 0 ) then
+			if( mirror_x ) then
+				xoff = pos.bsizex - scm_x + 1;
+			end
+			if( mirror_z ) then
+				zoff = pos.bsizez - scm_z + 1;
+			end
 		end
 
 		local has_snow    = false; -- TODO: make some villages snow covered if moresnow is installed
@@ -818,7 +865,27 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 					end
 					data[       a:index(ax, ay, az)] = new_content;
 					if(     t.node.param2list ) then
-						param2_data[a:index(ax, ay, az)] = t.node.param2list[ pos.brotate + 1];
+						local np2 = t.node.param2list[ pos.brotate + 1];
+						-- mirror
+						if(     mirror_x ) then
+							if(     #t.node.param2list==5) then
+								np2 = mg_villages.mirror_facedir[ ((pos.brotate+1)%2)+1 ][ np2+1 ];
+							elseif( #t.node.param2list<5 
+							       and  ((pos.brotate%2==1 and (np2==4 or np2==5)) 
+						 	          or (pos.brotate%2==0 and (np2==2 or np2==3)))) then 
+								np2 = t.node.param2list[ (pos.brotate + 2)%4 +1];
+							end
+
+						elseif( mirror_z ) then
+							if(     #t.node.param2list==5) then
+								np2 = mg_villages.mirror_facedir[ (pos.brotate     %2)+1 ][ np2+1 ];
+							elseif( #t.node.param2list<5 
+							       and  ((pos.brotate%2==0 and (np2==4 or np2==5)) 
+						 	          or (pos.brotate%2==1 and (np2==2 or np2==3)))) then 
+								np2 = t.node.param2list[ (pos.brotate + 2)%4 +1];
+							end
+						end
+						param2_data[a:index(ax, ay, az)] = np2;
 					elseif( t.node.param2 ) then
 						param2_data[a:index(ax, ay, az)] = t.node.param2;
 					end
