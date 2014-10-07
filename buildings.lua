@@ -45,10 +45,11 @@ mg_villages.BUILDINGS = {
 	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="logcabin7",  orients={1}, weight={logcabin=1}},
 	{sizex= 5,	sizez= 6,	yoff= 0,	ysize= 5,	scm="logcabin8",  orients={1}, weight={logcabin=1}},
 	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="logcabin9",  orients={1}, weight={logcabin=1}},
-	{sizex= 5,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabin10", orients={1}, weight={logcabin=1}},
-	{sizex= 7,	sizez= 10,	yoff= 0,	ysize= 7,	scm="logcabin11", orients={1}, weight={logcabin=1}},
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 5,	scm="logcabin12rot", orients={2}, weight={logcabin=1}},
-	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabin13rot", orients={2}, weight={logcabin=1}},
+	{sizex= 5,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabin10", orients={2}, weight={logcabin=1}},
+	{sizex= 7,	sizez= 10,	yoff= 0,	ysize= 7,	scm="logcabin11", orients={2}, weight={logcabin=1}},
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 5,	scm="logcabinpub1", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern'},
+	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub2", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern'},
+	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub3", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern'},
 
 -- grass huts (requiring cottages, dryplants, cavestuff/undergrowth, plantlife)
 	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 5,	scm="grasshut1", orients={2}, weight={grasshut=1}},
