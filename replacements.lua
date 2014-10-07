@@ -554,6 +554,38 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		{'sand', 'sandstone', 'clay'},
 		'');
 
+      if( mg_villages.realtest_trees ) then
+         local wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{ 'default:wood' },
+		'default:wood');
+         mg_villages.replace_tree_trunk( replacements, wood_type );
+         mg_villages.replace_saplings(   replacements, wood_type );
+         table.insert( replacements, {'default:clay', 'default:dirt_with_clay'});
+         local mfs2 = mg_villages.replace_materials( replacements, pr,
+		{'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
+		{'stairs:stair_',        'stairs:slab_',       'default:'      },
+		{ 'stone' }, -- will be replaced by mg_villages.realtest_stairs
+		'sandstone');
+      end
+      return replacements;
+   end
+
+
+   if( housetype == 'charachoal' ) then
+      if( mg_villages.realtest_trees ) then
+         local wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{ 'default:wood' },
+		'default:wood');
+         mg_villages.replace_tree_trunk( replacements, wood_type );
+         mg_villages.replace_saplings(   replacements, wood_type );
+
+         table.insert( replacements, {'stairs:slab_loam',     'cottages:loam'});
+         table.insert( replacements, {'stairs:stair_loam',    'cottages:loam'});
+      end
       return replacements;
    end
 
