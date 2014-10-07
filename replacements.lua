@@ -793,3 +793,50 @@ mg_villages.get_content_id_replaced = function( node_name, replacements )
 	end
 end
 
+
+-- they don't all grow cotton; farming_plus fruits are far more intresting!
+-- Note: This function modifies replacements.ids and replacements.table for each building
+--       as far as fruits are concerned. It needs to be called before placing a building
+--       which contains fruits.
+-- The function might as well be a local one.
+mg_villages.get_fruit_replacements = function( replacements, fruit)
+
+	if( not( fruit )) then
+		return;
+	end
+
+	for i=1,8 do
+		local old_name = '';
+		local new_name = '';
+		-- farming_plus plants sometimes come in 3 or 4 variants, but not in 8 as cotton does
+		if(     minetest.registered_nodes[ 'farming_plus:'..fruit..'_'..i ]) then
+			old_name = "farming:cotton_"..i;
+			new_name = 'farming_plus:'..fruit..'_'..i;
+	
+		-- "surplus" cotton variants will be replaced with the full grown fruit
+		elseif( minetest.registered_nodes[ 'farming_plus:'..fruit ]) then
+			old_name = "farming:cotton_"..i;
+			new_name = 'farming_plus:'..fruit;
+
+		-- and plants from farming: are supported as well
+		elseif( minetest.registered_nodes[ 'farming:'..fruit..'_'..i ]) then
+			old_name = "farming:cotton_"..i;
+			new_name = 'farming:'..fruit..'_'..i;
+
+		elseif( minetest.registered_nodes[ 'farming:'..fruit ]) then
+			old_name = "farming:cotton_"..i;
+			new_name = 'farming:'..fruit;
+		end
+
+		if( old_name ~= '' and new_name ~= '' ) then
+			-- this is mostly used by the voxelmanip based spawning of .we files
+			replacements.ids[ minetest.get_content_id( old_name )] = minetest.get_content_id( new_name );
+			-- this is used by the place_schematic based spawning	
+			for i,v in ipairs( replacements.table ) do
+				if( v and #v and v[1]==old_name ) then
+					v[2] = new_name;
+				end
+			end
+		end
+	end
+end
