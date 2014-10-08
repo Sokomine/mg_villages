@@ -601,6 +601,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
 
    -- glass that served as a marker got copied accidently; there's usually no glass in cottages
    table.insert( replacements, {'default:glass',           'air'});
+   -- some plants started growing while the buildings where saved - eliminate them
+   table.insert( replacements, {'junglegrass:medium',      'air'});
+   table.insert( replacements, {'junglegrass:short',       'air'});
+   table.insert( replacements, {'poisonivy:seedling',      'air'});
 
 -- TODO: sometimes, half_door/half_door_inverted gets rotated wrong
 --   table.insert( replacements, {'cottages:half_door',      'cottages:half_door_inverted'});
