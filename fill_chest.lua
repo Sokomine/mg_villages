@@ -14,13 +14,13 @@ end
 -- contains tables of the following structure: { node_name, probability (in percent, 100=always, 0=never), max_amount, repeat (for more than one stack) }
 mg_villages.random_chest_content = {};
 
-ADD_RCC({"default:pick_stone",             10,  1, 3, farm_tiny=1, farm_full=1, shed=1, lumberjack=1, hut=1 }); 
+ADD_RCC({"default:pick_stone",             10,  1, 3, farm_tiny=1, farm_full=1, shed=1, lumberjack=1, hut=1, chest_work=1, lumberjack=1 }); 
 ADD_RCC({"default:pick_steel",              5,  1, 2, forge=1 }); 
-ADD_RCC({"default:pick_mese",               2,  1, 2, forge=1 }); 
-ADD_RCC({"default:shovel_stone",            5,  1, 3, farm_tiny=1, farm_full=1, shed=1, lumberjack=1, hut=1 }); 
+ADD_RCC({"default:pick_mese",               2,  1, 2, forge=1, lumberjack=1 }); 
+ADD_RCC({"default:shovel_stone",            5,  1, 3, farm_tiny=1, farm_full=1, shed=1, lumberjack=1, hut=1, chest_work=1 }); 
 ADD_RCC({"default:shovel_steel",            5,  1, 2, forge=1 }); 
-ADD_RCC({"default:axe_stone",               5,  1, 3, farm_tiny=1, farm_full=1 }); 
-ADD_RCC({"default:axe_steel",               5,  1, 2, forge=1 }); 
+ADD_RCC({"default:axe_stone",               5,  1, 3, farm_tiny=1, farm_full=1, chest_work=1, lumberjack=1 }); 
+ADD_RCC({"default:axe_steel",               5,  1, 2, forge=1, lumberjack=1 }); 
 ADD_RCC({"default:sword_wood",              1,  1, 3, guard=1 }); 
 ADD_RCC({"default:sword_stone",             1,  1, 3, guard=1 }); 
 ADD_RCC({"default:sword_steel",             1,  1, 3, forge=1, guard=1 }); 
@@ -164,7 +164,7 @@ mg_villages.fill_chest_random = function( pos, pr, building_nr, building_typ )
 	if( typ == 'cottages:chest_work' and building_data.typ ) then
 		typ2 = building_data.typ;
 	end
---print('FILLING chest of type '..tostring( typ ));
+--print('FILLING chest of type '..tostring( typ )..' and '..tostring( typ2));
 	if( not( typ ) or typ=='' ) then
 		return;
 	end
