@@ -492,6 +492,23 @@ mg_villages.get_replacement_list = function( housetype, pr )
    end
 
 
+   if( housetype == 'tent' ) then
+      table.insert( replacements, { "glasspanes:wool_pane",  "cottages:wool_tent" });
+      table.insert( replacements, { "default:gravel",        "default:sand"       });
+      -- realtest needs diffrent fence posts and doors
+      if( mg_villages.realtest_trees ) then
+         local wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{ 'default:wood' },
+		'default:wood');
+         mg_villages.replace_tree_trunk( replacements, wood_type );
+         mg_villages.replace_saplings(   replacements, wood_type );
+      end
+      return replacements;
+   end
+
+
    if( housetype == 'grasshut' ) then
 
       table.insert( replacements, {'moreblocks:fence_jungle_wood',     'default:fence' });
