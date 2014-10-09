@@ -1,4 +1,7 @@
 
+-- cover some villages with artificial snow; probability: 1/mg_villages.artificial_snow_probability
+mg_villages.artificial_snow_probability = 10;
+
 mg_villages.wseed = 0;
 
 minetest.register_on_mapgen_init(function(mgparams)
@@ -106,10 +109,10 @@ end
 
 -- sets evrything at x,z and above height target_height to air;
 -- the area below gets filled up in a suitable way (i.e. dirt with grss - dirt - stone)
-mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, village_noise, vh, n_village, treepos )
+mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, village_noise, vh, n_village, treepos, has_artificial_snow )
 
 	local surface_node  = nil;
-	local has_snow      = false;
+	local has_snow      = has_artificial_snow;
 	local tree          = false;
 	local jtree         = false;
 	local old_height    = maxp.y;
@@ -237,11 +240,15 @@ mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp
 	for x = minp.x, maxp.x do
 		for village_nr, village in ipairs(villages) do
 			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
+			local has_artificial_snow = false;
+			if( village.artificial_snow and village.artificial_snow==1) then
+				has_artificial_snow = true;
+			end
 			if( village_area[ x ][ z ][ 1 ] > 0 and village_area[ x ][ z ][ 1 ]==village_nr and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then -- inside a village
-				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village, nil   );
+				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village, nil, has_artificial_snow   );
 
 			elseif (mg_villages.ENABLE_TERRAIN_BLEND and n_village <= 160) then -- PM v
-				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village,treepos);
+				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village,treepos, has_artificial_snow);
 			end -- PM ^
 		end
 	end
@@ -714,6 +721,14 @@ t1 = time_elapsed( t1, 'defines' );
 		-- generate the village structure: determine positions of buildings and roads
 		mg_villages.generate_village( village, village_noise);
 t1 = time_elapsed( t1, 'generate_village' );
+
+		if( not( village.artificial_snow )) then
+			if( mg_villages.artificial_snow_probability and math.random( 1, mg_villages.artificial_snow_probability )==1) then
+				village.artificial_snow = 1;
+			else
+				village.artificial_snow = 0;
+			end
+		end
 
 		mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
 t1 = time_elapsed( t1, 'mark_buildings' );
