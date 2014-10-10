@@ -747,6 +747,9 @@ mg_villages.get_replacement_list = function( housetype, pr )
          mcs = 'sandstone';
       end
       table.insert( replacements, {'stairs:slab_cobble',      'stairs:slab_'..mcs});
+      table.insert( replacements, {'moreblocks:slab_cobble',  'stairs:slab_'..mcs});
+   else
+      table.insert( replacements, {'moreblocks:slab_cobble',  'stairs:slab_'..mcs});
    end
  
 
