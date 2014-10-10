@@ -271,10 +271,7 @@ if( minetest.get_modpath( 'dryplants' )) then
 	table.insert( mg_villages.village_types, 'grasshut' );
 end
 
---mg_villages.village_types = {'lumberjack'};
---mg_villages.village_types = {'medieval'};
---mg_villages.village_types = {'claytrader'};
---mg_villages.village_types = {'grasshut'};
+
 
 -- read the data files and fill in information like size and nodes that need on_construct to be called after placing
 mg_villages.buildings_init = function()
@@ -283,16 +280,31 @@ mg_villages.buildings_init = function()
 	-- determine the size of the given houses
 	for i,v in ipairs( mg_villages.BUILDINGS ) do
      
-
-		-- read the size of the building
-		local res  = handle_schematics.analyze_mts_file( mts_path..mg_villages.BUILDINGS[ i ].scm ); 
-		-- alternatively, read the mts file
-		if( not( res )) then
-			res = mg_villages.import_scm( mg_villages.BUILDINGS[ i ].scm );
+		local is_used = false;
+		for _,t in ipairs( mg_villages.village_types ) do
+			if( t and v and v.weight and v.weight[ t ] ) then
+				is_used = true;
+			end
+		end
+		if( v.weight and v.weight.fields ) then
+			is_used = true;
 		end
 
+		local res = nil;
+		if( is_used ) then
+			-- read the size of the building
+			res  = handle_schematics.analyze_mts_file( mts_path..mg_villages.BUILDINGS[ i ].scm ); 
+			-- alternatively, read the mts file
+			if( not( res )) then
+				res = mg_villages.import_scm( mg_villages.BUILDINGS[ i ].scm );
+			end
+		end
+
+		if(     not( is_used )) then
+			-- do nothing; skip this file
+			print('SKIPPING '..tostring( mg_villages.BUILDINGS[ i ].scm )..' due to village type not supported.');
 		-- provided the file could be analyzed successfully
-		if( res and res.size and res.size.x ) then
+		elseif( res and res.size and res.size.x ) then
 			-- the file has to be placed with minetest.place_schematic(...)
 			mg_villages.BUILDINGS[ i ].is_mts = 1;
 
