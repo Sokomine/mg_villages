@@ -86,7 +86,7 @@ handle_schematics.analyze_mts_file = function( path )
 	end
 
 	-- decompression was recently added; if it is not yet present, we need to use normal place_schematic
-	if( false and not( minetest.decompress )) then
+	if( minetest.decompress == nil) then
 		file.close(file);
 		return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = nil };
 	end
