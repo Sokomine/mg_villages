@@ -268,7 +268,7 @@ end
 
 -- TODO: limit this function to the shell in order to speed things up
 -- repair mapgen griefings
-mg_villages.repair_outer_shell = function( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid )
+mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid )
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		-- inside a village
@@ -767,7 +767,7 @@ t1 = time_elapsed( t1, 'change_height' );
 	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid );
 t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
-	mg_villages.repair_outer_shell(   villages, village_noise, tmin, tmax, vm, data, param2_data, a, village_area, cid );
+	mg_villages.repair_outer_shell(   villages,                tmin, tmax, vm, data, param2_data, a, village_area, cid );
 t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
@@ -777,10 +777,10 @@ t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	for _, village in ipairs(villages) do
 
-		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, village_noise, cid);
+		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid);
 t1 = time_elapsed( t1, 'place_buildings' );
 
-		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, village_noise, c_feldweg);
+		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, c_feldweg);
 t1 = time_elapsed( t1, 'place_dirt_roads' );
 
 		-- grow trees which are part of buildings into saplings

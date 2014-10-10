@@ -489,7 +489,7 @@ end
 
 -- actually place the buildings (at least those which came as .we files; .mts files are handled later on)
 -- this code is also responsible for tree placement
-mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, vnoise, cid)
+mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, cid)
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
 	local seed = mg_villages.get_bseed({x=vx, z=vz})
@@ -530,7 +530,7 @@ end
 
 
 -- add the dirt roads
-mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, vnoise, c_road_node)
+mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, c_road_node)
 	local c_air = minetest.get_content_id( 'air' );
 	for _, pos in ipairs(village.to_add_data.dirt_roads) do
 		local param2 = 0;
