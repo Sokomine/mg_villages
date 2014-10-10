@@ -695,22 +695,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	
 
 t1 = time_elapsed( t1, 'defines' );
---[[
-	local centered_here = 0;
-	for _,village in ipairs( villages ) do
-		if(   village.vx >= minp.x and village.vx <= maxp.x 
-		  and village.vh >= minp.y and village.vh <= maxp.y 
-		  and village.vz >= minp.z and village.vz <= maxp.z ) then
-			village.center_in_this_mapchunk = true;
-			centered_here = centered_here + 1;
-		else
-			village.center_in_this_mapchunk = false;
-		end
-	end
-	if( centered_here < 1 ) then
-		return; -- TODO
-	end
---]]
 
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
 
@@ -762,6 +746,7 @@ t1 = time_elapsed( t1, 'get_vmap_data' );
 		tmin = minp;
 		tmax = maxp;
 	end
+	-- TODO: this needs a modified version for the individual, standalone buildings - or needs a diffrent noise function!
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
 t1 = time_elapsed( t1, 'mark_inside_village_area' );
 
@@ -778,6 +763,7 @@ t1 = time_elapsed( t1, 'get_height' );
 	end
 t1 = time_elapsed( t1, 'change_height' );
 
+	-- TODO: really requires the noise value (which individual buildings would not have)
 	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid );
 t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
@@ -919,6 +905,9 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	if( villages and #villages > 0 ) then
 		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil );
 	end
+
+	-- TODO: place individual buildings; villages will have to be empty in that case
+--  		mg_villages.place_villages_via_voxelmanip( {},       minp, maxp, nil, nil,  nil, nil, nil );
 end)
 
 
