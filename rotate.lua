@@ -34,9 +34,6 @@ mg_villages.rotate_wallmounted = function(wallmounted)
 end
 
 mg_villages.get_param2_rotated = function( paramtype2, p2 )
-	if( not( p2 )) then
-		return 0;
-	end
 	local p2r = {};
 	p2r[ 1 ] = p2;
 	if(     paramtype2 == 'wallmounted' ) then

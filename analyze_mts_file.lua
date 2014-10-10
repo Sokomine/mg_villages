@@ -9,7 +9,7 @@ handle_schematics.analyze_mts_file = function( path )
 	local size = { x = 0, y = 0, z = 0, version = 0 }
 	local version = 0;
 
-	local file = io.open(path..'.mts', "r")
+	local file = io.open(path..'.mts', "rb")
 	if (file == nil) then
 		return nil
 	end
