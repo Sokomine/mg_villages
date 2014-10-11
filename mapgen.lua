@@ -765,7 +765,7 @@ t1 = time_elapsed( t1, 'get_height' );
 	-- change height of those villages where an optimal_height could be determined
 	local village_data_updated = false;
 	for _,village in ipairs(villages) do
-		if( village.optimal_height and village.optimal_height >= 0 and village.optimal_height ~= village.vh ) then
+		if( village.optimal_height and village.optimal_height > 0 and village.optimal_height ~= village.vh ) then
 			mg_villages.change_village_height( village, village.optimal_height );
 			village_data_updated = true;
 		end
