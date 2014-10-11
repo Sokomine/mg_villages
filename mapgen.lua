@@ -109,8 +109,7 @@ end
 
 -- sets evrything at x,z and above height target_height to air;
 -- the area below gets filled up in a suitable way (i.e. dirt with grss - dirt - stone)
-mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, village_noise, vh, n_village, treepos, has_artificial_snow )
-
+mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, vh, treepos, has_artificial_snow, blend )
 	local surface_node  = nil;
 	local has_snow      = has_artificial_snow;
 	local tree          = false;
@@ -177,10 +176,8 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 
 	-- do terrain blending; target_height has to be calculated based on old_height
 	if( target_height == maxp.y ) then
-		local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
 		local yblend = old_height;
-		local blend = ((n_village - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
-		if n_rawnoise > 0 then -- leave some cliffs unblended
+		if blend > 0 then -- leave some cliffs unblended
 			yblend = math.floor(vh + blend * (old_height - vh))
 			target_height = yblend+1;
 		else	
@@ -234,21 +231,30 @@ end
 
 
 -- adjust the terrain level to the respective height of the village
-mg_villages.flatten_village_area = function( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid )
+mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid )
 	local treepos = {};
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		for village_nr, village in ipairs(villages) do
-			local n_village = mg_villages.get_vnoise(x, z, village, village_noise) -- PM
-			local has_artificial_snow = false;
-			if( village.artificial_snow and village.artificial_snow==1) then
-				has_artificial_snow = true;
-			end
-			if( village_area[ x ][ z ][ 1 ] > 0 and village_area[ x ][ z ][ 1 ]==village_nr and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then -- inside a village
-				mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village, nil, has_artificial_snow   );
+			-- is village_nr the village that is the one that is relevant for this spot?
+			if(    village_area[ x ][ z ][ 1 ] > 0
+			   and village_area[ x ][ z ][ 1 ]==village_nr 
+			   and village_area[ x ][ z ][ 2 ]~= 0
+			   and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then
 
-			elseif (mg_villages.ENABLE_TERRAIN_BLEND and n_village <= 160) then -- PM v
-				mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village_noise, village.vh, n_village,treepos, has_artificial_snow);
+				local has_artificial_snow = false;
+				if( village.artificial_snow and village.artificial_snow==1) then
+					has_artificial_snow = true;
+				end
+
+				if( village_area[ x ][ z ][ 2 ] > 0 ) then -- inside a village
+					mg_villages.lower_or_raise_terrain_at_point( x, z, village.vh, minp, maxp, vm, data, param2_data, a, cid, village.vh,
+											nil,     has_artificial_snow, 0   );
+
+				elseif( mg_villages.ENABLE_TERRAIN_BLEND and village_area[ x ][ z ][ 2 ] < 0) then
+					mg_villages.lower_or_raise_terrain_at_point( x, z, maxp.y,     minp, maxp, vm, data, param2_data, a, cid, village.vh,
+											treepos, has_artificial_snow, -1* village_area[ x ][ z ][ 2 ]);
+				end
 			end -- PM ^
 		end
 	end
@@ -383,8 +389,26 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 				village_area[ x ][ z ] = { 0, 0 };
 
 				for village_nr, village in ipairs(villages) do
-					if( mg_villages.inside_village_area(x, z, village, village_noise)) then
+					local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
+					local vn = mg_villages.get_vn(x, z, n_rawnoise, village);
+					-- the village core; this is where the houses stand (but there's no house or road at this particular spot)
+					if(     vn <= 40 ) then
+						village_area[ x ][ z ] = { village_nr, 6};
+
+					-- the flattened land around the village where wheat, cotton, trees or grass may be grown (depending on village type)
+					elseif( vn <= 80 ) then
 						village_area[ x ][ z ] = { village_nr, 1};
+
+					-- terrain blending for the flattened land
+					elseif( vn <= 160 and mg_villages.ENABLE_TERRAIN_BLEND) then
+						if n_rawnoise > -0.5 then -- leave some cliffs unblended
+							local blend = (( vn - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
+							-- assign a negative value to terrain that needs to be adjusted in height
+							village_area[ x ][ z ] = { village_nr, -1 * blend};
+						else
+							-- no height adjustments for this terrain; the terrain is not considered to be part of the village
+							village_area[ x ][ z ] = { village_nr, 0};
+						end
 					end
 				end
 			end
@@ -410,15 +434,15 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		for z = minp.z+1, maxp.z-1 do
 			if(     village_area[ x ][ z ][ 1 ] ~= 0
                             and village_area[ x ][ z ][ 2 ] ~= 0
-			    and ( village_area[ x+1 ][ z   ][ 2 ] == 0
-			       or village_area[ x-1 ][ z   ][ 2 ] == 0 
-			       or village_area[  x  ][ z+1 ][ 2 ] == 0 
-			       or village_area[  x  ][ z-1 ][ 2 ] == 0 )
+			    and ( village_area[ x+1 ][ z   ][ 2 ] <= 0
+			       or village_area[ x-1 ][ z   ][ 2 ] <= 0 
+			       or village_area[  x  ][ z+1 ][ 2 ] <= 0 
+			       or village_area[  x  ][ z-1 ][ 2 ] <= 0 )
 			  -- if the corners of the mapblock are inside the village area, they may count as borders here as well
-			  or ( x==minp.x+1 and village_area[ x-1 ][ z   ][ 1 ] ~= 0 )
-			  or ( x==maxp.x-1 and village_area[ x+1 ][ z   ][ 1 ] ~= 0 )
-			  or ( z==minp.z-1 and village_area[ x   ][ z-1 ][ 1 ] ~= 0 )
-			  or ( z==maxp.z+1 and village_area[ x   ][ z+1 ][ 1 ] ~= 0 )) then
+			  or ( x==minp.x+1 and village_area[ x-1 ][ z   ][ 1 ] >= 0 )
+			  or ( x==maxp.x-1 and village_area[ x+1 ][ z   ][ 1 ] >= 0 )
+			  or ( z==minp.z-1 and village_area[ x   ][ z-1 ][ 1 ] >= 0 )
+			  or ( z==maxp.z+1 and village_area[ x   ][ z+1 ][ 1 ] >= 0 )) then
 
 				y = maxp.y;
 				while( y > minp.y and y >= 0) do
@@ -557,7 +581,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	for x = minp.x, maxp.x do
 		for z = minp.z, maxp.z do
 			-- turn unused land (which is either dirt or desert sand) into a field that grows wheat
-			if( village_area[ x ][ z ][ 2 ]==1 ) then
+			if( village_area[ x ][ z ][ 2 ]==1 
+			 or village_area[ x ][ z ][ 2 ]==6) then
 
 				local village_nr = village_area[ x ][ z ][ 1 ];
 				local village    = villages[ village_nr ];
@@ -596,40 +621,12 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 						data[a:index( x,  h+2, z)] = cid.c_msnow_1;
 					end
 				
---[[
-					-- avoid water spills if the neighbour nodes are not part of the field
-					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
-					   and z<maxp.z and village_area[ x   ][ z+1 ][ 2 ] == 1 and village_area[ x   ][ z+1 ][ 1 ]==village_nr 
-					   and x>minp.x and village_area[ x-1 ][ z   ][ 2 ] == 1 and village_area[ x-1 ][ z   ][ 1 ]==village_nr 
-					   and z>minp.z and village_area[ x   ][ z-1 ][ 2 ] == 1 and village_area[ x   ][ z-1 ][ 1 ]==village_nr ) then
-						data[a:index( x,  h-1, z)] = c_water_source;
-						data[a:index( x,  h-2, z)] = c_clay;
-					else
-						data[a:index( x,  h-1, z)] = cid.c_dirt;
-						data[a:index( x,  h-2, z)] = cid.c_dirt;
-					end
---]]
-
 				-- grow wheat and cotton on desert sand soil - or on soil previously placed (before mudslide overflew it; same as above)
 				elseif( on_soil and (g==cid.c_desert_sand or g==cid.c_soil_sand) and cid.c_soil_sand and cid.c_soil_sand > 0) then
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
 					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = cid.c_soil_sand;
---[[
-					-- avoid water spills if the neighbour nodes are not part of the field
-					if(    x<maxp.x and village_area[ x+1 ][ z   ][ 2 ] == 1 and village_area[ x+1 ][ z   ][ 1 ]==village_nr 
-					   and z<maxp.z and village_area[ x   ][ z+1 ][ 2 ] == 1 and village_area[ x   ][ z+1 ][ 1 ]==village_nr 
-					   and x>minp.x and village_area[ x-1 ][ z   ][ 2 ] == 1 and village_area[ x-1 ][ z   ][ 1 ]==village_nr 
-					   and z>minp.z and village_area[ x   ][ z-1 ][ 2 ] == 1 and village_area[ x   ][ z-1 ][ 1 ]==village_nr ) then
-						data[a:index( x,  h-1, z)] = c_clay;      -- so that desert sand soil does not fall down
-						data[a:index( x,  h-2, z)] = c_water_source;
-						data[a:index( x,  h-3, z)] = c_clay;
-					else
-						data[a:index( x,  h-1, z)] = cid.c_desert_stone;
-						data[a:index( x,  h-2, z)] = cid.c_desert_stone;
-					end
---]]
-	
+
 				elseif( on_soil ) then
 					if( math.random(1,5)==1 ) then
 						data[a:index( pos.x,  pos.y, pos.z)] = cid.c_shrub;
@@ -714,8 +711,15 @@ t1 = time_elapsed( t1, 'generate_village' );
 			end
 		end
 
+		-- will set village_area to N where .. is:
+		--  2: a building
+		--  3: border around a building
+		--  4: a road
+		--  5: border around a road
 		mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
 t1 = time_elapsed( t1, 'mark_buildings' );
+		-- will set village_area to N where .. is:
+		--  8: a dirt road
 		mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
 t1 = time_elapsed( t1, 'mark_dirt_roads' );
         end
@@ -747,6 +751,11 @@ t1 = time_elapsed( t1, 'get_vmap_data' );
 		tmax = maxp;
 	end
 	-- TODO: this needs a modified version for the individual, standalone buildings - or needs a diffrent noise function!
+	-- will set village_area to N where .. is:
+	--  0: not part of any village
+	--  1: flattened area around the village; plants (wheat, cotton, trees, grass, ...) may be planted here
+  	--  6: free/unused spot in the core area of the village where the buildings are
+        -- negative value: do terrain blending
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
 t1 = time_elapsed( t1, 'mark_inside_village_area' );
 
@@ -763,11 +772,10 @@ t1 = time_elapsed( t1, 'get_height' );
 	end
 t1 = time_elapsed( t1, 'change_height' );
 
-	-- TODO: really requires the noise value (which individual buildings would not have)
-	mg_villages.flatten_village_area( villages, village_noise, minp, maxp, vm, data, param2_data, a, village_area, cid );
+	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
 t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
-	mg_villages.repair_outer_shell(   villages,                tmin, tmax, vm, data, param2_data, a, village_area, cid );
+	mg_villages.repair_outer_shell(   villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
 t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
