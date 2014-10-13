@@ -1,4 +1,7 @@
 
+-- cover some villages with artificial snow; probability: 1/mg_villages.artificial_snow_probability
+mg_villages.artificial_snow_probability = 10;
+
 
 -- if set to false, villages will not be integrated into the terrain - which looks very bad
 mg_villages.ENABLE_TERRAIN_BLEND = true;

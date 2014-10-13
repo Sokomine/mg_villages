@@ -1,6 +1,4 @@
 
--- cover some villages with artificial snow; probability: 1/mg_villages.artificial_snow_probability
-mg_villages.artificial_snow_probability = 10;
 
 mg_villages.wseed = 0;
 
