@@ -1,54 +1,7 @@
-mg_villages.VILLAGE_CHECK_RADIUS = 2
-mg_villages.VILLAGE_CHECK_COUNT = 1
---mg_villages.VILLAGE_CHANCE = 28
---mg_villages.VILLAGE_MIN_SIZE = 20
---mg_villages.VILLAGE_MAX_SIZE = 40
-mg_villages.VILLAGE_CHANCE = 28
-mg_villages.VILLAGE_MIN_SIZE = 25
-mg_villages.VILLAGE_MAX_SIZE = 90 --55
-mg_villages.FIRST_ROADSIZE = 3
-mg_villages.BIG_ROAD_CHANCE = 0
-
--- Enable that for really big villages (there are also really slow to generate)
---[[mg_villages.VILLAGE_CHECK_RADIUS = 3
-mg_villages.VILLAGE_CHECK_COUNT = 3
-mg_villages.VILLAGE_CHANCE = 28
-mg_villages.VILLAGE_MIN_SIZE = 100
-mg_villages.VILLAGE_MAX_SIZE = 150
-mg_villages.FIRST_ROADSIZE = 5
-mg_villages.BIG_ROAD_CHANCE = 50]]
-
-
--- if set to false, villages will not be integrated into the terrain - which looks very bad
-mg_villages.ENABLE_TERRAIN_BLEND = true;
--- if set to false, holes digged by cavegen and mudflow inside the village will not be repaired; houses will be destroyed
-mg_villages.UNDO_CAVEGEN_AND_MUDFLOW = true;
-
--- on average, every n.th node may be one of these trees - and it will be a relatively dense packed forrest
-mg_villages.sapling_probability = {};
-
-mg_villages.sapling_probability[ minetest.get_content_id( 'default:sapling' )       ] = 25; -- suitable for a relatively dense forrest of normal trees
-mg_villages.sapling_probability[ minetest.get_content_id( 'default:junglesapling' ) ] = 40; -- jungletrees are a bit bigger and need more space
-if( minetest.get_modpath( 'mg' )) then
-	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:savannasapling'     ) ] = 30; 
-	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:pinesapling'        ) ] = 35; 
-end
-if( minetest.get_modpath( 'moretrees' )) then
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:birch_sapling_ongen'       ) ] = 200;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:spruce_sapling_ongen'      ) ] = 200;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:fir_sapling_ongen'         ) ] =  90;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:jungletree_sapling_ongen'  ) ] = 200;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:beech_sapling_ongen'       ) ] =  30;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:apple_sapling_ongen'       ) ] = 380;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:oak_sapling_ongen'         ) ] = 380; -- ca 20x20; height: 10
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:sequoia_sapling_ongen'     ) ] =  90; -- ca 10x10
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:palm_sapling_ongen'        ) ] =  90;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:pine_sapling_ongen'        ) ] = 200;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:willow_sapling_ongen'      ) ] = 380;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:rubber_tree_sapling_ongen' ) ] = 380;
-end
-
-
+-- this contains the functions to actually generate the village structure in a table;
+-- said table will hold information about which building will be placed where,
+-- how the buildings are rotated, where the roads will be, which replacement materials
+-- will be used etc.
 
 local function is_village_block(minp)
 	local x, z = math.floor(minp.x/80), math.floor(minp.z/80)
@@ -56,6 +9,7 @@ local function is_village_block(minp)
 	return (x%vcc == 0) and (z%vcc == 0)
 end
 
+-- called by mapgen.lua and spawn_player.lua
 mg_villages.villages_at_point = function(minp, noise1)
 	if not is_village_block(minp) then return {} end
 	local vcr, vcc = mg_villages.VILLAGE_CHECK_RADIUS, mg_villages.VILLAGE_CHECK_COUNT
@@ -472,7 +426,7 @@ end
 
 
 -- dirt roads seperate the wheat area around medieval villages into seperate fields and make it look better
-mg_villages.generate_dirt_roads = function( village, vnoise, bpos, secondary_dirt_roads )
+local function generate_dirt_roads = function( village, vnoise, bpos, secondary_dirt_roads )
 	local dirt_roads = {};
 	if( not( secondary_dirt_roads)) then
 		return dirt_roads;
@@ -636,7 +590,7 @@ mg_villages.generate_village = function(village, vnoise)
 		secondary_dirt_roads = "dirt_road";
 	end
 
-	local dirt_roads = mg_villages.generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads );
+	local dirt_roads = generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads );
 
 	-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
 	-- now or later; after the first call to this function here, the village data will be final
