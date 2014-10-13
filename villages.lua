@@ -426,7 +426,7 @@ end
 
 
 -- dirt roads seperate the wheat area around medieval villages into seperate fields and make it look better
-local function generate_dirt_roads = function( village, vnoise, bpos, secondary_dirt_roads )
+local function generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads )
 	local dirt_roads = {};
 	if( not( secondary_dirt_roads)) then
 		return dirt_roads;
