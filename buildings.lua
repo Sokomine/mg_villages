@@ -60,15 +60,14 @@ mg_villages.BUILDINGS = {
 	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub2", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1, inh=2}, -- +8 guests
 	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub3", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1, inh=2}, -- +12 guest
 
--- TODO: inhabitants/grasshut
 -- grass huts (requiring cottages, dryplants, cavestuff/undergrowth, plantlife)
-	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 5,	scm="grasshut1", orients={2}, weight={grasshut=1}},
-	{sizex= 9,	sizez= 9,	yoff= 0,	ysize= 8,	scm="grasshut2", orients={2}, weight={grasshut=1}},
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="grasshut3", orients={2}, weight={grasshut=1}},
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="grasshut4", orients={2}, weight={grasshut=1}},
-	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="grasshut5", orients={2}, weight={grasshut=1}},
-	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="grasshut6", orients={2}, weight={grasshut=1}},
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 2,	scm="grasshutcenter", orients={2}, pervillage=1, weight={grasshut=2}},
+	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 5,	scm="grasshut1", orients={2}, weight={grasshut=1}, inh=3},
+	{sizex= 9,	sizez= 9,	yoff= 0,	ysize= 8,	scm="grasshut2", orients={2}, weight={grasshut=1}, inh=10}, -- community hut for meetings
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="grasshut3", orients={2}, weight={grasshut=1}, inh=3},
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="grasshut4", orients={2}, weight={grasshut=1}, inh=3},
+	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="grasshut5", orients={2}, weight={grasshut=1}, inh=1},
+	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="grasshut6", orients={2}, weight={grasshut=1}, inh=3},
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 2,	scm="grasshutcenter", orients={2}, pervillage=1, weight={grasshut=2}}, -- open meeting place
 
 -- for the buildings below, sizex, sizez and ysize are read from the file directly;
 
@@ -195,42 +194,41 @@ mg_villages.BUILDINGS = {
 	{scm="clay_pit_5",      yoff= 1, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
 
 
--- TODO: find out how many mobs may live there per house (in taokis houses)
    -- Houses from Taokis Structure I/O Mod (see https://forum.minetest.net/viewtopic.php?id=5524)
 	{scm="default_town_farm",          yoff= -1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
-	{scm="default_town_house_large_1", yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1},
-	{scm="default_town_house_large_2", yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1},
-	{scm="default_town_house_medium",  yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/2}, axis=1},
-	{scm="default_town_house_small",   yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
-	{scm="default_town_house_tiny_1",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
-	{scm="default_town_house_tiny_2",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
-	{scm="default_town_house_tiny_3",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
-	{scm="default_town_park",          yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
-	{scm="default_town_tower",         yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/6}, axis=1},
+	{scm="default_town_house_large_1", yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1, inh=10},
+	{scm="default_town_house_large_2", yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1, inh=8},
+	{scm="default_town_house_medium",  yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/2}, axis=1, inh=6},
+	{scm="default_town_house_small",   yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1},   axis=1, inh=4},
+	{scm="default_town_house_tiny_1",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1},   axis=1, inh=3},
+	{scm="default_town_house_tiny_2",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1},   axis=1, inh=3},
+	{scm="default_town_house_tiny_3",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1},   axis=1, inh=2},
+	{scm="default_town_park",          yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1},   axis=1},
+	{scm="default_town_tower",         yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/6}, axis=1, inh=-1},
 	{scm="default_town_well",          yoff= -6, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1},
 	{scm="default_town_fountain",      yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1},
 	-- the hotel seems to be only the middle section of the building; it's build for another spawning algorithm
 --	{scm="default_town_hotel",         yoff= -1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/5}},
 
    -- include houses from LadyMacBeth, originally created for Mauvebics mm2 modpack; the houses seem to be in canadian village style
-	{scm="c_bank",                     yoff=  1, orients={2}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}},
-	{scm="c_bank2",                    yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}},
-	{scm="c_bar",                      yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}},
-	{scm="c_hotel",                    yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}},
-	{scm="c_postoffice",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
-	{scm="c_bordello",                 yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
-	{scm="c_library",                  yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
+	{scm="c_bank",                     yoff=  1, orients={2}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, inh=-2},
+	{scm="c_bank2",                    yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, inh=-2},
+	{scm="c_bar",                      yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, inh=-2},
+	{scm="c_hotel",                    yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, inh=-2},
+	{scm="c_postoffice",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
+	{scm="c_bordello",                 yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
+	{scm="c_library",                  yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
 
-	{scm="g_observatory",              yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
-	{scm="g_court",                    yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
-	{scm="g_prefecture",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
-	{scm="g_townhall",                 yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1},
+	{scm="g_observatory",              yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
+	{scm="g_court",                    yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
+	{scm="g_prefecture",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
+	{scm="g_townhall",                 yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=1}, pervillage=1, inh=-2},
 	{scm="g_park2",                    yoff= -1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=2},},
 
-	{scm="r_apartments",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=4},},
-	{scm="r_rowhouses",                yoff=  1, orients={2}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=4},},
-	{scm="r_manorhouse",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=3},},
-	{scm="r_triplex",                  yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=3},},
+	{scm="r_apartments",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=4}, inh=20},
+	{scm="r_rowhouses",                yoff=  1, orients={2}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=4}, inh=16},
+	{scm="r_manorhouse",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=3}, inh=4},
+	{scm="r_triplex",                  yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=3}, inh=10},
 
 	{scm="field_1",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
 	{scm="field_2",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
