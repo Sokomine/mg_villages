@@ -17,41 +17,50 @@ mg_villages.village_sizes = {
 -- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
 mg_villages.medieval_subtype = false;
 
+--  scm="bla"		Name of the file that holds the buildings' schematic. Supported types: .we and .mts (omit the extension!)
+--  sizex, sizez, ysize: obsolete
+--  yoff=0		how deep is the building burried?
+--  pervillage=1	Never generate more than this amount of this building and this type (if set) of building per village.
+--  axis=1		Building needs to be mirrored along the x-axis instead of the z-axis because it is initially rotated
+--  inh=2  		maximum amount of inhabitants the building may hold (usually amount of beds present)
+--			if set to i.e. -1, this indicates that a mob is WORKING, but not LIVING here 
+
 mg_villages.BUILDINGS = {
 
 -- the houses the mod came with
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 9,	scm="house", orients={2},                 weight={nore=1   }},
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 9,	scm="house", orients={2},                 weight={nore=1   },         inh=4},
 	{sizex= 9,	sizez= 9,	yoff= 0,	ysize= 2,	scm="wheat_field",                        weight={nore=1   }},
 	{sizex= 9,	sizez= 9,	yoff= 0,	ysize= 2,	scm="cotton_field",                       weight={nore=1   }},
 	{sizex= 3,	sizez= 3,	yoff= 1,	ysize= 4,	scm="lamp", no_rotate=true,               weight={nore=1/5 }},
 	{sizex= 4,	sizez= 4,	yoff=-5,	ysize=11,	scm="well", no_rotate=true, pervillage=1, weight={nore=1   }},
 	{sizex= 7,	sizez= 7,	yoff= 0,	ysize=11,	scm="fountain", pervillage=3,             weight={nore=1/4 }, axis=1},
-	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="small_house", orients={3},           weight={nore=1   }, axis=1},
-	{sizex= 6,	sizez=12,	yoff= 0,	ysize= 7,	scm="house_with_garden", orients={1},     weight={nore=1   }, axis=1},
-	{sizex=16,	sizez=17,	yoff= 0,	ysize=12,	scm="church", orients={3}, pervillage=1,  weight={nore=1   }, axis=1},
-	{sizex= 5,	sizez= 5,	yoff= 0,	ysize=16,	scm="tower", orients={0},                 weight={nore=1/7 }},
-	{sizex= 8,	sizez= 9,	yoff= 0,	ysize= 6,	scm="forge", orients={0}, pervillage=2,   weight={nore=1   }},
-	{sizex=11,	sizez=12,	yoff= 0,	ysize= 6,	scm="library", orients={1}, pervillage=2, weight={nore=1   }, axis=1},
-	{sizex=15,	sizez= 7,	yoff= 0,	ysize=12,	scm="inn", orients={1}, pervillage=4,     weight={nore=1/2 }, axis=1},
-	{sizex=22,	sizez=17,	yoff= 0,	ysize= 7,	scm="pub", orients={3}, pervillage=2,     weight={nore=1/3 }, axis=1},
+	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="small_house", orients={3},           weight={nore=1   }, axis=1, inh=2},
+	{sizex= 6,	sizez=12,	yoff= 0,	ysize= 7,	scm="house_with_garden", orients={1},     weight={nore=1   }, axis=1, inh=3},
+	{sizex=16,	sizez=17,	yoff= 0,	ysize=12,	scm="church", orients={3}, pervillage=1,  weight={nore=1   }, axis=1, inh=-1},
+	{sizex= 5,	sizez= 5,	yoff= 0,	ysize=16,	scm="tower", orients={0},                 weight={nore=1/7 },         inh=-1},
+	{sizex= 8,	sizez= 9,	yoff= 0,	ysize= 6,	scm="forge", orients={0}, pervillage=2,   weight={nore=1   },         inh=-1},
+	{sizex=11,	sizez=12,	yoff= 0,	ysize= 6,	scm="library", orients={1}, pervillage=2, weight={nore=1   }, axis=1, inh=-1},
+	{sizex=15,	sizez= 7,	yoff= 0,	ysize=12,	scm="inn", orients={1}, pervillage=4,     weight={nore=1/2 }, axis=1, inh=-1}, -- has room for 4 guests
+	{sizex=22,	sizez=17,	yoff= 0,	ysize= 7,	scm="pub", orients={3}, pervillage=2,     weight={nore=1/3 }, axis=1, inh=-1},
 
 
 -- log cabins by Sokomine (requiring cottages, glasspanes)
-	{sizex= 6,	sizez= 4,	yoff= 0,	ysize= 5,	scm="logcabin1",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 6,	scm="logcabin2",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 6,	scm="logcabin3",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 5,	sizez= 7,	yoff= 0,	ysize= 7,	scm="logcabin4",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 5,	scm="logcabin5",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 5,	sizez= 7,	yoff= 0,	ysize= 5,	scm="logcabin6",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="logcabin7",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 5,	sizez= 6,	yoff= 0,	ysize= 5,	scm="logcabin8",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="logcabin9",  orients={1}, weight={logcabin=1}, axis=1},
-	{sizex= 5,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabin10", orients={2}, weight={logcabin=1}},
-	{sizex= 7,	sizez= 10,	yoff= 0,	ysize= 7,	scm="logcabin11", orients={2}, weight={logcabin=1}},
-	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 5,	scm="logcabinpub1", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1},
-	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub2", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1},
-	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub3", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1},
+	{sizex= 6,	sizez= 4,	yoff= 0,	ysize= 5,	scm="logcabin1",  orients={1}, weight={logcabin=1}, axis=1, inh=2},
+	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 6,	scm="logcabin2",  orients={1}, weight={logcabin=1}, axis=1, inh=2},
+	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 6,	scm="logcabin3",  orients={1}, weight={logcabin=1}, axis=1, inh=3},
+	{sizex= 5,	sizez= 7,	yoff= 0,	ysize= 7,	scm="logcabin4",  orients={1}, weight={logcabin=1}, axis=1, inh=3},
+	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 5,	scm="logcabin5",  orients={1}, weight={logcabin=1}, axis=1, inh=1},
+	{sizex= 5,	sizez= 7,	yoff= 0,	ysize= 5,	scm="logcabin6",  orients={1}, weight={logcabin=1}, axis=1, inh=1},
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 7,	scm="logcabin7",  orients={1}, weight={logcabin=1}, axis=1, inh=2},
+	{sizex= 5,	sizez= 6,	yoff= 0,	ysize= 5,	scm="logcabin8",  orients={1}, weight={logcabin=1}, axis=1, inh=2},
+	{sizex= 5,	sizez= 5,	yoff= 0,	ysize= 6,	scm="logcabin9",  orients={1}, weight={logcabin=1}, axis=1, inh=1},
+	{sizex= 5,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabin10", orients={2}, weight={logcabin=1},         inh=3},
+	{sizex= 7,	sizez= 10,	yoff= 0,	ysize= 7,	scm="logcabin11", orients={2}, weight={logcabin=1},         inh=6},
+	{sizex= 7,	sizez= 7,	yoff= 0,	ysize= 5,	scm="logcabinpub1", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1, inh=1}, -- +5 guests
+	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub2", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1, inh=2}, -- +8 guests
+	{sizex= 7,	sizez= 8,	yoff= 0,	ysize= 7,	scm="logcabinpub3", orients={1}, weight={logcabin=1/6}, pervillage=1, typ='tavern', axis=1, inh=2}, -- +12 guest
 
+-- TODO: inhabitants/grasshut
 -- grass huts (requiring cottages, dryplants, cavestuff/undergrowth, plantlife)
 	{sizex= 6,	sizez= 6,	yoff= 0,	ysize= 5,	scm="grasshut1", orients={2}, weight={grasshut=1}},
 	{sizex= 9,	sizez= 9,	yoff= 0,	ysize= 8,	scm="grasshut2", orients={2}, weight={grasshut=1}},
@@ -64,29 +73,29 @@ mg_villages.BUILDINGS = {
 -- for the buildings below, sizex, sizez and ysize are read from the file directly;
 
 -- schematics from Sokomines villages mod (requires cottages)
-	{scm="church_1",        yoff= 0, orients={0}, farming_plus=0, avoid='', typ='church',    weight={medieval=4}, pervillage=1},    
+	{scm="church_1",        yoff= 0, orients={0}, farming_plus=0, avoid='', typ='church',    weight={medieval=4}, pervillage=1,   inh=-1},    
 --	{scm="church_2_twoelk", yoff= 0, orients={0}, farming_plus=0, avoid='', typ='church',    weight={medieval=4}, pervillage=1},    
-	{scm="forge_1",         yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=2}, pervillage=1},
-	{scm="mill_1",          yoff= 0, orients={0}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2}, pervillage=1},
-	{scm="hut_1",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1}},
-	{scm="hut_2",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1}},
-	{scm="farm_full_1",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4}},
-	{scm="farm_full_2",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4}},
-	{scm="farm_full_3",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4}},
-	{scm="farm_full_4",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4}},
-	{scm="farm_full_5",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4}},
-	{scm="farm_full_6",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4}},
-	{scm="farm_tiny_1",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="farm_tiny_2",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="farm_tiny_3",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="farm_tiny_4",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="farm_tiny_5",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="farm_tiny_6",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="farm_tiny_7",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1}},
-	{scm="taverne_1",       yoff= 0, orients={0}, farming_plus=1, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1},
-	{scm="taverne_2",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1},
-	{scm="taverne_3",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1},
-	{scm="taverne_4",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1},
+	{scm="forge_1",         yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=2}, pervillage=1,   inh=-1},
+	{scm="mill_1",          yoff= 0, orients={0}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2}, pervillage=1,   inh=-1},
+	{scm="hut_1",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1},                 inh=1},
+	{scm="hut_2",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1},                 inh=2},
+	{scm="farm_full_1",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4},               inh=2},
+	{scm="farm_full_2",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4},               inh=5},
+	{scm="farm_full_3",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4},               inh=5},
+	{scm="farm_full_4",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4},               inh=8},
+	{scm="farm_full_5",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4},               inh=5},
+	{scm="farm_full_6",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4},               inh=5},
+	{scm="farm_tiny_1",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=2},
+	{scm="farm_tiny_2",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=6},
+	{scm="farm_tiny_3",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=4},
+	{scm="farm_tiny_4",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=4},
+	{scm="farm_tiny_5",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=4},
+	{scm="farm_tiny_6",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=4},
+	{scm="farm_tiny_7",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1},                 inh=7},
+	{scm="taverne_1",       yoff= 0, orients={0}, farming_plus=1, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1, inh=6},  -- 19 beds: 10 guest, 3 worker, 6 family
+	{scm="taverne_2",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1, inh=2},  -- no guests
+	{scm="taverne_3",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1, inh=2},  -- no guests
+	{scm="taverne_4",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2}, pervillage=1, inh=1},  -- no guests
 
 	{scm="well_1",          yoff= 0, orients={0}, farming_plus=0, avoid='well', typ='well',  weight={medieval=1/12}, pervillage=4},
 	{scm="well_2",          yoff= 0, orients={0}, farming_plus=0, avoid='well', typ='well',  weight={medieval=1/12}, pervillage=4},
@@ -151,32 +160,33 @@ mg_villages.BUILDINGS = {
 	{scm="field_4",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='field',   typ='field',    weight={medieval=1/6}, pervillage=8},
 
 	-- hut and hills for charachoal burners; perhaps they could live together with lumberjacks?
-	{scm="charachoal_hut",  yoff= 0, orients={0,1,2},   farming_plus=0, avoid='', typ='hut',  weight={charachoal=1}},
-	{scm="charachoal_hill", yoff= 0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='hut',  weight={charachoal=2}},
+	{scm="charachoal_hut",  yoff= 0, orients={0,1,2},   farming_plus=0, avoid='', typ='hut',  weight={charachoal=1}, inh=2},
+	{scm="charachoal_hill", yoff= 0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='hut',  weight={charachoal=2}, inh=-1},
 
 	-- lumberjacks; they require the cottages mod
-	{scm="lumberjack_1",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_2",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_3",        yoff= 1, orients={0}, avoid='', typ='lumberjack', weight={lumberjack=1}},
-	{scm="lumberjack_4",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_5",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_6",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_7",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_8",        yoff= 1, orients={1}, avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_pub_1",    yoff= 1, orients={1}, avoid='', typ='tavern',     weight={lumberjack=3}, pervillage=1, axis=1},
-	{scm="lumberjack_church_1", yoff= 1, orients={1}, avoid='', typ='church',     weight={lumberjack=3}, pervillage=1, axis=1},
-	{scm="lumberjack_hotel_1",  yoff= 1, orients={1}, avoid='', typ='house',      weight={lumberjack=1}, axis=1},
-	{scm="lumberjack_shop_1",   yoff= 1, orients={1}, avoid='', typ='shop',       weight={lumberjack=1}, pervillage=1, axis=1},
+	{scm="lumberjack_1",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=3},
+	{scm="lumberjack_2",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=4},
+	{scm="lumberjack_3",        yoff= 1, orients={1,2,3}, avoid='', typ='lumberjack', weight={lumberjack=1},         inh=3},
+	{scm="lumberjack_4",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=4},
+	{scm="lumberjack_5",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=9},
+	{scm="lumberjack_6",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=5},
+	{scm="lumberjack_7",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=5},
+	{scm="lumberjack_8",        yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1}, axis=1, inh=9},
+	{scm="lumberjack_pub_1",    yoff= 1, orients={1},     avoid='', typ='tavern',     weight={lumberjack=3}, pervillage=1, axis=1, inh=-1},
+	{scm="lumberjack_church_1", yoff= 1, orients={1},     avoid='', typ='church',     weight={lumberjack=3}, pervillage=1, axis=1, inh=-1},
+	{scm="lumberjack_hotel_1",  yoff= 1, orients={1},     avoid='', typ='house',      weight={lumberjack=1}, axis=1,               inh=16}, -- all 16 are guests
+	{scm="lumberjack_shop_1",   yoff= 1, orients={1},     avoid='', typ='shop',       weight={lumberjack=1}, pervillage=1, axis=1, inh=-1},
+	{scm="lumberjack_sawmill_1",yoff=-7, orients={1},     avoid='', typ='sawmill',    weight={lumberjack=2}, pervillage=1, axis=1, inh=-1},
 
 
 --	{scm="cow_trader_1",    yoff= 0, orients={4}, avoid='', typ='trader',     weight={lumberjack=1}},
 
 	-- clay traders depend on cottages as well
-	{scm="trader_clay_1",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3}, axis=1},
-	{scm="trader_clay_2",   yoff= 1, orients={3}, avoid='', typ='trader',     weight={claytrader=3}, axis=1},
-	{scm="trader_clay_3",   yoff= 1, orients={0}, avoid='', typ='trader',     weight={claytrader=3}},
-	{scm="trader_clay_4",   yoff= 1, orients={2}, avoid='', typ='trader',     weight={claytrader=3}},
-	{scm="trader_clay_5",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3}, axis=1},
+	{scm="trader_clay_1",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3}, axis=1, inh=1}, -- poor guy who has to live in that small thing
+	{scm="trader_clay_2",   yoff= 1, orients={3}, avoid='', typ='trader',     weight={claytrader=3}, axis=1, inh=1}, -- not that he'll live very comftable there...
+	{scm="trader_clay_3",   yoff= 1, orients={0}, avoid='', typ='trader',     weight={claytrader=3},         inh=2},
+	{scm="trader_clay_4",   yoff= 1, orients={2}, avoid='', typ='trader',     weight={claytrader=3},         inh=2},
+	{scm="trader_clay_5",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3}, axis=1, inh=2},
 
 	{scm="clay_pit_1",      yoff=-3, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
 	{scm="clay_pit_2",      yoff=-2, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
@@ -185,8 +195,8 @@ mg_villages.BUILDINGS = {
 	{scm="clay_pit_5",      yoff= 1, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
 
 
+-- TODO: find out how many mobs may live there per house (in taokis houses)
    -- Houses from Taokis Structure I/O Mod (see https://forum.minetest.net/viewtopic.php?id=5524)
-
 	{scm="default_town_farm",          yoff= -1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1}, axis=1},
 	{scm="default_town_house_large_1", yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1},
 	{scm="default_town_house_large_2", yoff= -4, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1/4}, axis=1},
@@ -227,14 +237,14 @@ mg_villages.BUILDINGS = {
 	{scm="field_3",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
 	{scm="field_4",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
 
-	{scm="tent_tiny_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1}},
-	{scm="tent_tiny_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1}},
-	{scm="tent_big_1",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1}},
-	{scm="tent_big_2",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1}},
-	{scm="tent_medium_1",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}},
-	{scm="tent_medium_2",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}},
-	{scm="tent_medium_3",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}},
-	{scm="tent_medium_4",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}},
+	{scm="tent_tiny_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1},   inh=1},
+	{scm="tent_tiny_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1},   inh=1},
+	{scm="tent_big_1",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1}},           -- no sleeping place
+	{scm="tent_big_2",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1},   inh=2},
+	{scm="tent_medium_1",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}, inh=3},
+	{scm="tent_medium_2",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}, inh=3},
+	{scm="tent_medium_3",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}, inh=3},
+	{scm="tent_medium_4",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2}, inh=3},
 	{scm="tent_open_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
 	{scm="tent_open_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
 	{scm="tent_open_3",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},

@@ -2,6 +2,8 @@
 -- cover some villages with artificial snow; probability: 1/mg_villages.artificial_snow_probability
 mg_villages.artificial_snow_probability = 10;
 
+-- only place roads if there are at least that many buildings in the village
+mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT = 3;
 
 -- if set to false, villages will not be integrated into the terrain - which looks very bad
 mg_villages.ENABLE_TERRAIN_BLEND = true;
