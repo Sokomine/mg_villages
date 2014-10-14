@@ -179,7 +179,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 			end
 		end
 
-		local has_snow    = false; -- TODO: make some villages snow covered if moresnow is installed
+		local has_snow    = false;
 		local ground_type = c_dirt_with_grass; 
 		for y = 0, binfo.ysize-1 do
 			ax, ay, az = pos.x+x, pos.y+y+binfo.yoff, pos.z+z
@@ -330,7 +330,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 		end
 		if( has_snow and ax >= minp.x and ax <= maxp.x and az >= minp.z and az <= maxp.z ) then
 			local res = mg_villages.mg_drop_moresnow( ax, az, y_top, y_bottom, a, data, param2_data);
-			if( res ) then
+			if( res and data[ a:index(ax, res.height, az)]==cid.c_air) then
 				data[       a:index(ax, res.height, az)] = res.suggested.new_id;
 				param2_data[a:index(ax, res.height, az)] = res.suggested.param2;
 				has_snow = false;
@@ -518,9 +518,26 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
+
+	-- count the buildings
+	local anz_buildings = 0;
 	for i, pos in ipairs(bpos) do
-		-- replacements are in table format for mapgen-based building spawning
-		generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls, i )
+		if( pos.btype and not(pos.btype == 'road' )) then 
+			local binfo = mg_villages.BUILDINGS[pos.btype];
+			-- count buildings which can house inhabitants as well as those requiring workers
+			if( binfo and binfo.inh and binfo.inh ~= 0 ) then
+				anz_buildings = anz_buildings + 1;
+			end
+		end
+	end
+	village.anz_buildings = anz_buildings;
+
+	for i, pos in ipairs(bpos) do
+		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
+		if( not(pos.btype) or pos.btype ~= 'road' or anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
+			-- replacements are in table format for mapgen-based building spawning
+			generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls, i )
+		end
 	end
 
 	-- replacements are in list format for minetest.place_schematic(..) type spawning
