@@ -298,7 +298,15 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 
 				elseif( new_content == cid.c_chest
 				   or   new_content == cid.c_chest_locked 
-				   or   new_content == cid.c_chest_shelf ) then
+				   or   new_content == cid.c_chest_shelf
+				   or   new_content == cid.c_chest_ash
+				   or   new_content == cid.c_chest_aspen
+				   or   new_content == cid.c_chest_birch
+				   or   new_content == cid.c_chest_maple
+				   or   new_content == cid.c_chest_chestnut
+				   or   new_content == cid.c_chest_pine
+				   or   new_content == cid.c_chest_spruce
+					 ) then
 					-- we're dealing with a chest that might need filling
 					table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
 
@@ -513,6 +521,13 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	cid.c_chest_work       = mg_villages.get_content_id_replaced( 'cottages:chest_work',    replacements );
 	cid.c_chest_storage    = mg_villages.get_content_id_replaced( 'cottages:chest_storage', replacements );
 	cid.c_chest_shelf      = mg_villages.get_content_id_replaced( 'cottages:shelf',         replacements );
+	cid.c_chest_ash        = mg_villages.get_content_id_replaced( 'trees:chest_ash',        replacements );
+	cid.c_chest_aspen      = mg_villages.get_content_id_replaced( 'trees:chest_aspen',      replacements );
+	cid.c_chest_birch      = mg_villages.get_content_id_replaced( 'trees:chest_birch',      replacements );
+	cid.c_chest_maple      = mg_villages.get_content_id_replaced( 'trees:chest_maple',      replacements );
+	cid.c_chest_chestnut   = mg_villages.get_content_id_replaced( 'trees:chest_chestnut',   replacements );
+	cid.c_chest_pine       = mg_villages.get_content_id_replaced( 'trees:chest_pine',       replacements );
+	cid.c_chest_spruce     = mg_villages.get_content_id_replaced( 'trees:chest_spruce',     replacements );
 	cid.c_sign             = mg_villages.get_content_id_replaced( 'default:sign_wall',      replacements );
 --print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..tostring( minetest.get_name_from_content_id( cid.c_chest ))); -- TODO
 
