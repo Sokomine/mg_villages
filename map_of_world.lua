@@ -38,7 +38,7 @@ mg_villages.map_of_world = function( pname )
 
 	-- also usable: diamond_block, sand, water
 	local formspec = "size[14.4,10]"..
-			"background[0,0;10,10;default_grass.png]"..
+			"background[0,0;10,10;"..mg_villages.MAP_BACKGROUND_IMAGE.."]"..
 			"label[10,10;x axis]"..
 			"label[0,0;z axis]"..
 			"label[0,10;|]"..
