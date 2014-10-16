@@ -14,7 +14,7 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 	local radius = 1000000;
 	-- without the special priv, players can only obtain informatoin about villages which are very close by
 	if( not( minetest.check_player_privs( pname, {mg_villages=true}))) then
-		radius = 100;
+		radius = mg_villages.VILLAGE_DETECT_RANGE;
 	end
 
 	local formspec = 'size[12,12]'..
@@ -74,7 +74,7 @@ minetest.register_chatcommand( 'visit', {
         func = function(name, param)
 
 
-		if( not( minetest.check_player_privs( name, {mg_villages=true}))) then
+		if( mg_villages.REQUIRE_PRIV_FOR_TELEPORT and not( minetest.check_player_privs( name, {mg_villages=true}))) then
 			minetest.chat_send_player( name, "You need the 'mg_villages' priv in order to teleport to villages using this command.");
 			return;
 		end

@@ -10,6 +10,14 @@ mg_villages.ENABLE_TERRAIN_BLEND = true;
 -- if set to false, holes digged by cavegen and mudflow inside the village will not be repaired; houses will be destroyed
 mg_villages.UNDO_CAVEGEN_AND_MUDFLOW = true;
 
+-- players without the mg_villages priv can only see villages which are less than that many blocks away
+-- from them when using the /vmap command
+mg_villages.VILLAGE_DETECT_RANGE = 400;
+
+-- if set to true, only players which have the mg_villages priv can use the "/visit <village nr>"
+-- command which allows teleporting to the village with the given number
+mg_villages.REQUIRE_PRIV_FOR_TELEPORT = false;
+
 -- background image for the /vmap command
 -- RealTest comes with a diffrent texture
 if(     minetest.get_modpath('grounds') and minetest.get_modpath('joiner_table')) then
