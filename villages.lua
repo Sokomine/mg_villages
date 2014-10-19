@@ -63,6 +63,8 @@ mg_villages.villages_at_point = function(minp, noise1)
 	return {{vx = x, vz = z, vs = size, vh = height, village_type = village_type}}
 end
 
+
+
 --local function dist_center2(ax, bsizex, az, bsizez)
 --	return math.max((ax+bsizex)*(ax+bsizex),ax*ax)+math.max((az+bsizez)*(az+bsizez),az*az)
 --end
@@ -567,6 +569,7 @@ mg_villages.generate_village = function(village, vnoise)
 	local pr_village = PseudoRandom(seed)
 
 	-- generate a name for the village
+	-- TODO: generate diffrent name if it's a single house
 	village.name = namegen.generate_village_name( pr_village );
 
 	-- only generate a new village if the data is not already stored
@@ -578,19 +581,30 @@ mg_villages.generate_village = function(village, vnoise)
 	end
 
 	-- in the case of medieval villages, we later on want to add wheat fields with dirt roads; 1 wide dirt roads look odd
-	local space_between_buildings = mg_villages.village_sizes[ village_type ].space_between_buildings;
-
-	-- actually generate the village structure
-	local bpos = generate_bpos( village, pr_village, vnoise, space_between_buildings)
-
-
-	local secondary_dirt_roads = nil; 
-	-- if there is enough space, add dirt roads between the buildings (those will later be prolonged so that they reach the fields)
-	if( space_between_buildings >= 2 and village_type == 'medieval') then
-		secondary_dirt_roads = "dirt_road";
+	local space_between_buildings = 1;
+	if( mg_villages.village_sizes[ village_type ]) then
+		space_between_buildings = mg_villages.village_sizes[ village_type ].space_between_buildings;
 	end
 
-	local dirt_roads = generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads );
+	local bpos = {};
+	local dirt_roads = {};
+	local secondary_dirt_roads = nil; 
+	if( village.to_add_data and village.to_add_data.bpos ) then
+		-- If it is a single building instead of a full village, then village.to_add_data.bpos will
+		-- already have been generated (but not the replacements and other data structures which still need to be generated here)
+		bpos = village.to_add_data.bpos;
+	else
+		-- actually generate the village structure
+		bpos = generate_bpos( village, pr_village, vnoise, space_between_buildings)
+
+		-- if there is enough space, add dirt roads between the buildings (those will later be prolonged so that they reach the fields)
+		-- only add dirt roads if there are at least 3 buildings in the village
+		if( space_between_buildings >= 2 and village_type == 'medieval' and #bpos>3) then
+			secondary_dirt_roads = "dirt_road";
+		end
+
+		dirt_roads = generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads );
+	end
 
 	-- set fruits for all buildings in the village that need it - regardless weather they will be spawned
 	-- now or later; after the first call to this function here, the village data will be final
@@ -649,5 +663,41 @@ mg_villages.generate_village = function(village, vnoise)
 	village.to_add_data.plantlist     = plantlist;
 
 	--print('VILLAGE GENREATION: GENERATING NEW VILLAGE Nr. '..tostring( village.nr ));
+end
+
+-- creates individual buildings outside of villages;
+-- the data structure is like that of a village, except that bpos (=buildings to be placed) is already set;
+-- Note: one building per mapchunk is more than enough (else it would look too crowded);
+mg_villages.houses_in_mapchunk = function( minp )
+	local village = {};
+	local pr = PseudoRandom(mg_villages.get_bseed(minp))
+
+	-- only each mg_villages.INVERSE_HOUSE_DENSITY th mapchunk gets a building
+	if( pr:next(1,mg_villages.INVERSE_HOUSE_DENSITY) > 1 ) then
+		return {};
+	end
+	-- set random coordinates withhin chunk (but far enough away from the shell so that we don't have to bother about cavegen)
+	-- TODO: the 79 depends on chunk size
+	village.vx = pr:next(minp.x+16, minp.x + 79-32)
+	village.vz = pr:next(minp.z+16, minp.z + 79-32)
+	-- village height will be set to a value fitting the terrain later on
+	village.vh = 10;
+	-- this will force re-calculation of height
+	village.vs = 5;
+
+	-- pseudorandom orientation
+	local orient1 = pr:next(0,3);
+	-- determine which kind of building to use
+	-- TODO: select only types fitting to that particular place
+	-- TODO: select only types that exist
+	local village_types = {'lumberjack','logcabin','medieval','trader','tent','tower'};
+	village.village_type = village_types[ pr:next(1, #village_types )];
+print('VILLAGE TYPE SELECTED: '..tostring( village.village_type ));
+	btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, village.village_type);
+
+	village.to_add_data = {};
+	village.to_add_data.bpos = { {x=village.vx, y=village.vh, z=village.vz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
+	print('adding SINGLE HOUSE of type '..tostring( village.village_type )..' to map at '..tostring( village.vx )..':'..tostring( village.vz )..'.'); -- TODO
+	return { village };
 end
 

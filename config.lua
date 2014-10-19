@@ -1,4 +1,11 @@
 
+-- set to false if you do not want to have any villages spawning
+mg_villages.ENABLE_VILLAGES = true;
+
+-- generate one random building for each mg_villages.INVERSE_HOUSE_DENSITY th mapchunk;
+-- set to 0 in order to disable spawning of these lone buildings outside villages
+mg_villages.INVERSE_HOUSE_DENSITY = 4;
+
 -- cover some villages with artificial snow; probability: 1/mg_villages.artificial_snow_probability
 mg_villages.artificial_snow_probability = 10;
 

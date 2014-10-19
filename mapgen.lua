@@ -39,7 +39,6 @@ mg_villages.villages_in_mapchunk = function( minp )
 	
 	local vcr = mg_villages.VILLAGE_CHECK_RADIUS
 	local villages = {}
-	local generate_new_villages = true;
 	for xi = -vcr, vcr do
 	for zi = -vcr, vcr do
 		for _, village in ipairs(mg_villages.villages_at_point({x = minp.x + xi * 80, z = minp.z + zi * 80}, noise1raw)) do
@@ -57,7 +56,6 @@ mg_villages.villages_in_mapchunk = function( minp )
 
 			if( mg_villages.all_villages and mg_villages.all_villages[ village_id ]) then
 				villages[ v_nr ] = mg_villages.all_villages[ village_id ];
-				generate_new_villages = false;
 			end
 		end
 	end
@@ -482,7 +480,7 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 --		    and village.vz >= minp.z and village.vz <= maxp.z ) then
 
 			local ideal_height = math.floor( height_sum[ village_nr ] / height_count[ village_nr ]);
-print('For village_nr '..tostring( village_nr )..', a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
+print('For village_nr '..tostring( village_nr )..' ('..tostring( village.name )..'), a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
 
 			local max    = 0;
 			local target = village.vh;
@@ -701,7 +699,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		mg_villages.generate_village( village, village_noise);
 		--t1 = time_elapsed( t1, 'generate_village' );
 
-		if( not( village.artificial_snow )) then
+		-- only add artificial snow if the village has at least a size of 15 (else it might look too artificial)
+		if( not( village.artificial_snow ) and village.vs > 15) then
 			if( mg_villages.artificial_snow_probability and math.random( 1, mg_villages.artificial_snow_probability )==1) then
 				village.artificial_snow = 1;
 			else
@@ -887,7 +886,15 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	if( minp.y ~= -32 or minp.y < -32 or minp.y > 64) then
 		return;
 	end
-	local villages = mg_villages.villages_in_mapchunk( minp );
+	local villages = {};
+	-- create normal villages
+	if( mg_villages.ENABLE_VILLAGES == true ) then
+		villages = mg_villages.villages_in_mapchunk( minp );
+	end
+	-- if this mapchunk contains no part of a village, probably a lone building may be found in it
+	if( #villages < 1 and mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
+		villages = mg_villages.houses_in_mapchunk( minp );
+	end
 	if( villages and #villages > 0 ) then
 		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil );
 	end
