@@ -443,7 +443,7 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 				y = maxp.y;
 				while( y > minp.y and y >= 0) do
 					local ci = data[a:index(x, y, z)];
-					if( ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) then
+					if(( ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) or (y==0)) then
 						local village_nr = village_area[ x ][ z ][ 1 ];
 						if( village_nr > 0 and height_sum[ village_nr ] ) then
 							height_sum[   village_nr ] = height_sum[   village_nr ] + y;
@@ -494,6 +494,11 @@ print('For village_nr '..tostring( village_nr )..' ('..tostring( village.name ).
 			end
 			if( height_count[ village_nr ] > 5 ) then
 				qmw = math.floor( math.sqrt( qmw / height_count[ village_nr ]) +0.5); -- round the value
+				-- a height of 0 would be one below water level; so let's choose something higher;
+				-- as this may be an island created withhin deep ocean, it might look better if it extends a bit from said ocean
+				if( qmw < 1 ) then
+					qmw = 2;
+				end
 			else
 				qmw = 0; -- if in doubt, a height of 0 usually works well
 			end
