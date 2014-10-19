@@ -12,6 +12,7 @@ mg_villages.village_sizes = {
 	canadian     = { min = 40, max = 110,  space_between_buildings=1, texture = 'wool_white.png'},
 	grasshut     = { min = 10, max = 40,   space_between_buildings=1, texture = 'dryplants_reed.png'},
 	tent         = { min =  5, max = 20,   space_between_buildings=2, texture = 'wool_white.png'},
+	tower        = { min =  2, max =  6,   space_between_buildings=1, texture = 'default_mese.png'},
 }
 
 -- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
@@ -249,6 +250,11 @@ mg_villages.BUILDINGS = {
 	{scm="tent_open_big_1",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
 	{scm="tent_open_big_2",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
 	{scm="tent_open_big_3",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
+
+	{scm="hochsitz_1",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1}},
+	{scm="hochsitz_2",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1}},
+	{scm="hochsitz_3",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1}},
+	{scm="hochsitz_4",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1}},
 }
 
 
@@ -294,7 +300,7 @@ mg_villages.buildings_init = function()
 				is_used = true;
 			end
 		end
-		if( v.weight and v.weight.fields ) then
+		if( v.weight and (v.weight.fields or v.weight.tower)) then
 			is_used = true;
 		end
 
@@ -423,9 +429,10 @@ mg_villages.BUILDINGS["wall"] = {yoff = 1, ysize = 6, scm = wall}
 --end
 
 
-mg_villages.village_types[ #mg_villages.village_types+1 ] = 'fields';
 
 print('[mg_villages] Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
+mg_villages.village_types[ #mg_villages.village_types+1 ] = 'fields';
+mg_villages.village_types[ #mg_villages.village_types+1 ] = 'tower';
 for j,v in ipairs( mg_villages.village_types ) do
 	
 	local total_weight = 0
@@ -446,4 +453,6 @@ for j,v in ipairs( mg_villages.village_types ) do
 	end
 end
 -- the fields do not exist as an independent type
+mg_villages.village_types[ #mg_villages.village_types ] = nil;
+-- neither does the tower type
 mg_villages.village_types[ #mg_villages.village_types ] = nil;
