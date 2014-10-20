@@ -698,22 +698,22 @@ mg_villages.houses_in_mapchunk = function( minp )
 	local bx = village.vx;
 	local bz = village.vz;
 	if(     orient1==0 ) then
-		bz = bz+math.floor(bsizez/2);
+		bz = bz - math.floor(bsizez/2);
 	elseif( orient1==1 ) then
-		bx = bx+math.floor(bsizex/2);
-		bz = bz + bsizez;
+		bx = bx - math.floor(bsizex/2);
+		bz = bz - bsizez;
 	elseif( orient1==2 ) then
-		bz = bz+math.floor(bsizez/2);
-		bx = bx + bsizex;
+		bz = bz - math.floor(bsizez/2);
+		bx = bx - bsizex;
 	elseif( orient1==3 ) then
-		bx = bx+math.floor(bsizex/2);
+		bx = bx - math.floor(bsizex/2);
 	end
 	
 	-- adjust the size of the flattened area to the building's size
-	village.vs = pr:next( math.min( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.ceil( math.max( bsizex, bsizez )));
+	village.vs = pr:next( math.max( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.ceil( math.max( bsizex, bsizez )));
 
 	village.to_add_data = {};
-	village.to_add_data.bpos = { {x=village.vx, y=village.vh, z=village.vz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
+	village.to_add_data.bpos = { {x=bx, y=village.vh, z=bz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
 	print('adding SINGLE HOUSE of type '..tostring( village.village_type )..' to map at '..tostring( village.vx )..':'..tostring( village.vz )..'.'); -- TODO
 	return { village };
 end
