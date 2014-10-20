@@ -692,8 +692,25 @@ mg_villages.houses_in_mapchunk = function( minp )
 	-- TODO: select only types that exist
 	local village_types = {'lumberjack','logcabin','medieval','trader','tent','tower'};
 	village.village_type = village_types[ pr:next(1, #village_types )];
-print('VILLAGE TYPE SELECTED: '..tostring( village.village_type ));
 	btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, village.village_type);
+
+	-- the flattened area shall extend in front of the building (so that there's room for using the front entrance)
+	local bx = village.vx;
+	local bz = village.vz;
+	if(     orient1==0 ) then
+		bz = bz+math.floor(bsizez/2);
+	elseif( orient1==1 ) then
+		bx = bx+math.floor(bsizex/2);
+		bz = bz + bsizez;
+	elseif( orient1==2 ) then
+		bz = bz+math.floor(bsizez/2);
+		bx = bx + bsizex;
+	elseif( orient1==3 ) then
+		bx = bx+math.floor(bsizex/2);
+	end
+	
+	-- adjust the size of the flattened area to the building's size
+	village.vs = pr:next( math.min( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.ceil( math.max( bsizex, bsizez )));
 
 	village.to_add_data = {};
 	village.to_add_data.bpos = { {x=village.vx, y=village.vh, z=village.vz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
