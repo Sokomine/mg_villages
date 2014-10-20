@@ -692,7 +692,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	end
 	
 
-	--t1 = time_elapsed( t1, 'defines' );
+	t1 = time_elapsed( t1, 'defines' );
 
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
 
@@ -702,7 +702,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for village_nr, village in ipairs(villages) do
 		-- generate the village structure: determine positions of buildings and roads
 		mg_villages.generate_village( village, village_noise);
-		--t1 = time_elapsed( t1, 'generate_village' );
+		t1 = time_elapsed( t1, 'generate_village' );
 
 		-- only add artificial snow if the village has at least a size of 15 (else it might look too artificial)
 		if( not( village.artificial_snow ) and village.vs > 15) then
@@ -719,11 +719,11 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		--  4: a road
 		--  5: border around a road
 		mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
-		--t1 = time_elapsed( t1, 'mark_buildings' );
+		t1 = time_elapsed( t1, 'mark_buildings' );
 		-- will set village_area to N where .. is:
 		--  8: a dirt road
 		mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
-		--t1 = time_elapsed( t1, 'mark_dirt_roads' );
+		t1 = time_elapsed( t1, 'mark_dirt_roads' );
         end
 
 	-- if no voxelmanip data was passed on, read the data here
@@ -741,7 +741,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		data = vm:get_data()
 		param2_data = vm:get_param2_data()
 	end
-	--t1 = time_elapsed( t1, 'get_vmap_data' );
+	t1 = time_elapsed( t1, 'get_vmap_data' );
 
 	-- all vm manipulation functions write their content to the *entire* volume/area - including those 16 nodes that
 	-- extend into neighbouring mapchunks; thus, cavegen griefing and mudflow can be repaired by placing everythiing again
@@ -759,10 +759,10 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
   	--  6: free/unused spot in the core area of the village where the buildings are
         -- negative value: do terrain blending
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
-	--t1 = time_elapsed( t1, 'mark_inside_village_area' );
+	t1 = time_elapsed( t1, 'mark_inside_village_area' );
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
-	--t1 = time_elapsed( t1, 'get_height' );
+	t1 = time_elapsed( t1, 'get_height' );
 	if( mg_villages.all_villages and mg_villages.anz_villages > 0 ) then
 		mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	-- the villages in the first mapchunk are set to a fixed height of 1 so that players will not end up embedded in stone
@@ -780,13 +780,13 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			village_data_updated = true;
 		end
 	end
-	--t1 = time_elapsed( t1, 'change_height' );
+	t1 = time_elapsed( t1, 'change_height' );
 
 	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
-	--t1 = time_elapsed( t1, 'flatten_village_area' );
+	t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
 	mg_villages.repair_outer_shell(   villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
-	--t1 = time_elapsed( t1, 'repair_outer_shell' );
+	t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
 	if( not( c_feldweg )) then
@@ -796,10 +796,10 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for _, village in ipairs(villages) do
 
 		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid);
-		--t1 = time_elapsed( t1, 'place_buildings' );
+		t1 = time_elapsed( t1, 'place_buildings' );
 
 		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, c_feldweg);
-		--t1 = time_elapsed( t1, 'place_dirt_roads' );
+		t1 = time_elapsed( t1, 'place_dirt_roads' );
 
 		-- grow trees which are part of buildings into saplings
 		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do
@@ -808,20 +808,20 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	end
 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
-	--t1 = time_elapsed( t1, 'fill_with_plants' );
+	t1 = time_elapsed( t1, 'fill_with_plants' );
 
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
-	--t1 = time_elapsed( t1, 'vm data set' );
+	t1 = time_elapsed( t1, 'vm data set' );
 
 	vm:calc_lighting(
 		{x=minp.x-16, y=minp.y, z=minp.z-16},
 		{x=maxp.x+16, y=maxp.y, z=maxp.z+16}
 	)
-	--t1 = time_elapsed( t1, 'vm calc lighting' );
+	t1 = time_elapsed( t1, 'vm calc lighting' );
 
 	vm:write_to_map(data)
-	--t1 = time_elapsed( t1, 'vm data written' );
+	t1 = time_elapsed( t1, 'vm data written' );
 
 	-- do on_construct calls AFTER the map data has been written - else i.e. realtest fences can not update themshevles
 	for _, village in ipairs(villages) do
@@ -851,7 +851,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		-- now add those buildings which are .mts files and need to be placed by minetest.place_schematic(...)
 		-- place_schematics is no longer needed	
 		--mg_villages.place_schematics( village.to_add_data.bpos, village.to_add_data.replacements, a, pr );
-		--t1 = time_elapsed( t1, 'place_schematics' );
+		t1 = time_elapsed( t1, 'place_schematics' );
 
 		if( not( mg_villages.all_villages )) then
 			mg_villages.all_villages = {};
@@ -878,7 +878,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	if( village_data_updated ) then
 		save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
 	end
-	--t1 = time_elapsed( t1, 'save village data' );
+	t1 = time_elapsed( t1, 'save village data' );
 
 end
 
