@@ -776,6 +776,10 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	local village_data_updated = false;
 	for _,village in ipairs(villages) do
 		if( village.optimal_height and village.optimal_height > 0 and village.optimal_height ~= village.vh ) then
+			-- towers are usually found on elevated places
+			if( village.village_type == 'tower' ) then
+				village.optimal_height = village.optimal_height + math.max( math.floor(village.vs/2), 2 );
+			end
 			mg_villages.change_village_height( village, village.optimal_height );
 			village_data_updated = true;
 		end
