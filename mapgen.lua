@@ -34,29 +34,15 @@ mg_villages.get_vn = function(x, z, noise, village)
 end
 
 
-mg_villages.villages_in_mapchunk = function( minp )
+mg_villages.villages_in_mapchunk = function( minp, mapchunk_size )
 	local noise1raw = minetest.get_perlin(12345, 6, 0.5, 256)
 	
 	local vcr = mg_villages.VILLAGE_CHECK_RADIUS
 	local villages = {}
 	for xi = -vcr, vcr do
 	for zi = -vcr, vcr do
-		for _, village in ipairs(mg_villages.villages_at_point({x = minp.x + xi * 80, z = minp.z + zi * 80}, noise1raw)) do
-			village.to_grow = {}
+		for _, village in ipairs(mg_villages.villages_at_point({x = minp.x + xi * mapchunk_size, z = minp.z + zi * mapchunk_size}, noise1raw)) do
 			villages[#villages+1] = village
-		end
-		-- check if the village exists already
-		local v_nr = 1;
-		for v_nr, village in ipairs(villages) do
-			local village_id = tostring( village.vx )..':'..tostring( village.vz );
-
-			if( not( village.name ) or village.name == '') then
-				village.name = 'unknown';
-			end
-
-			if( mg_villages.all_villages and mg_villages.all_villages[ village_id ]) then
-				villages[ v_nr ] = mg_villages.all_villages[ village_id ];
-			end
 		end
 	end
 	end
@@ -384,8 +370,8 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 			if( not( village_area[ x ][ z ] )) then
 				village_area[ x ][ z ] = { 0, 0 };
 
+				local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
 				for village_nr, village in ipairs(villages) do
-					local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
 					local vn = mg_villages.get_vn(x, z, n_rawnoise, village);
 					-- the village core; this is where the houses stand (but there's no house or road at this particular spot)
 					if(     vn <= 40 ) then
@@ -898,18 +884,31 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local villages = {};
 	-- create normal villages
 	if( mg_villages.ENABLE_VILLAGES == true ) then
-		villages = mg_villages.villages_in_mapchunk( minp );
+		villages = mg_villages.villages_in_mapchunk( minp, maxp.x-minp.x+1 );
 	end
+
 	-- if this mapchunk contains no part of a village, probably a lone building may be found in it
-	if( #villages < 1 and mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
-		villages = mg_villages.houses_in_mapchunk( minp );
+	if( mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
+		villages = mg_villages.houses_in_mapchunk(   minp, maxp.x-minp.x+1, villages );
 	end
+
+	-- check if the village exists already
+	local v_nr = 1;
+	for v_nr, village in ipairs(villages) do
+		local village_id = tostring( village.vx )..':'..tostring( village.vz );
+
+		if( not( village.name ) or village.name == '') then
+			village.name = 'unknown';
+		end
+
+		if( mg_villages.all_villages and mg_villages.all_villages[ village_id ]) then
+			villages[ v_nr ] = mg_villages.all_villages[ village_id ];
+		end
+	end
+
 	if( villages and #villages > 0 ) then
 		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil );
 	end
-
-	-- TODO: place individual buildings; villages will have to be empty in that case
---  		mg_villages.place_villages_via_voxelmanip( {},       minp, maxp, nil, nil,  nil, nil, nil );
 end)
 
 

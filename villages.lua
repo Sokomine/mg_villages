@@ -668,7 +668,7 @@ end
 -- creates individual buildings outside of villages;
 -- the data structure is like that of a village, except that bpos (=buildings to be placed) is already set;
 -- Note: one building per mapchunk is more than enough (else it would look too crowded);
-mg_villages.houses_in_mapchunk = function( minp )
+mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vnoise )
 	local village = {};
 	local pr = PseudoRandom(mg_villages.get_bseed(minp))
 
@@ -677,9 +677,8 @@ mg_villages.houses_in_mapchunk = function( minp )
 		return {};
 	end
 	-- set random coordinates withhin chunk (but far enough away from the shell so that we don't have to bother about cavegen)
-	-- TODO: the 79 depends on chunk size
-	village.vx = pr:next(minp.x+16, minp.x + 79-32)
-	village.vz = pr:next(minp.z+16, minp.z + 79-32)
+	village.vx = pr:next(minp.x, minp.x + mapchunk_size - 1)
+	village.vz = pr:next(minp.z, minp.z + mapchunk_size - 1)
 	-- village height will be set to a value fitting the terrain later on
 	village.vh = 10;
 	-- this will force re-calculation of height
@@ -710,11 +709,51 @@ mg_villages.houses_in_mapchunk = function( minp )
 	end
 	
 	-- adjust the size of the flattened area to the building's size
-	village.vs = pr:next( math.max( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.ceil( math.max( bsizex, bsizez )));
+	village.vs = pr:next( math.max( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.min( math.ceil( math.max( bsizex, bsizez )), 25));
+
+	-- now check if this village can be placed here or if it intersects with another village in any critical manner;
+	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
+	for i,v in ipairs(villages) do
+		-- abort if the new building can't be placed here
+		if(   mg_villages.inside_village_area(bx,        bz,        v, vnoise) 
+		   or mg_villages.inside_village_area(bx+bsizex, bz,        v, vnoise)
+		   or mg_villages.inside_village_area(bx,        bz+bsizez, v, vnoise)
+		   or mg_villages.inside_village_area(bx+bsizex, bz+bsizez, v, vnoise)) then
+			return;
+		end
+	end
+
+	local village_id = tostring( village.vx )..':'..tostring( village.vz );
+	-- these values have to be determined once per village; afterwards, they need to be fixed
+	if( mg_villages.all_villages  and mg_villages.all_villages[ village_id ] and mg_villages.all_villages[ village_id ].optimal_height) then
+		village.optimal_height  = mg_villages.all_villages[ village_id ].optimal_height;
+		village.vh              = mg_villages.all_villages[ village_id ].optimal_height;
+		village.artificial_snow = mg_villages.all_villages[ village_id ].artificial_snow;
+	end
 
 	village.to_add_data = {};
 	village.to_add_data.bpos = { {x=bx, y=village.vh, z=bz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
 	print('adding SINGLE HOUSE of type '..tostring( village.village_type )..' to map at '..tostring( village.vx )..':'..tostring( village.vz )..'.'); -- TODO
-	return { village };
+
+	return village;
 end
 
+
+-- we need to determine where single houses will be placed in neighbouring mapchunks as well because
+-- they may be so close to the border that they will affect this mapchunk
+mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
+	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
+	for x=-1,1 do
+		for z=-1,1 do
+			local new_village = mg_villages.houses_in_one_mapchunk(
+					{x=minp.x+(x*mapchunk_size), y=minp.y, z=minp.z+(z*mapchunk_size)},
+					mapchunk_size,
+					villages,
+					village_noise );
+			if( new_village and new_village.vs and new_village.vx and new_village.vz ) then
+				table.insert( villages, new_village );
+			end
+		end
+	end
+	return villages;
+end
