@@ -141,7 +141,9 @@ local function choose_building_rot(l, pr, orient, village_type)
 	end
 	-- some buildings are mirrored
 	local mirror = nil;
-	if( pr:next( 1,2 )==1 ) then
+	-- some buildings may be too difficult for mirroring (=many nodebox-nodes that can't be mirrored well by rotation) or
+	-- be too symmetric to be worth the trouble
+	if( not(mg_villages.BUILDINGS[btype].nomirror) and pr:next( 1,2 )==1 ) then
 		mirror = true;
 	end
 	return btype, rotation, bsizex, bsizez, mirror
@@ -684,14 +686,32 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	-- this will force re-calculation of height
 	village.vs = 5;
 
+	-- store that this is not a village but a lone house
+	village.is_single_house = 1;
+
 	-- pseudorandom orientation
 	local orient1 = pr:next(0,3);
 	-- determine which kind of building to use
 	-- TODO: select only types fitting to that particular place
 	-- TODO: select only types that exist
-	local village_types = {'lumberjack','logcabin','medieval','trader','tent','tower'};
-	village.village_type = village_types[ pr:next(1, #village_types )];
-	btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, village.village_type);
+	-- the village type is "single" here - since not all houses which might fit into a village might do for lone standing houses
+	-- (i.e. church, forge, wagon, ..)
+	btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'single');
+	if( not( bsizex )) then
+		print('FAILURE to generate a building.');
+		btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'lumberjack');
+	end
+	-- if no building was found, give up
+	if( not( bsizex ) or not(mg_villages.BUILDINGS[ btype ].weight)) then
+		return {};
+	end
+	-- find out the real village type of this house (which is necessary for the replacements);
+	-- the "single" type only indicates that this building may be used for one-house-villages such as this one
+	for k,v in pairs( mg_villages.BUILDINGS[ btype ].weight ) do
+		if( k and k ~= 'single' ) then
+			village.village_type = k;
+		end
+	end
 
 	-- the flattened area shall extend in front of the building (so that there's room for using the front entrance)
 	local bx = village.vx;
@@ -711,6 +731,7 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	-- adjust the size of the flattened area to the building's size
 	village.vs = pr:next( math.max( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.min( math.ceil( math.max( bsizex, bsizez )), 25));
 
+	-- TODO: if village.is_single_house==1, do another check (based on the houses only)
 	-- now check if this village can be placed here or if it intersects with another village in any critical manner;
 	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
 	for i,v in ipairs(villages) do

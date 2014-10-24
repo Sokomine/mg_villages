@@ -451,11 +451,11 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 	for village_nr, village in ipairs( villages ) do
 		if( village.optimal_height ) then
 		-- villages above a size of 40 are *always* place at a convenient height of 1
-		elseif( village.vs >= 40 ) then
+		elseif( village.vs >= 40 and not(village.is_single_house)) then
 			village.optimal_height = 2;
-		elseif( village.vs >= 30 ) then
+		elseif( village.vs >= 30 and not(village.is_single_house)) then
 			village.optimal_height = 41 - village.vs;
-		elseif( village.vs >= 25 ) then
+		elseif( village.vs >= 25 and not(village.is_single_house)) then
 			village.optimal_height = 36 - village.vs;
 		
 		-- if no border height was found, there'd be no point in calculating anything;
