@@ -657,6 +657,17 @@ mg_villages.generate_village = function(village, vnoise)
 			{ id=c_grass,    p=3         }};
 	end
 
+	if( village.is_single_house and plantlist and #plantlist>0 ) then
+		-- do not grow wheat or cotton around single houses as that looks stupid
+		if( village_type=='medieval' or village_type=='taoki' ) then
+			local c_grass = mg_villages.get_content_id_replaced( 'default:grass_5', replacements);
+			plantlist[2] = { id=c_grass,    p=10        };
+		-- reduce the amount of plants grown so that the area stands out less from the sourroundings
+		else
+			plantlist[2].p = plantlist[2].p*3;
+		end
+	end
+
 	-- store the generated data in the village table 
 	village.to_add_data               = {};
 	village.to_add_data.bpos          = bpos;
