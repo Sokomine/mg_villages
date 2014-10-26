@@ -449,6 +449,24 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		end
 	end
 	for village_nr, village in ipairs( villages ) do
+
+		local tmin = maxp.y;
+		local tmax = minp.y;
+		local topt = 2;
+		for k,v in pairs( height_statistic[ village_nr ] ) do
+			if( k >= 2 and k < tmin and k >= minp.y) then
+				tmin = k;
+			end
+			if( k <= maxp.y and k > tmax ) then
+				tmax = k;
+			end
+			if(    height_statistic[ village_nr ][ topt ] 
+			   and height_statistic[ village_nr ][ topt ] < height_statistic[ village_nr ][ k ]) then
+				topt = k;
+			end
+		end
+		--print('HEIGHT for village '..tostring( village.name )..' min:'..tostring( tmin )..' max:'..tostring(tmax)..' opt:'..tostring(topt)..' count:'..tostring( height_count[ village_nr ]));
+
 		if( village.optimal_height ) then
 		-- villages above a size of 40 are *always* place at a convenient height of 1
 		elseif( village.vs >= 40 and not(village.is_single_house)) then
@@ -458,15 +476,19 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		elseif( village.vs >= 25 and not(village.is_single_house)) then
 			village.optimal_height = 36 - village.vs;
 		
+		-- in some cases, choose that height which was counted most often
+		elseif( topt and (tmax - tmin ) > 8 and height_count[ village_nr ] > 0) then
+
+			if( ( tmax - topt ) > ( topt - tmin )) then
+				qmw = tmax;
+			else
+				qmw = tmin;
+			end
+			village.optimal_height = qmw;
+			
 		-- if no border height was found, there'd be no point in calculating anything;
 		-- also, this is done only if the village has its center inside this mapchunk	
 		elseif(  height_count[ village_nr ] > 0 ) then
---		    and village.vx >= minp.x and village.vx <= maxp.x
-----		    and village.vh >= minp.y and village.vh <= maxp.y  -- the height is what we're actually looking for here
---		    and village.vz >= minp.z and village.vz <= maxp.z ) then
-
-			local ideal_height = math.floor( height_sum[ village_nr ] / height_count[ village_nr ]);
-print('For village_nr '..tostring( village_nr )..' ('..tostring( village.name )..'), a height of '..tostring( ideal_height )..' would be optimal. Sum: '..tostring( height_sum[ village_nr ] )..' Count: '..tostring( height_count[ village_nr ])..'. VS: '..tostring( village.vs)); -- TODO
 
 			local max    = 0;
 			local target = village.vh;
@@ -490,8 +512,6 @@ print('For village_nr '..tostring( village_nr )..' ('..tostring( village.name ).
 			end
 
 			village.optimal_height = qmw;
-
-			print('Majority vote for '..tostring( village_nr )..' is: '..tostring( target )..' with '..tostring( max )..' counts. Details: '..minetest.serialize( height_statistic[ village_nr] ).." QMW: "..tostring( qmw ));
 		end
 	end
 end
