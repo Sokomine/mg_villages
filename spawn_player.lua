@@ -1,6 +1,9 @@
 
 
 local function spawnplayer(player)
+	if( minetest.setting_get("static_spawnpoint")) then
+		return;
+	end
 	local noise1 = minetest.get_perlin(12345, 6, 0.5, 256)
 	local min_dist = math.huge
 	local min_pos = {x = 0, y = 3, z = 0}
