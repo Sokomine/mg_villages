@@ -373,8 +373,11 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 				local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
 				for village_nr, village in ipairs(villages) do
 					local vn = mg_villages.get_vn(x, z, n_rawnoise, village);
+					if(     village.is_single_house ) then
+						-- do nothing here; the village area will be specificly marked later on
+
 					-- the village core; this is where the houses stand (but there's no house or road at this particular spot)
-					if(     vn <= 40 ) then
+					elseif( vn <= 40 ) then
 						village_area[ x ][ z ] = { village_nr, 6};
 
 					-- the flattened land around the village where wheat, cotton, trees or grass may be grown (depending on village type)
@@ -394,6 +397,14 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 					end
 				end
 			end
+		end
+	end
+	
+	-- single houses get their own form of terrain blend
+	local pr = PseudoRandom(mg_villages.get_bseed(minp));
+	for village_nr, village in ipairs( villages ) do
+		if( village and village.is_single_house and village.to_add_data and village.to_add_data.bpos and #village.to_add_data.bpos>=1) then
+			mg_villages.village_area_mark_single_house_area( village_area, minp, maxp, village.to_add_data.bpos[1], pr, village_nr );
 		end
 	end
 end
@@ -710,26 +721,28 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		mg_villages.generate_village( village, village_noise);
 		t1 = time_elapsed( t1, 'generate_village' );
 
-		-- only add artificial snow if the village has at least a size of 15 (else it might look too artificial)
-		if( not( village.artificial_snow ) and village.vs > 15) then
-			if( mg_villages.artificial_snow_probability and math.random( 1, mg_villages.artificial_snow_probability )==1) then
-				village.artificial_snow = 1;
-			else
-				village.artificial_snow = 0;
+		if( not( village.is_single_house )) then
+			-- only add artificial snow if the village has at least a size of 15 (else it might look too artificial)
+			if( not( village.artificial_snow ) and village.vs > 15) then
+				if( mg_villages.artificial_snow_probability and math.random( 1, mg_villages.artificial_snow_probability )==1) then
+					village.artificial_snow = 1;
+				else
+					village.artificial_snow = 0;
+				end
 			end
+	
+			-- will set village_area to N where .. is:
+			--  2: a building
+			--  3: border around a building
+			--  4: a road
+			--  5: border around a road
+			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
+			t1 = time_elapsed( t1, 'mark_buildings' );
+			-- will set village_area to N where .. is:
+			--  8: a dirt road
+			mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
+			t1 = time_elapsed( t1, 'mark_dirt_roads' );
 		end
-
-		-- will set village_area to N where .. is:
-		--  2: a building
-		--  3: border around a building
-		--  4: a road
-		--  5: border around a road
-		mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
-		t1 = time_elapsed( t1, 'mark_buildings' );
-		-- will set village_area to N where .. is:
-		--  8: a dirt road
-		mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
-		t1 = time_elapsed( t1, 'mark_dirt_roads' );
         end
 
 	-- if no voxelmanip data was passed on, read the data here
@@ -832,6 +845,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	vm:write_to_map(data)
 	t1 = time_elapsed( t1, 'vm data written' );
+
+	vm:update_liquids()
+	t1 = time_elapsed( t1, 'vm update liquids' );
 
 	-- do on_construct calls AFTER the map data has been written - else i.e. realtest fences can not update themshevles
 	for _, village in ipairs(villages) do

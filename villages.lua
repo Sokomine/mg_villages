@@ -775,8 +775,10 @@ end
 -- they may be so close to the border that they will affect this mapchunk
 mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
-	for x=-1,1 do
-		for z=-1,1 do
+--	for x=-1,1 do
+--		for z=-1,1 do
+			local x = 0;
+			local z = 0;
 			local new_village = mg_villages.houses_in_one_mapchunk(
 					{x=minp.x+(x*mapchunk_size), y=minp.y, z=minp.z+(z*mapchunk_size)},
 					mapchunk_size,
@@ -785,7 +787,7 @@ mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 			if( new_village and new_village.vs and new_village.vx and new_village.vz ) then
 				table.insert( villages, new_village );
 			end
-		end
-	end
+--		end
+--	end
 	return villages;
 end
