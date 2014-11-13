@@ -735,7 +735,7 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 		xdim = bsizex + math.floor(FFAPROP * bsizex)
 		zdim = bsizez
 	end
-	local blenrad = math.floor((math.max(xdim, zdim) + 16) / 2) -- radius of blend area
+	local blenrad = math.floor((math.max(xdim, zdim) + 16) / 2)+2 -- radius of blend area
 	local blencenx = pr:next(minp.x + blenrad, minp.x + mapchunk_size - blenrad - 1) -- blend area centre point
 	local blencenz = pr:next(minp.z + blenrad, minp.z + mapchunk_size - blenrad - 1)
 	local minx = blencenx - math.ceil(xdim / 2) -- minimum point of house plus front flat area

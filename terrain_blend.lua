@@ -55,8 +55,8 @@ mg_villages.village_area_mark_single_house_area = function(village_area, minp, m
 		local flatradn = flatrad + n_absblend * 2 -- vary shape of house flat area
 		local nodrad = math.sqrt(xr ^ 2 + zr ^ 2) -- node radius
 
-		if    x >= pos.x and x <= pos.x + pos.bsizex -- area reserved for house
-		  and z >= pos.z and z <= pos.z + pos.bsizez then
+		if    x >= (pos.x-1) and x <= (pos.x + pos.bsizex + 1) -- area reserved for house
+		  and z >= (pos.z-1) and z <= (pos.z + pos.bsizez + 1) then
 			village_area[ x ][ z ] = {village_nr, 4}
 		elseif nodrad <= flatradn or (xr == 0 and zr == 0) then -- irregular flat area around house
 			village_area[ x ][ z ] = {village_nr, 1}
