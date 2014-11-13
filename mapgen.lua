@@ -544,12 +544,12 @@ end
 
 mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr )
 	-- a normal tree; sometimes comes with apples
-	if(     plant_id == cid.c_sapling and default.grow_tree ) then
-		default.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
+	if(     plant_id == cid.c_sapling ) then
+		mg_villages.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
 		return true;
 	-- a normal jungletree
-	elseif( plant_id == cid.c_jsapling and default.grow_jungletree ) then
-		default.grow_jungletree( data, a, pos, math.random(1,100000))
+	elseif( plant_id == cid.c_jsapling ) then
+		mg_villages.grow_jungletree( data, a, pos, math.random(1,100000))
 		return true;
 	-- a savannatree from the mg mod
 	elseif( plant_id == cid.c_savannasapling and add_savannatree) then

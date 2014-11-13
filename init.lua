@@ -24,6 +24,9 @@ dofile(mg_villages.modpath.."/analyze_mts_file.lua")
 -- adds a special gravel node which will neither fall nor be griefed by mapgen
 dofile(mg_villages.modpath.."/nodes.lua")
 
+-- the default game no longer provides helpful tree growing code
+dofile(mg_villages.modpath.."/trees.lua")
+
 -- Note: the "buildings" talbe is not in the mg_villages.* namespace
 dofile(mg_villages.modpath.."/buildings.lua")
 
