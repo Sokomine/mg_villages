@@ -8,7 +8,17 @@ mg_villages.get_town_id_at_pos = function( pos )
 		  and ( pos.y - v.vh < 40 and v.vh - pos.y < 10 )) then
 			local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
 			if( mg_villages.inside_village_area( pos.x,  pos.z, v, village_noise)) then
-				return id;
+
+				local node = minetest.get_node( pos );
+				if( node
+				   and node.name
+				   and minetest.registered_nodes[ node.name ]
+				   and minetest.registered_nodes[ node.name ].groups
+				   and minetest.registered_nodes[ node.name ].groups.leaves ) then
+					return nil;
+				else
+					return id;
+				end
 			end
 		end
 	end
