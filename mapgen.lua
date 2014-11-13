@@ -125,9 +125,13 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		end
 		y = y-1;
 	end
-
-	if( not( surface_node ) and old_height == maxp.y and data[a:index( x, minp.y, z)]==c_air) then
-		old_height = vh - 2;	
+		
+	if( not( surface_node ) and old_height == maxp.y ) then
+		if(     data[a:index( x, minp.y, z)]==c_air) then
+			old_height = vh - 2;	
+		elseif( minp.y < 0 ) then
+			old_height = minp.y;	
+		end
 	end
 	if( not( surface_node ) or surface_node == cid.c_dirt) then
 		surface_node = cid.c_dirt_with_grass;
