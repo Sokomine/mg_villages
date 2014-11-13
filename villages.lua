@@ -682,23 +682,13 @@ end
 -- the data structure is like that of a village, except that bpos (=buildings to be placed) is already set;
 -- Note: one building per mapchunk is more than enough (else it would look too crowded);
 mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vnoise )
-	local village = {};
-	local pr = PseudoRandom(mg_villages.get_bseed(minp))
 
+	local pr = PseudoRandom(mg_villages.get_bseed(minp))
 	-- only each mg_villages.INVERSE_HOUSE_DENSITY th mapchunk gets a building
 	if( pr:next(1,mg_villages.INVERSE_HOUSE_DENSITY) > 1 ) then
 		return {};
 	end
-	-- set random coordinates withhin chunk (but far enough away from the shell so that we don't have to bother about cavegen)
-	village.vx = pr:next(minp.x, minp.x + mapchunk_size - 1)
-	village.vz = pr:next(minp.z, minp.z + mapchunk_size - 1)
-	-- village height will be set to a value fitting the terrain later on
-	village.vh = 10;
-	-- this will force re-calculation of height
-	village.vs = 5;
 
-	-- store that this is not a village but a lone house
-	village.is_single_house = 1;
 
 	-- pseudorandom orientation
 	local orient1 = pr:next(0,3);
@@ -707,7 +697,7 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	-- TODO: select only types that exist
 	-- the village type is "single" here - since not all houses which might fit into a village might do for lone standing houses
 	-- (i.e. church, forge, wagon, ..)
-	btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'single');
+	local btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'single');
 	if( not( bsizex )) then
 		print('FAILURE to generate a building.');
 		btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'lumberjack');
@@ -716,36 +706,55 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	if( not( bsizex ) or not(mg_villages.BUILDINGS[ btype ].weight)) then
 		return {};
 	end
+
+
+	local village = {};
+	-- store that this is not a village but a lone house
+	village.is_single_house = 1;
+	-- village height will be set to a value fitting the terrain later on
+	village.vh = 10;
+	-- this will force re-calculation of height
+	village.vs = 5;
 	-- find out the real village type of this house (which is necessary for the replacements);
 	-- the "single" type only indicates that this building may be used for one-house-villages such as this one
-	for k,v in pairs( mg_villages.BUILDINGS[ btype ].weight ) do
+	for k, _ in pairs( mg_villages.BUILDINGS[ btype ].weight ) do
 		if( k and k ~= 'single' ) then
 			village.village_type = k;
 		end
 	end
 
-	-- the flattened area shall extend in front of the building (so that there's room for using the front entrance)
-	local bx = village.vx;
-	local bz = village.vz;
-	if(     orient1==0 ) then
-		bz = bz - math.floor(bsizez/2);
-	elseif( orient1==1 ) then
-		bx = bx - math.floor(bsizex/2);
-		bz = bz - bsizez;
-	elseif( orient1==2 ) then
-		bz = bz - math.floor(bsizez/2);
-		bx = bx - bsizex;
-	elseif( orient1==3 ) then
-		bx = bx - math.floor(bsizex/2);
-	end
-	
-	-- adjust the size of the flattened area to the building's size
-	village.vs = pr:next( math.max( 2, math.floor(math.min( bsizex, bsizez )*0.3)), math.min( math.ceil( math.max( bsizex, bsizez )), 25));
 
-	-- TODO: if village.is_single_house==1, do another check (based on the houses only)
+	-- taken from paramats terrain blending code for single houses
+	local FFAPROP = 0.5 -- front flat area proportion of dimension
+
+	local xdim, zdim -- dimensions of house plus front flat area
+	if rotation == 0 or rotation == 2 then
+		xdim = bsizex
+		zdim = bsizez + math.floor(FFAPROP * bsizez)
+	else
+		xdim = bsizex + math.floor(FFAPROP * bsizex)
+		zdim = bsizez
+	end
+	local blenrad = math.floor((math.max(xdim, zdim) + 16) / 2) -- radius of blend area
+	local blencenx = pr:next(minp.x + blenrad, minp.x + mapchunk_size - blenrad - 1) -- blend area centre point
+	local blencenz = pr:next(minp.z + blenrad, minp.z + mapchunk_size - blenrad - 1)
+	local minx = blencenx - math.ceil(xdim / 2) -- minimum point of house plus front flat area
+	local minz = blencenz - math.ceil(zdim / 2)
+	local bx, bz -- house minimum point
+	if rotation == 2 or rotation == 3 then -- N, E
+		bx = minx
+		bz = minz
+	elseif rotation == 1 then -- W
+		bx = minx + math.floor(FFAPROP * bsizex)
+		bz = minz
+	else -- rotation = 2, S
+		bx = minx
+		bz = minz + math.floor(FFAPROP * bsizez)
+	end
+
 	-- now check if this village can be placed here or if it intersects with another village in any critical manner;
 	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
-	for i,v in ipairs(villages) do
+	for _,v in ipairs(villages) do
 		-- abort if the new building can't be placed here
 		if(   mg_villages.inside_village_area(bx,        bz,        v, vnoise) 
 		   or mg_villages.inside_village_area(bx+bsizex, bz,        v, vnoise)
@@ -755,6 +764,9 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 		end
 	end
 
+	village.vx = blencenx;
+	village.vz = blencenz;
+	village.vs = blenrad;
 	local village_id = tostring( village.vx )..':'..tostring( village.vz );
 	-- these values have to be determined once per village; afterwards, they need to be fixed
 	if( mg_villages.all_villages  and mg_villages.all_villages[ village_id ] and mg_villages.all_villages[ village_id ].optimal_height) then

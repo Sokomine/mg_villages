@@ -404,7 +404,7 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 	local pr = PseudoRandom(mg_villages.get_bseed(minp));
 	for village_nr, village in ipairs( villages ) do
 		if( village and village.is_single_house and village.to_add_data and village.to_add_data.bpos and #village.to_add_data.bpos>=1) then
-			mg_villages.village_area_mark_single_house_area( village_area, minp, maxp, village.to_add_data.bpos[1], pr, village_nr );
+			mg_villages.village_area_mark_single_house_area( village_area, minp, maxp, village.to_add_data.bpos[1], pr, village_nr, village );
 		end
 	end
 end
