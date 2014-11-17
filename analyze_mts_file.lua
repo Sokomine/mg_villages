@@ -162,7 +162,7 @@ mg_villages.decode_one_node = function( node_name, param2, node_meta )
 		end
 
 		-- ..except if they are stairs or ladders
-		if( node_name == 'default:ladder' or string.sub( node_name, 1, 7 ) == 'stairs:' ) then
+		if( node_name == 'default:ladder' or string.sub( node_name, 1, 7 ) == 'stairs:' or string.sub( node_name, 1, 6 ) == 'doors:') then
 			return { node = {
 					name    = node_name,
 					param2  = param2,
