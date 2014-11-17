@@ -51,3 +51,23 @@ mg_villages.get_param2_rotated = function( paramtype2, p2 )
 	return p2r;
 end
 
+
+mg_villages.mirrored_node = {};
+
+mg_villages.add_mirrored_node_type = function( name, mirrored_name )
+	mg_villages.mirrored_node[ name ] = mirrored_name;
+	local id    = minetest.get_content_id( name );
+	local id_mi = minetest.get_content_id( mirrored_name );
+	local c_ignore = minetest.get_content_id( 'ignore' );
+	if( id and id_mi and id ~= c_ignore  and id_mi2 ~= c_ignore ) then
+		mg_villages.mirrored_node[ id ] = id_mi;
+	end
+end
+
+local door_materials = {'wood','steel','glass','obsidian_glass'};
+for _,material in ipairs( door_materials ) do 
+	mg_villages.add_mirrored_node_type( 'doors:door_'..material..'_b_1', 'doors:door_'..material..'_b_2' );
+	mg_villages.add_mirrored_node_type( 'doors:door_'..material..'_t_1', 'doors:door_'..material..'_t_2' );
+	mg_villages.add_mirrored_node_type( 'doors:door_'..material..'_b_2', 'doors:door_'..material..'_b_1' );
+	mg_villages.add_mirrored_node_type( 'doors:door_'..material..'_t_2', 'doors:door_'..material..'_t_1' );
+end
