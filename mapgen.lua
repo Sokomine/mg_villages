@@ -548,11 +548,11 @@ end
 
 mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr )
 	-- a normal tree; sometimes comes with apples
-	if(     plant_id == cid.c_sapling ) then
+	if(     plant_id == cid.c_sapling and minetest.registered_nodes[ 'default:tree']) then
 		mg_villages.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
 		return true;
 	-- a normal jungletree
-	elseif( plant_id == cid.c_jsapling ) then
+	elseif( plant_id == cid.c_jsapling and minetest.registered_nodes[ 'default:jungletree']) then
 		mg_villages.grow_jungletree( data, a, pos, math.random(1,100000))
 		return true;
 	-- a savannatree from the mg mod
