@@ -200,13 +200,23 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 	
 				if (type(t) == "table" and t.node) then
 					new_content = t.node.content;
+					local new_node_name    = t.node.name;
+
+					if( new_content   and ( mirror_x or mirror_z ) and mg_villages.mirrored_node[ new_content ] ) then
+						new_content = mg_villages.mirrored_node[ t.node.content ];
+					end
+
+					if( new_node_name and ( mirror_x or mirror_z ) and mg_villages.mirrored_node[ new_node_name ] ) then
+						new_node_name = mg_villages.mirrored_node[ new_node_name ];
+					end
+
 					-- replace unkown nodes by name
 					if( not( new_content) or new_content == c_ignore 
-					    and t.node.name and t.node.name ~= 'mg:ignore') then
-						if( replacements.table[ t.node.name ] and minetest.registered_nodes[ replacements.table[ t.node.name ]]) then
+					    and new_node_name and new_node_name ~= 'mg:ignore') then
+						if( replacements.table[ new_node_name ] and minetest.registered_nodes[ replacements.table[ new_node_name ]]) then
 							
-							new_content = minetest.get_content_id(  replacements.table[ t.node.name ] );
-							if( minetest.registered_nodes[ replacements.table[ t.node.name ]].on_construct ) then
+							new_content = minetest.get_content_id(  replacements.table[ new_node_name ] );
+							if( minetest.registered_nodes[ replacements.table[ new_node_name ]].on_construct ) then
 								if( not( extra_calls.on_constr[ new_content ] )) then
 									extra_calls.on_constr[ new_content ] = { {x=ax, y=ay, z=az}};
 								else
@@ -214,12 +224,12 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 								end
 							end
 						-- we tried our best, but the replacement node is not defined	
-						elseif (t.node.name ~= 'mg:ignore' ) then
-							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( t.node.name )..' (suggested but inexistant: '..tostring( replacements.table[ t.node.name ] )..'). Building: '..tostring( binfo.scm )..'.');
+						elseif (new_node_name ~= 'mg:ignore' ) then
+							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( new_node_name )..' (suggested but inexistant: '..tostring( replacements.table[ new_node_name ] )..'). Building: '..tostring( binfo.scm )..'.');
 							new_content = cid.c_air;
 						end
 
-					elseif( new_content == c_ignore or (t.node.name and t.node.name == 'mg:ignore' )) then
+					elseif( new_content == c_ignore or (new_node_name and new_node_name == 'mg:ignore' )) then
 						-- no change; keep the old content
 					-- do replacements for normal nodes with facedir or wallmounted
 					elseif( new_content ~= c_ignore and replacements.ids[ new_content ]) then
