@@ -4,6 +4,8 @@ local c_air = minetest.get_content_id("air")
 local c_ignore = minetest.get_content_id("ignore")
 local c_tree = minetest.get_content_id("default:tree")
 local c_leaves = minetest.get_content_id("default:leaves")
+local c_sapling = minetest.get_content_id("default:sapling");
+local c_junglesapling = minetest.get_content_id("default:junglesapling");
 
 mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed)
         --[[
@@ -26,7 +28,7 @@ mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed)
     end
     for tree_h = 0, hight-1 do  -- add the trunk
         local area_t = a:index(pos.x, pos.y+tree_h, pos.z)  --set area for tree
-        if data[area_t] == c_air or data[area_t] == c_leaves then    --sets if air
+        if data[area_t] == c_air or data[area_t] == c_leaves or data[area_t] == c_sapling then    --sets if air
             data[area_t] = c_tree    --add tree now
         end
 	end
@@ -56,7 +58,7 @@ mg_villages.grow_jungletree = function(data, a, pos, seed)
     end
     for tree_h = 0, hight-1 do  -- add the trunk
         local area_t = a:index(pos.x, pos.y+tree_h, pos.z)  --set area for tree
-        if data[area_t] == c_air or data[area_t] == c_jungleleaves then    --sets if air
+        if data[area_t] == c_air or data[area_t] == c_jungleleaves or data[area_t] == c_junglesapling then    --sets if air
             data[area_t] = c_jungletree    --add tree now
         end
     end
