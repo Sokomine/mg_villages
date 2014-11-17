@@ -492,6 +492,62 @@ mg_villages.get_replacement_list = function( housetype, pr )
    end
 
 
+   if( housetype == 'chateau' ) then
+
+      if( minetest.get_modpath( 'cottages' )) then
+	       -- straw is the most likely building material for roofs for historical buildings
+         mg_villages.replace_materials( replacements, pr,
+		-- all three shapes of roof parts have to fit together
+		{ 'cottages:roof_straw',    'cottages:roof_connector_straw',   'cottages:roof_flat_straw' },
+		{ 'cottages:roof_',         'cottages:roof_connector_',        'cottages:roof_flat_'},
+		{'straw', 'straw', 'straw', 'straw', 'straw',
+			   'reet', 'reet', 'reet',
+			   'slate', 'slate',
+                           'wood',  'wood',  
+                           'red',
+                           'brown',
+                           'black'},
+		'straw');
+      else
+         mg_villages.replace_materials( replacements, pr,
+		-- all three shapes of roof parts have to fit together
+		{ 'cottages:roof_straw',    'cottages:roof_connector_straw',   'cottages:roof_flat_straw' },
+		{ 'stairs:stair_',          'stairs:stair_',                   'stairs:slab_'},
+		{'cobble', 'stonebrick', 'desert_cobble', 'desert_stonebrick', 'stone'},
+		'stonebrick');
+         mg_villages.replace_materials( replacements, pr, { 'cottages:glass_pane', 'default:glass' });
+      end
+
+
+      local wood_type = mg_villages.replace_materials( replacements, pr,
+		{'default:wood'},
+		{''},
+		{ 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood'}, --, 'default:brick', 'default:sandstone', 'default:desert_cobble' }, 
+		'default:wood');
+      mg_villages.replace_tree_trunk( replacements, wood_type );
+      mg_villages.replace_saplings(   replacements, wood_type );
+
+
+      if( mg_villages.realtest_trees ) then
+         -- replace the floor with another type of wood (looks better than the same type as above)
+         mg_villages.replace_materials( replacements, pr,
+		{'stairs:stair_junglewood',  'stairs:slab_junglewood', 'default:junglewood'},
+		{'stairs:stair_',            'stairs:slab_',           'default:'     },
+		{ 'default:wood' },
+		'wood' );
+      end
+
+
+      local mfs2 = mg_villages.replace_materials( replacements, pr,
+		{'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
+		{'stairs:stair_',        'stairs:slab_',       'default:'      },
+		{ 'cobble', 'brick', 'clay', 'desert_cobble', 'desert_stone', 'desert_stonebrick', 'loam', 'sandstone', 'sandstonebrick', 'stonebrick' },
+		'cobble');
+
+      return replacements;
+   end
+
+
    if( housetype == 'tent' ) then
       table.insert( replacements, { "glasspanes:wool_pane",  "cottages:wool_tent" });
       table.insert( replacements, { "default:gravel",        "default:sand"       });

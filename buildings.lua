@@ -13,6 +13,7 @@ mg_villages.village_sizes = {
 	grasshut     = { min = 10, max = 40,   space_between_buildings=1, texture = 'dryplants_reed.png'},
 	tent         = { min =  5, max = 20,   space_between_buildings=2, texture = 'wool_white.png'},
 	tower        = { min =  2, max =  6,   space_between_buildings=1, texture = 'default_mese.png'},
+	chateau      = { min = 50, max = 80,   space_between_buildings=1, texture = 'default_gold_block.png'},
 }
 
 -- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
@@ -231,10 +232,10 @@ mg_villages.BUILDINGS = {
 	{scm="r_manorhouse",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=3}, inh=4},
 	{scm="r_triplex",                  yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='ladymacbeth',  weight={canadian=3}, inh=10},
 
-	{scm="field_1",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-	{scm="field_2",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-	{scm="field_3",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-	{scm="field_4",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
+	{scm="field_1",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1, chateau=1}},
+	{scm="field_2",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1, chateau=1}},
+	{scm="field_3",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1, chateau=1}},
+	{scm="field_4",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1, chateau=1}},
 
 	{scm="tent_tiny_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
 	{scm="tent_tiny_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
@@ -255,6 +256,8 @@ mg_villages.BUILDINGS = {
 	{scm="hochsitz_2",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
 	{scm="hochsitz_3",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
 	{scm="hochsitz_4",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
+
+	{scm="chateau_1",                  yoff=-1,orients={0,1,2,3}, farming_plus=0, avoid='', typ='chateau',  weight={chateau=5}, pervillage=1},
 }
 
 
@@ -266,7 +269,7 @@ if( not( minetest.get_modpath("farming_plus"))) then
 end
 
 -- 'nore' and 'taoki' do not require any other mods; thus, they can be used in all worlds
-mg_villages.village_types = { 'nore', 'taoki'};
+mg_villages.village_types = { 'nore', 'taoki', 'chateau'};
 
 if(         minetest.get_modpath("cottages")) then
 	table.insert( mg_villages.village_types, 'medieval' );
