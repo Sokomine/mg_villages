@@ -515,7 +515,7 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		{ 'stairs:stair_',          'stairs:stair_',                   'stairs:slab_'},
 		{'cobble', 'stonebrick', 'desert_cobble', 'desert_stonebrick', 'stone'},
 		'stonebrick');
-         mg_villages.replace_materials( replacements, pr, { 'cottages:glass_pane', 'default:glass' });
+         table.insert( replacements, { 'cottages:glass_pane', 'default:glass' });
       end
 
 
