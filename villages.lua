@@ -736,8 +736,16 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 		zdim = bsizez
 	end
 	local blenrad = math.floor((math.max(xdim, zdim) + 16) / 2)+2 -- radius of blend area
+--[[
+	if( blenrad >= math.ceil(mapchunk_size/2)-2 ) then
+		blenrad = math.floor(mapchunk_size/2)-2;
+	end
 	local blencenx = pr:next(minp.x + blenrad, minp.x + mapchunk_size - blenrad - 1) -- blend area centre point
 	local blencenz = pr:next(minp.z + blenrad, minp.z + mapchunk_size - blenrad - 1)
+--]]
+	local blencenx = pr:next(minp.x, minp.x + mapchunk_size - 1) -- blend area centre point
+	local blencenz = pr:next(minp.z, minp.z + mapchunk_size - 1)
+
 	local minx = blencenx - math.ceil(xdim / 2) -- minimum point of house plus front flat area
 	local minz = blencenz - math.ceil(zdim / 2)
 	local bx, bz -- house minimum point
@@ -787,19 +795,22 @@ end
 -- they may be so close to the border that they will affect this mapchunk
 mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
+	local vcr = mg_villages.VILLAGE_CHECK_RADIUS
+        for xi = -vcr, vcr do
+        for zi = -vcr, vcr do
 --	for x=-1,1 do
 --		for z=-1,1 do
-			local x = 0;
-			local z = 0;
+--			local x = 0;
+--			local z = 0;
 			local new_village = mg_villages.houses_in_one_mapchunk(
-					{x=minp.x+(x*mapchunk_size), y=minp.y, z=minp.z+(z*mapchunk_size)},
+					{x=minp.x+(xi*mapchunk_size), y=minp.y, z=minp.z+(zi*mapchunk_size)},
 					mapchunk_size,
 					villages,
 					village_noise );
 			if( new_village and new_village.vs and new_village.vx and new_village.vz ) then
 				table.insert( villages, new_village );
 			end
---		end
---	end
+		end
+	end
 	return villages;
 end
