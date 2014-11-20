@@ -66,7 +66,9 @@ if( minetest.get_modpath( 'mg' )) then
 	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:savannasapling'     ) ] = 30; 
 	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:pinesapling'        ) ] = 35; 
 end
+mg_villages.moretrees_treelist = nil;
 if( minetest.get_modpath( 'moretrees' )) then
+	mg_villages.moretrees_treelist = moretrees.treelist;
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:birch_sapling_ongen'       ) ] = 200;
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:spruce_sapling_ongen'      ) ] = 200;
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:fir_sapling_ongen'         ) ] =  90;

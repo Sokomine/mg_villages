@@ -19,7 +19,7 @@ end
 mg_villages.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, param2_data)
 
 	-- this only works if moresnow is installed
-	if( not( moresnow ) or not( moresnow.suggest_snow_type )) then
+	if( not( mg_villages.moresnow_installed )) then
 		return;
 	end
 
@@ -76,7 +76,7 @@ end
 
 
 
-local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extranodes, replacements, cid, extra_calls, building_nr_in_bpos)
+local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos)
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
@@ -182,11 +182,13 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, pr, extr
 		local has_snow    = false;
 		local ground_type = c_dirt_with_grass; 
 		for y = 0, binfo.ysize-1 do
-			ax, ay, az = pos.x+x, pos.y+y+binfo.yoff, pos.z+z
+			local ax = pos.x+x;
+			local ay = pos.y+y+binfo.yoff;
+			local az = pos.z+z;
 			if (ax >= minp.x and ax <= maxp.x) and (ay >= minp.y and ay <= maxp.y) and (az >= minp.z and az <= maxp.z) then
 	
 				local new_content = c_air;
-				t = scm[y+1][xoff][zoff];
+				local t = scm[y+1][xoff][zoff];
 
 				if( binfo.yoff+y == 0 ) then
 					local node_content = data[a:index(ax, ay, az)];
@@ -523,7 +525,7 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		end
 	end
 
-	local replacements = mg_villages.get_replacement_table( village.village_type, p, village.to_add_data.replacements );
+	local replacements = mg_villages.get_replacement_table( village.village_type, nil, village.to_add_data.replacements );
 
 	cid.c_chest            = mg_villages.get_content_id_replaced( 'default:chest',          replacements );
 	cid.c_chest_locked     = mg_villages.get_content_id_replaced( 'default:chest_locked',   replacements );
@@ -561,7 +563,7 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
 		if( not(pos.btype) or pos.btype ~= 'road' or anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
 			-- replacements are in table format for mapgen-based building spawning
-			generate_building(pos, minp, maxp, data, param2_data, a, pr_village, extranodes, replacements, cid, extra_calls, i )
+			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i )
 		end
 	end
 
@@ -584,7 +586,7 @@ mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, 
 				local ax = pos.x+x;
 				local az = pos.z+z;
 			
-                      			if (ax >= minp.x and ax <= maxp.x) and (ay >= minp.y and ay <= maxp.y) and (az >= minp.z and az <= maxp.z) then
+                      			if (ax >= minp.x and ax <= maxp.x) and (pos.y >= minp.y and pos.y <= maxp.y-2) and (az >= minp.z and az <= maxp.z) then
 					-- roads have a height of 1 block
 					data[ a:index( ax, pos.y, az)] = c_road_node;
 					param2_data[ a:index( ax, pos.y, az)] = param2;
@@ -597,3 +599,6 @@ mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, 
 	end
 end
 
+if( minetest.get_modpath('moresnow' )) then
+	mg_villages.moresnow_installed = true;
+end

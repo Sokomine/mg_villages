@@ -42,7 +42,7 @@ mg_villages.import_scm = function(scm)
 		return {};
 	end
 
-	value = f:read("*a")
+	local value = f:read("*a")
 	f:close()
 	value = value:gsub("return%s*{", "", 1):gsub("}%s*$", "", 1)
 	local escaped = value:gsub("\\\\", "@@"):gsub("\\\"", "@@"):gsub("(\"[^\"]*\")", function(s) return string.rep("@", #s) end)

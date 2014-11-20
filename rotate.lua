@@ -59,7 +59,7 @@ mg_villages.add_mirrored_node_type = function( name, mirrored_name )
 	local id    = minetest.get_content_id( name );
 	local id_mi = minetest.get_content_id( mirrored_name );
 	local c_ignore = minetest.get_content_id( 'ignore' );
-	if( id and id_mi and id ~= c_ignore  and id_mi2 ~= c_ignore ) then
+	if( id and id_mi and id ~= c_ignore  and id_mi ~= c_ignore ) then
 		mg_villages.mirrored_node[ id ] = id_mi;
 	end
 end

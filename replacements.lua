@@ -67,8 +67,8 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 	end
 	
 	-- support wooden planks from moretrees
-	if( wood_found and moretrees and moretrees.treelist ) then
-		for _,v in ipairs( moretrees.treelist ) do
+	if( wood_found and mg_villages.moretrees_treelist ) then
+		for _,v in ipairs( mg_villages.moretrees_treelist ) do
 			if( minetest.registered_nodes[ "moretrees:"..v[1].."_planks"] ) then
 				table.insert( known_materials, "moretrees:"..v[1].."_planks" );
 			end	
@@ -144,8 +144,8 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 	elseif( wood_type == 'mg:pinewood' ) then
 		table.insert( replacements, {'default:tree',  'mg:pinetree'});
 
- 	elseif( moretrees and moretrees.treelist ) then
-		for _,v in ipairs( moretrees.treelist ) do
+ 	elseif( mg_villages.moretrees_treelist ) then
+		for _,v in ipairs( mg_villages.moretrees_treelist ) do
 			if( wood_type == "moretrees:"..v[1].."_planks" ) then
 				table.insert( replacements, {'default:tree',   "moretrees:"..v[1].."_trunk"});
 				table.insert( replacements, {'default:leaves', "moretrees:"..v[1].."_leaves"});
@@ -225,8 +225,8 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 		table.insert( replacements, {'default:sapling',  'mg:savannasapling'});
 	elseif( wood_type == 'mg:pinewood' ) then
 		table.insert( replacements, {'default:sapling',  'mg:pinesapling'});
- 	elseif( moretrees and moretrees.treelist ) then
-		for _,v in ipairs( moretrees.treelist ) do
+ 	elseif( mg_villages.moretrees_treelist ) then
+		for _,v in ipairs( mg_villages.moretrees_treelist ) do
 			if( wood_type == "moretrees:"..v[1].."_planks" ) then
 				table.insert( replacements, {'default:sapling', "moretrees:"..v[1].."_sapling_ongen"});
 			end

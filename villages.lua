@@ -192,6 +192,11 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 		orient1 = 3
 		orient2 = 1
 	end
+	local btype;
+	local rotation;
+	local bsizex;
+	local bsizez;
+	local mirror;
 	-- we have one more road
 	mg_villages.road_nr = mg_villages.road_nr + 1;
 	while mg_villages.inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize, l) do
@@ -296,6 +301,10 @@ local function generate_road(village, l, pr, roadsize, rx, rz, rdx, rdz, vnoise,
 	end
 	mx = mmx or rdx*math.max(rdx*mx, rdx*m2x)
 	mz = mmz or rdz*math.max(rdz*mz, rdz*m2z)
+	local rxmin;
+	local rxmax;
+	local rzmin;
+	local rzmax;
 	if rdx == 0 then
 		rxmin = rx - roadsize + 1
 		rxmax = rx + roadsize - 1
@@ -419,7 +428,7 @@ local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	-- the function below is recursive; we need a way to count roads
 	mg_villages.road_nr = 0;
 	generate_road(village, l, pr, mg_villages.FIRST_ROADSIZE, rx, rz, 1, 0, vnoise, space_between_buildings)
-	i = 1
+	local i = 1
 	while i < calls.index do
 		generate_road(unpack(calls[i]))
 		i = i+1
@@ -442,6 +451,10 @@ local function generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads 
 		local sizex = pos.bsizex;
 		local sizez = 2;
 		local orientation = 0;
+		local vx;
+		local vz;
+		local vsx;
+		local vsz;
 		-- prolong the roads; start with a 3x2 piece of road for testing
 		if( pos.btype == 'road' ) then
 			-- the road streches in x direction
@@ -495,7 +508,7 @@ local function generate_dirt_roads( village, vnoise, bpos, secondary_dirt_roads 
 				sizez = pos.bsizez+1;
 				vx = 0;  vz = -1; vsx = 0; vsz = 1;
 
-			elseif( pos.o == 3 ) then
+			else --if( pos.o == 3 ) then
 				x = pos.x-2;
 				z = pos.z-pos.side; 
 				sizex = 2;
@@ -624,7 +637,7 @@ mg_villages.generate_village = function(village, vnoise)
 	
 	-- determine which plants will grow in the area around the village
 	local plantlist = {};
-	sapling_id = mg_villages.get_content_id_replaced( 'default:sapling', replacements );
+	local sapling_id = mg_villages.get_content_id_replaced( 'default:sapling', replacements );
 	-- 1/sapling_p = probability of a sapling beeing placed
 	local sapling_p  = 25;
 	if( mg_villages.sapling_probability[ sapling_id ] ) then

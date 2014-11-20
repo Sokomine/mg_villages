@@ -76,7 +76,9 @@ mg_villages.check_if_ground = function( ci )
 	-- store information about this node type for later use
 	if(     not( def )) then
 		mg_villages.node_is_ground[ ci ] = false;
-	elseif( def.groups and def.groups.tree) then
+	elseif( not( def.walkable)) then
+		mg_villages.node_is_ground[ ci ] = false;
+	elseif( def.groups and def.groups.tree ) then
 		mg_villages.node_is_ground[ ci ] = false;
 	elseif(	def.drop   and def.drop == 'default:dirt') then
 		mg_villages.node_is_ground[ ci ] = true;
@@ -97,7 +99,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	local tree          = false;
 	local jtree         = false;
 	local old_height    = maxp.y;
-	y = maxp.y;
+	local y = maxp.y;
 	-- search for a surface and set everything above target_height to air
 	while( y > minp.y) do
 		local ci = data[a:index(x, y, z)];
@@ -127,7 +129,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	end
 		
 	if( not( surface_node ) and old_height == maxp.y ) then
-		if(     data[a:index( x, minp.y, z)]==c_air) then
+		if(     data[a:index( x, minp.y, z)]==cid.c_air) then
 			old_height = vh - 2;	
 		elseif( minp.y < 0 ) then
 			old_height = minp.y;	
@@ -265,6 +267,7 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 	for x = minp.x, maxp.x do
 		-- inside a village
 		if( village_area[ x ][ z ][ 2 ] > 0 ) then
+			local y;
 			local village = villages[ village_area[ x ][ z ][ 1 ]];
 			-- the current node at the ground
 			local node    = data[a:index(x,village.vh,z)];
@@ -299,7 +302,7 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 				if( ci ~= cid.c_ignore and (ci==cid.c_dirt or ci==cid.c_dirt_with_grass or ci==cid.c_sand or ci==cid.c_desert_sand)) then
 					data[a:index(x,y,z)] = cid.c_air;
 				-- if there was a moresnow cover, add a snow on top of the new floor node
-				elseif( moresnow and ci ~= cid.c_ignore
+				elseif( ci ~= cid.c_ignore
 					         and (ci==cid.c_msnow_1 or ci==cid.c_msnow_2 or ci==cid.c_msnow_3 or ci==cid.c_msnow_4 or
 					              ci==cid.c_msnow_5 or ci==cid.c_msnow_6 or ci==cid.c_msnow_7 or ci==cid.c_msnow_8 or
 					              ci==cid.c_msnow_9 or ci==cid.c_msnow_10 or ci==cid.c_msnow_11)) then
@@ -441,7 +444,7 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 			  or ( z==minp.z-1 and village_area[ x   ][ z-1 ][ 1 ] >= 0 )
 			  or ( z==maxp.z+1 and village_area[ x   ][ z+1 ][ 1 ] >= 0 )) then
 
-				y = maxp.y;
+				local y = maxp.y;
 				while( y > minp.y and y >= 0) do
 					local ci = data[a:index(x, y, z)];
 					if(( ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) or (y==0)) then
@@ -494,6 +497,7 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		-- in some cases, choose that height which was counted most often
 		elseif( topt and (tmax - tmin ) > 8 and height_count[ village_nr ] > 0) then
 
+			local qmw;
 			if( ( tmax - topt ) > ( topt - tmin )) then
 				qmw = tmax;
 			else
@@ -545,6 +549,11 @@ print('CHANGING HEIGHT from '..tostring( village.vh )..' to '..tostring( new_hei
 end
 
 
+-- those functions from the mg mod do not have their own namespace
+if( minetest.get_modpath( 'mg' )) then
+	mg_villages.add_savannatree = add_savannatree;
+	mg_villages.add_pinetree    = add_pinetree;
+end
 
 mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr )
 	-- a normal tree; sometimes comes with apples
@@ -556,12 +565,12 @@ mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr 
 		mg_villages.grow_jungletree( data, a, pos, math.random(1,100000))
 		return true;
 	-- a savannatree from the mg mod
-	elseif( plant_id == cid.c_savannasapling and add_savannatree) then
-		add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+	elseif( plant_id == cid.c_savannasapling and mg_villages.add_savannatree) then
+		mg_villages.add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
 		return true;
 	-- a pine tree from the mg mod
-	elseif( plant_id == cid.c_pinesapling    and add_pinetree   ) then
-		add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+	elseif( plant_id == cid.c_pinesapling    and mg_villages.add_pinetree   ) then
+		mg_villages.add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
 		return true;
 	end
 	return false;
@@ -639,7 +648,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 					data[a:index( x,  h,   z)] = cid.c_soil_wet;
 
 					-- put a snow cover on plants where needed
-					if( g==cid.c_dirt_with_snow and moresnow ) then
+					if( g==cid.c_dirt_with_snow and cid.c_msnow_1 ~= cid.c_ignore ) then
 						data[a:index( x,  h+2, z)] = cid.c_msnow_1;
 					end
 				
@@ -666,9 +675,9 @@ end
 
 
 time_elapsed = function( t_last, msg )
-	t_now = minetest.get_us_time();
-	print( 'TIME ELAPSED: '..tostring( t_now - t_last )..' '..msg );
-	return t_now;
+	mg_villages.t_now = minetest.get_us_time();
+	print( 'TIME ELAPSED: '..tostring( mg_villages.t_now - t_last )..' '..msg );
+	return mg_villages.t_now;
 end
 
 
@@ -749,6 +758,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
         end
 
+	local emin;
+	local emax;
 	-- if no voxelmanip data was passed on, read the data here
 	if( not( vm ) or not( a) or not( data ) or not( param2_data ) ) then
 		vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
@@ -830,7 +841,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 		-- grow trees which are part of buildings into saplings
 		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do
-			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, pr );
+			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, nil ); -- TODO: supply pseudorandom value?
 		end
 	end
 
