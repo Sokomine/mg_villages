@@ -85,6 +85,13 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		return;
 	end
 
+	if((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
+	    or ( binfo.sizez ~= pos.bsizex and binfo.sizez ~= pos.bsizez )
+	    or not( binfo.scm_data_cache )) then
+		print('ERROR: This village was created using diffrent buildings than those known know. Cannot place unknown building.');
+		return;
+	end
+
 	if( binfo.scm_data_cache )then
 		scm = binfo.scm_data_cache;
 	else
