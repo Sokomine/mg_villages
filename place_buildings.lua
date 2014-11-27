@@ -77,6 +77,7 @@ end
 
 
 local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos)
+
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
@@ -85,9 +86,10 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		return;
 	end
 
-	if((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
+	if( pos.btype ~= "road" and
+	  ((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
 	    or ( binfo.sizez ~= pos.bsizex and binfo.sizez ~= pos.bsizez )
-	    or not( binfo.scm_data_cache )) then
+	    or not( binfo.scm_data_cache ))) then
 		print('ERROR: This village was created using diffrent buildings than those known know. Cannot place unknown building.');
 		return;
 	end
@@ -565,7 +567,6 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		end
 	end
 	village.anz_buildings = anz_buildings;
-
 	for i, pos in ipairs(bpos) do
 		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
 		if( not(pos.btype) or pos.btype ~= 'road' or anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
