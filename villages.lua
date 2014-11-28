@@ -40,7 +40,6 @@ mg_villages.villages_at_point = function(minp, noise1)
 	else
 		village_type = mg_villages.village_types[ pr:next(1, #mg_villages.village_types )]; -- select a random type
 	end
-village_type = 'nore';
 
 	if( not( mg_villages.village_sizes[ village_type ] )) then
 		mg_villages.village_sizes[  village_type ] = { min = mg_villages.VILLAGE_MIN_SIZE, max = mg_villages.VILLAGE_MAX_SIZE };
