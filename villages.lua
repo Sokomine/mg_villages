@@ -40,6 +40,7 @@ mg_villages.villages_at_point = function(minp, noise1)
 	else
 		village_type = mg_villages.village_types[ pr:next(1, #mg_villages.village_types )]; -- select a random type
 	end
+village_type = 'nore';
 
 	if( not( mg_villages.village_sizes[ village_type ] )) then
 		mg_villages.village_sizes[  village_type ] = { min = mg_villages.VILLAGE_MIN_SIZE, max = mg_villages.VILLAGE_MAX_SIZE };
@@ -781,7 +782,7 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 		   or mg_villages.inside_village_area(bx+bsizex, bz,        v, vnoise)
 		   or mg_villages.inside_village_area(bx,        bz+bsizez, v, vnoise)
 		   or mg_villages.inside_village_area(bx+bsizex, bz+bsizez, v, vnoise)) then
-			return;
+			return {};
 		end
 	end
 
@@ -808,13 +809,9 @@ end
 -- they may be so close to the border that they will affect this mapchunk
 mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
-	local vcr = mg_villages.VILLAGE_CHECK_RADIUS
+	local vcr = 1; --mg_villages.VILLAGE_CHECK_RADIUS
         for xi = -vcr, vcr do
         for zi = -vcr, vcr do
---	for x=-1,1 do
---		for z=-1,1 do
---			local x = 0;
---			local z = 0;
 			local new_village = mg_villages.houses_in_one_mapchunk(
 					{x=minp.x+(xi*mapchunk_size), y=minp.y, z=minp.z+(zi*mapchunk_size)},
 					mapchunk_size,
