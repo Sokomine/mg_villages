@@ -28,7 +28,8 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 			'text,align=right;'..	-- y
 			'text,align=right;'..	-- z
 			'text,align=right;'..	-- size
-			'text,align=right]'..	-- #houses
+			'text,align=right;'..	-- #houses where inhabitants may live or work
+			'text,align=right]'..
                         'table[0.1,2.7;11.4,8.8;'..formname..';';
 
 	for k,v in pairs( mg_villages.all_villages ) do
@@ -38,21 +39,26 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 		-- distance in y direction is less relevant here and may be ignored
 		if( dx + dz < radius ) then
 			local dist = math.sqrt( dx * dx + dz * dz );
+			local is_full_village = 'village';
+			if( v.is_single_house ) then
+				is_full_village = '';
+			end
 			formspec = formspec..
 				v.nr..','..
 				tostring( math.floor( dist ))..','..
-				tostring( village.name or 'unknown' )..','..
+				tostring( v.name or 'unknown' )..','..
 				v.village_type..','..
 				tostring( v.vx )..','..
 				tostring( v.vh )..','..
 				tostring( v.vz )..','..
-				tostring( v.vsize )..','..
-				tostring( v.bpos )..','; -- TODO
+				tostring( v.vs )..','..
+				tostring( v.anz_buildings )..','..
+				tostring( is_full_village )..',';
 		end
 	end
 
  	formspec = formspec..';]'..
-			'tabheader[0.1,2.2;spalte;N,Dist,Name,Typ,X,H,Z,Size,Buildings;;true;true]';
+			'tabheader[0.1,2.2;spalte;Nr,Dist,Name of village,Type of village,_X_,_H_,_Z_,Size,Buildings;;true;true]';
 
 	minetest.show_formspec( pname, formname, formspec );
 end
