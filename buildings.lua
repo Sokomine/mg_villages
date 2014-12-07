@@ -39,11 +39,11 @@ mg_villages.BUILDINGS = {
 	{yoff= 0, scm="small_house", orients={3},           weight={nore=1,   single=2   }, axis=1, inh=2},
 	{yoff= 0, scm="house_with_garden", orients={1},     weight={nore=1,   single=2   }, axis=1, inh=3},
 	{yoff= 0, scm="church", orients={3}, pervillage=1,  weight={nore=1   },             axis=1, inh=-1},
-	{yoff= 0, scm="tower", orients={0},                 weight={nore=1/7, single=1   },         inh=-1},
-	{yoff= 0, scm="forge", orients={0}, pervillage=2,   weight={nore=1,   single=1/3 },         inh=-1},
+	{yoff= 0, scm="tower", orients={0},                 weight={nore=1/7, single=1   },         inh=-1, typ='tower'},
+	{yoff= 0, scm="forge", orients={0}, pervillage=2,   weight={nore=1,   single=1/3 },         inh=-1, typ='forge'},
 	{yoff= 0, scm="library", orients={1}, pervillage=2, weight={nore=1               }, axis=1, inh=-1},
-	{yoff= 0, scm="inn", orients={1}, pervillage=4,     weight={nore=1/2, single=1/3 }, axis=1, inh=-1}, -- has room for 4 guests
-	{yoff= 0, scm="pub", orients={3}, pervillage=2,     weight={nore=1/3, single=1/3 }, axis=1, inh=-1},
+	{yoff= 0, scm="inn", orients={1}, pervillage=4,     weight={nore=1/2, single=1/3 }, axis=1, inh=-1, typ='tavern'}, -- has room for 4 guests
+	{yoff= 0, scm="pub", orients={3}, pervillage=2,     weight={nore=1/3, single=1/3 }, axis=1, inh=-1, typ='tavern'},
 
 
 -- log cabins by Sokomine (requiring cottages, glasspanes)

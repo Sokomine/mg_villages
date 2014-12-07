@@ -66,3 +66,36 @@ namegen.generate_village_name = function( pr )
 	name = string.upper( string.sub( name, 1, 1 ) )..string.sub( name, 2 );
 	return name;
 end
+
+
+namegen.generate_village_name_with_prefix = function( pr, village )
+
+	local name = namegen.generate_village_name( pr );
+
+	-- if a village consists of a single house, it gets a prefix depending on the house type
+	if( village.is_single_house and village.to_add_data and village.to_add_data.bpos ) then
+		local btyp = mg_villages.BUILDINGS[ village.to_add_data.bpos[1].btype].typ;
+		if(     btyp == 'forge' ) then
+			name = 'Forge at '..name;
+		elseif( btyp == 'tower' ) then
+			name = 'Tower at '..name;
+		elseif( btyp == 'tavern' ) then
+			name = 'Inn at '..name;
+		elseif( btyp == 'well' ) then
+			name = 'Well at '..name;
+		elseif( btyp == 'lumberjack' ) then
+			name = 'Camp '..name;
+		elseif( btyp == 'sawmill' ) then
+			name = 'Sawmill at '..name;
+		elseif( btyp == 'trader' ) then
+			name = 'Trading post '..name;
+		elseif( btyp == 'tent' ) then
+			name = 'Tent at '..name;
+		elseif( btyp == 'chateau' ) then
+			name = 'Chateau '..name;
+		else			
+			name = 'House '..name;
+		end
+	end
+	return name;
+end
