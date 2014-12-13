@@ -6,58 +6,40 @@ local function numk(tbl)
 	return i
 end
 
-mg_villages.import_scm = function(scm)
+mg_villages.import_scm = function(scm, we_origin)
 	local c_ignore = minetest.get_content_id("ignore")
 
 	-- this table will contain the nodes read
 	local nodes = {}
 
---[[
-	-- .bld file support did not work very well
-
-	-- first check if it's a .bld file from mauvebics mm2 modpack; code taken from said modpack from mauvebic and adjusted
-	local bldfile, bld_err = io.open(mg_villages.modpath..'/schems/'..scm..'.bld', "r");
-	if( bldfile ) then
-		local line = bldfile:read("*line")
-		while line ~= nil do
-			local nodename, coords,param2 = unpack(line:split("~"))
-			if not string.find(nodename,'mbbase:') then
-				local p = {}
-				p.x, p.y, p.z = string.match(coords, "^([%d.-]+)[, ] *([%d.-]+)[, ] *([%d.-]+)$")
-				if p.x and p.y and p.z then
-					table.insert( nodes, {x = tonumber(math.ceil(p.x)),y= tonumber(math.ceil(p.y)),z = tonumber(math.ceil(p.z)),name=nodename,param2=param2})
-				end
-			end
-			line = bldfile:read("*line")
-		end
-		io.close(bldfile)
-	end
---]]
-
 	-- check if it is a worldedit file
 	-- (no idea why reading that is done in such a complicated way; a simple deserialize and iteration over all nodes ought to do as well)
 	local f, err = io.open( scm..".we", "r")
 	if not f then
-		error("Could not open schematic '" .. scm .. ".we': " .. err)
-		return {};
+		f, err = io.open( scm..".wem", "r")
+		if not f then
+			error("Could not open schematic '" .. scm .. ".we': " .. err)
+			return {};
+		end
 	end
 
 	local value = f:read("*a")
 	f:close()
-	value = value:gsub("return%s*{", "", 1):gsub("}%s*$", "", 1)
-	local escaped = value:gsub("\\\\", "@@"):gsub("\\\"", "@@"):gsub("(\"[^\"]*\")", function(s) return string.rep("@", #s) end)
-	local startpos, startpos1, endpos = 1, 1
-	while true do
-		startpos, endpos = escaped:find("},%s*{", startpos)
-		if not startpos then
-			break
-		end
-		local current = value:sub(startpos1, startpos)
-		table.insert(nodes, minetest.deserialize("return " .. current))
-		startpos, startpos1 = endpos, endpos
-	end
-	table.insert(nodes, minetest.deserialize("return " .. value:sub(startpos1)))
 
+	local version = worldedit.read_header(value)
+	-- some very old worldedit schematics may have an internal offset and not start at 0,0,0
+	if( version==3 or version=="3") then
+		originx = 0;
+		originy = 0;
+		originz = 0;
+		if( we_origin and #we_origin == 3 ) then
+			originx = we_origin[1];
+			originy = we_origin[2];
+			originz = we_origin[3];
+		end
+	end
+		
+	local nodes = worldedit.load_schematic(value)
 
 	scm = {}
 	local maxx, maxy, maxz = -1, -1, -1

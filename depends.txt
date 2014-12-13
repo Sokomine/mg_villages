@@ -16,3 +16,4 @@ trees?
 metals?
 grounds?
 moreblocks?
+worldedit?

@@ -5,6 +5,7 @@
 --  axis=1		Building needs to be mirrored along the x-axis instead of the z-axis because it is initially rotated
 --  inh=2  		maximum amount of inhabitants the building may hold (usually amount of beds present)
 --			if set to i.e. -1, this indicates that a mob is WORKING, but not LIVING here 
+--   we_origin		Only needed for very old .we files (savefile format version 3) which do not start at 0,0,0 but have an offset.
 
 local buildings = {
 
@@ -274,7 +275,7 @@ mg_villages.add_building = function( building_data )
 	res  = handle_schematics.analyze_mts_file( building_data.mts_path .. building_data.scm ); 
 	-- alternatively, read the mts file
 	if( not( res )) then
-		res = mg_villages.import_scm(      building_data.mts_path .. building_data.scm );
+		res = mg_villages.import_scm(      building_data.mts_path .. building_data.scm, building_data.we_origin );
 	end
 
 	if( not( res )) then
