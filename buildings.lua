@@ -15,7 +15,7 @@
 --                of villages, the village name will consist of  name_prefix..village_name..name_postfix
 
 
-mg_villages.village_type_data = {
+mg_villages.village_type_data_list = {
 	nore         = { min = 20, max = 40,   space_between_buildings=1, mods={},            texture = 'default_stone_brick.png'},
 	taoki        = { min = 30, max = 70,   space_between_buildings=1, mods={},            texture = 'default_brick.png' },
 	medieval     = { min = 25, max = 60,   space_between_buildings=2, mods={'cottages'},  texture = 'cottages_darkage_straw.png'}, -- they often have straw roofs
@@ -41,29 +41,37 @@ mg_villages.village_type_data = {
 }
 
 
--- list of village types supported by the mods installed
--- (some villages require special mods as building material for their houses)
-mg_villages.village_types = {};
-for k,v in pairs( mg_villages.village_type_data ) do
+-- some villages require special mods as building material for their houses;
+-- figure out which village types can be used 
+mg_villages.add_village_type = function( type_name, v )
 	local found = true;
 	if( not( v.mods )) then
 		v.mods = {};
 	end
 	for _,m in ipairs( v.mods ) do
 		if( not( minetest.get_modpath( m ))) then
-			found = false;
+			-- this village type will not be used because not all required mods are installed
+			return false;
 		end
 	end
-	if( found ) then
-		if( not( v.only_single )) then
-			table.insert( mg_villages.village_types, k );
-		end
-		-- this village type is supported by the mods installed and may be used
-		v.supported = 1;
+
+	if( not( v.only_single ) and (not(v.min) or not(v.max))) then
+		print('[mg_villages] Error: Village type '..tostring( type_name )..' lacks size information.');
+		return false;
 	end
+	-- this village type is supported by the mods installed and may be used
+	v.supported = 1;
+
+	mg_villages.village_type_data[ type_name ] = v;
+	return true;
 end
 
-print('[mg_villages] Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
+
+-- build a list of all useable village types
+mg_villages.village_type_data = {};
+for k,v in pairs( mg_villages.village_type_data_list ) do
+	mg_villages.add_village_type( k, v );
+end
 
 
 
@@ -90,7 +98,7 @@ mg_villages.medieval_subtype = false;
 --  inh=2  		maximum amount of inhabitants the building may hold (usually amount of beds present)
 --			if set to i.e. -1, this indicates that a mob is WORKING, but not LIVING here 
 
-mg_villages.BUILDINGS = {
+mg_villages.ALL_BUILDINGS = {
 
 -- the houses the mod came with
 	{yoff= 0, scm="house", orients={2},                 weight={nore=1,   single=2   },         inh=4},
@@ -331,120 +339,154 @@ mg_villages.BUILDINGS = {
 
 
 
--- read the data files and fill in information like size and nodes that need on_construct to be called after placing
-mg_villages.buildings_init = function()
+-- read the data files and fill in information like size and nodes that need on_construct to be called after placing;
+-- skip buildings that cannot be used due to missing mods
+mg_villages.add_building = function( building_data )
 
-	local mts_path = mg_villages.modpath.."/schems/";
-	-- determine the size of the given houses
-	for i,v in ipairs( mg_villages.BUILDINGS ) do
-     
-		local is_used = false;
-		for typ,weight in pairs( v.weight ) do
-			if( typ and weight and weight>0 and mg_villages.village_type_data[ typ ] and mg_villages.village_type_data[ typ ].supported ) then
-				is_used = true;
-			end
+	-- a building will only be used if it is used by at least one supported village type (=mods required for that village type are installed)
+	local is_used = false;
+	for typ,weight in pairs( building_data.weight ) do
+		if( typ and weight and weight>0 and mg_villages.village_type_data[ typ ] and mg_villages.village_type_data[ typ ].supported ) then
+			is_used = true;
 		end
-
-		local res = nil;
-		if( is_used ) then
-			-- read the size of the building
-			res  = handle_schematics.analyze_mts_file( mts_path..mg_villages.BUILDINGS[ i ].scm ); 
-			-- alternatively, read the mts file
-			if( not( res )) then
-				res = mg_villages.import_scm( mg_villages.BUILDINGS[ i ].scm );
-			end
-
-			-- create lists for all village types containing the buildings which may be used for that village
-			for typ, data in pairs( mg_villages.village_type_data ) do
-				local total_weight = 0;
-				if( not( data.building_list ) or not( data.max_weight_list )) then
-					data.building_list   = {};
-					data.max_weight_list = {};
-				elseif( #data.max_weight_list > 0 ) then
-					-- get the last entry - that one will determine the current total_weight
-					total_weight = data.max_weight_list[ #data.max_weight_list ];
-				end
-
-				if( v.weight and v.weight[ typ ] and v.weight[ typ ] > 0 ) then
-					local index = #data.building_list+1;
-					data.building_list[   index ] = i;
-					data.max_weight_list[ index ] = total_weight + v.weight[ typ ];
-				end
-			end
-		end
-
-		if(     not( is_used )) then
-			-- do nothing; skip this file
-			print('SKIPPING '..tostring( mg_villages.BUILDINGS[ i ].scm )..' due to village type not supported.');
-			-- building cannot be used
-			v.not_available = 1;
-		-- provided the file could be analyzed successfully
-		elseif( res and res.size and res.size.x ) then
-			-- the file has to be placed with minetest.place_schematic(...)
-			mg_villages.BUILDINGS[ i ].is_mts = 1;
-
-			mg_villages.BUILDINGS[ i ].sizex = res.size.x;
-				mg_villages.BUILDINGS[ i ].sizez = res.size.z;
-			mg_villages.BUILDINGS[ i ].ysize = res.size.y;
-			
-			-- some buildings may be rotated
-			if(   res.rotated == 90
-			  or  res.rotated == 270 ) then
-
-				mg_villages.BUILDINGS[ i ].sizex = res.size.z;
-				mg_villages.BUILDINGS[ i ].sizez = res.size.x;
-			end
-
-			if( not( mg_villages.BUILDINGS[ i ].yoff ) or mg_villages.BUILDINGS[ i ].yoff == 0 ) then
-				mg_villages.BUILDINGS[ i ].yoff = res.burried;
-			end
-
-			-- we do need at least the list of nodenames which will need on_constr later on
-			mg_villages.BUILDINGS[ i ].rotated          = res.rotated;
-			mg_villages.BUILDINGS[ i ].nodenames        = res.nodenames;
-			mg_villages.BUILDINGS[ i ].on_constr        = res.on_constr;
-			mg_villages.BUILDINGS[ i ].after_place_node = res.after_place_node;
-
-			if( res.scm_data_cache ) then
-				mg_villages.BUILDINGS[ i ].scm_data_cache   = res.scm_data_cache;
-				mg_villages.BUILDINGS[ i ].is_mts = 0;
-			end
-		-- determine size of worldedit schematics
-		elseif( res and #res and #res>0 and #res[1] and #res[1][1]) then
-
-			-- scm has the following structure: scm[y][x][z] 
-			mg_villages.BUILDINGS[ i ].ysize = #res;
-			mg_villages.BUILDINGS[ i ].sizex = #res[1];
-			mg_villages.BUILDINGS[ i ].sizez = #res[1][1];
-
-			mg_villages.BUILDINGS[ i ].is_mts = 0;
-
-			-- cache the data for later placement
-			mg_villages.BUILDINGS[ i ].scm_data_cache = res;
-			-- deep copy the schematics data here so that the file does not have to be read again
-			-- caching cannot be done here as not all nodes from other mods have been registered yet!
-			--buildings[ i ].scm_data_cache = minetest.serialize( res );
-
-		-- missing data regarding building size - do not use this building for anything
-		elseif( not( mg_villages.BUILDINGS[ i ].sizex )    or not( mg_villages.BUILDINGS[ i ].sizez )
-			or   mg_villages.BUILDINGS[ i ].sizex == 0 or      mg_villages.BUILDINGS[ i ].sizez==0) then
-
-			-- no village will use it
-			print('[mg_villages] INFO: No schematic found for building \''..tostring( mg_villages.BUILDINGS[ i ].scm )..'\'. Will not use that building.');
-			mg_villages.BUILDINGS[ i ].weight = {};
-
-		else
-			-- the file has to be handled by worldedit; it is no .mts file
-			mg_villages.BUILDINGS[ i ].is_mts = 0;
-		end
-		-- print it for debugging usage
-   		--print( v.scm .. ': '..tostring(buildings[i].sizex)..' x '..tostring(buildings[i].sizez)..' x '..tostring(buildings[i].ysize)..' h');
 	end
+
+	if( not( is_used )) then
+		-- do nothing; skip this file
+		print('SKIPPING '..tostring( building_data.scm )..' due to village type not supported.');
+		-- building cannot be used
+		building_data.not_available = 1;
+		return false;
+	end
+
+
+	-- determine the size of the building
+	local res = nil;
+	-- read the size of the building
+	res  = handle_schematics.analyze_mts_file( building_data.mts_path .. building_data.scm ); 
+	-- alternatively, read the mts file
+	if( not( res )) then
+		res = mg_villages.import_scm(      building_data.mts_path .. building_data.scm );
+	end
+
+	if( not( res )) then
+		print('SKIPPING '..tostring( building_data.scm )..' due to import failure.');
+		building_data.not_available = 1;
+		return false;
+	-- provided the file could be analyzed successfully
+	elseif( res and res.size and res.size.x ) then
+		-- the file has to be placed with minetest.place_schematic(...)
+		building_data.is_mts = 1;
+
+		building_data.sizex = res.size.x;
+		building_data.sizez = res.size.z;
+		building_data.ysize = res.size.y;
+			
+		-- some buildings may be rotated
+		if(   res.rotated == 90
+		  or  res.rotated == 270 ) then
+
+			building_data.sizex = res.size.z;
+			building_data.sizez = res.size.x;
+		end
+
+		if( not( building_data.yoff ) or building_data.yoff == 0 ) then
+			building_data.yoff = res.burried;
+		end
+
+		-- we do need at least the list of nodenames which will need on_constr later on
+		building_data.rotated          = res.rotated;
+		building_data.nodenames        = res.nodenames;
+		building_data.on_constr        = res.on_constr;
+		building_data.after_place_node = res.after_place_node;
+
+		if( res.scm_data_cache ) then
+			building_data.scm_data_cache   = res.scm_data_cache;
+			building_data.is_mts = 0;
+		end
+	-- determine size of worldedit schematics
+	elseif( res and #res and #res>0 and #res[1] and #res[1][1]) then
+
+		-- scm has the following structure: scm[y][x][z] 
+		building_data.ysize = #res;
+		building_data.sizex = #res[1];
+		building_data.sizez = #res[1][1];
+
+		building_data.is_mts = 0;
+
+		-- cache the data for later placement
+		building_data.scm_data_cache = res;
+		-- deep copy the schematics data here so that the file does not have to be read again
+		-- caching cannot be done here as not all nodes from other mods have been registered yet!
+		--buildings[ i ].scm_data_cache = minetest.serialize( res );
+
+	-- missing data regarding building size - do not use this building for anything
+	elseif( not( building_data.sizex )    or not( building_data.sizez )
+		or   building_data.sizex == 0 or      building_data.sizez==0) then
+
+		-- no village will use it
+		print('[mg_villages] INFO: No schematic found for building \''..tostring( building_data.scm )..'\'. Will not use that building.');
+		building_data.weight = {};
+		building_data.not_available = 1;
+		return false;
+
+	else
+		-- the file has to be handled by worldedit; it is no .mts file
+		building_data.is_mts = 0;
+	end
+
+
+	if( not( building_data.weight ) or type( building_data.weight ) ~= 'table' ) then
+		print('SKIPPING '..tostring( building_data.scm )..' due to missing weight information.');
+		building_data.not_available = 1;
+		return false;
+	end
+
+
+-- TODO: handle duplicates; make sure buildings always get the same number
+	-- determine the internal number for the building; this number is used as a key and can be found in the mg_all_villages.data file
+	if( not( mg_villages.BUILDINGS )) then
+		mg_villages.BUILDINGS = {};
+	end
+	local internal_number = #mg_villages.BUILDINGS + 1;
+	-- actually store the building data
+	mg_villages.BUILDINGS[ internal_number ] = minetest.deserialize( minetest.serialize( building_data ));
+
+
+	-- create lists for all village types containing the buildings which may be used for that village
+	for typ, data in pairs( mg_villages.village_type_data ) do
+		local total_weight = 0;
+		if( not( data.building_list ) or not( data.max_weight_list )) then
+			data.building_list   = {};
+			data.max_weight_list = {};
+		elseif( #data.max_weight_list > 0 ) then
+			-- get the last entry - that one will determine the current total_weight
+			total_weight = data.max_weight_list[ #data.max_weight_list ];
+		end
+
+		if( building_data.weight[ typ ] and building_data.weight[ typ ] > 0 ) then
+			local index = #data.building_list+1;
+			data.building_list[   index ] = internal_number; 
+			data.max_weight_list[ index ] = total_weight + building_data.weight[ typ ];
+		end
+	end
+
+	-- print it for debugging usage
+ 	--print( v.scm .. ': '..tostring(buildings[i].sizex)..' x '..tostring(buildings[i].sizez)..' x '..tostring(buildings[i].ysize)..' h');
+	return true;
 end
 
 
--- call the initialization function above
-mg_villages.buildings_init();
+-- import all the buildings
+mg_villages.BUILDINGS = {};
+local mts_path = mg_villages.modpath.."/schems/";
+-- determine the size of the given houses and other necessary values
+for i,v in ipairs( mg_villages.ALL_BUILDINGS ) do
+	v.mts_path = mts_path;
+	mg_villages.add_building( v, i );
+end
+
+
 
 
 --local gravel = minetest.get_content_id("default:gravel")
@@ -488,6 +530,18 @@ mg_villages.BUILDINGS["wall"] = {yoff = 1, ysize = 6, scm = wall}
 --for _,i in ipairs(buildings) do
 --	i.max_weight = i.max_weight*multiplier
 --end
+
+
+
+
+-- create a list of all used village types
+mg_villages.village_types = {};
+for k,v in pairs( mg_villages.village_type_data ) do
+	if( not( v.only_single ) and v.supported and v.building_list ) then
+		table.insert( mg_villages.village_types, k );
+	end
+end
+print('[mg_villages] Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
 
 
 

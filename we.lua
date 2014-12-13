@@ -36,7 +36,7 @@ mg_villages.import_scm = function(scm)
 
 	-- check if it is a worldedit file
 	-- (no idea why reading that is done in such a complicated way; a simple deserialize and iteration over all nodes ought to do as well)
-	local f, err = io.open( mg_villages.modpath.."/schems/"..scm..".we", "r")
+	local f, err = io.open( scm..".we", "r")
 	if not f then
 		error("Could not open schematic '" .. scm .. ".we': " .. err)
 		return {};
