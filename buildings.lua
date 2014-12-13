@@ -1,95 +1,3 @@
-
---  DOCUMENTATION: mg_villages.village_type_data has entries in the following form:
---      key = { data values }   with key beeing the name of the village type
---  meaning of the data values:
---      min, max: the village size will be choosen randomly between these two values;
---                the actual village will have a radius about twice as big (including sourrounding area)
---      space_between_buildings=2  How much space is there between the buildings. 1 or 2 are good values.
---                The higher, the further the buildings are spread apart.
---      mods = {'homedecor','moreblocks'} List of mods that are required for the buildings of this village type.
---                List all the mods the blocks used by your buildings which are not in default.
---      texture = 'wool_white.png'        Texture used to show the location of the village when using the
---                vmap  command.
---      name_prefix = 'Village ',
---      name_postfix = ''                 When creating village names for single houses which are spawned outside
---                of villages, the village name will consist of  name_prefix..village_name..name_postfix
-
-
-mg_villages.village_type_data_list = {
-	nore         = { min = 20, max = 40,   space_between_buildings=1, mods={},            texture = 'default_stone_brick.png'},
-	taoki        = { min = 30, max = 70,   space_between_buildings=1, mods={},            texture = 'default_brick.png' },
-	medieval     = { min = 25, max = 60,   space_between_buildings=2, mods={'cottages'},  texture = 'cottages_darkage_straw.png'}, -- they often have straw roofs
-	charachoal   = { min = 10, max = 15,   space_between_buildings=1, mods={'cottages'},  texture = 'default_coal_block.png'},
-	lumberjack   = { min = 10, max = 30,   space_between_buildings=1, mods={'cottages'},  texture = 'default_tree.png', name_prefix = 'Camp '},
-	claytrader   = { min = 10, max = 20,   space_between_buildings=1, mods={'cottages'},  texture = 'default_clay.png'},
-	logcabin     = { min = 15, max = 30,   space_between_buildings=1, mods={'cottages'},  texture = 'default_wood.png'},
-	canadian     = { min = 40, max = 110,  space_between_buildings=1, mods={'hdb','nbu'}, texture = 'wool_white.png'},
-	grasshut     = { min = 10, max = 40,   space_between_buildings=1, mods={'dryplants'}, texture = 'dryplants_reed.png'},
-	tent         = { min =  5, max = 20,   space_between_buildings=2, mods={'cottages'},  texture = 'wool_white.png', name_preifx = 'Tent at'},
-
-	-- these sub-types may occour as single houses placed far from villages
-	tower        = { only_single = 1, name_prefix = 'Tower at ',      mods={'cottages'},  texture = 'default_mese.png'},
-	chateau      = { only_single = 1, name_prefix = 'Chateau ',                           texture = 'default_gold_block.png'},
-	forge        = { only_single = 1, name_prefix = 'Forge at '},
-	tavern       = { only_single = 1, name_prefix = 'Inn at '},
-	well         = { only_single = 1, name_prefix = 'Well at '},
-	trader       = { only_single = 1, name_prefix = 'Trading post ' },
-	sawmill      = { only_single = 1, name_prefix = 'Sawmill at ' },
-	farm_tiny    = { only_single = 1, name_prefix = 'House '},
-	farm_full    = { only_single = 1, name_prefix = 'Farm '},
-	single       = { only_single = 1, name_prefix = 'House '}, -- fallback
-}
-
-
--- some villages require special mods as building material for their houses;
--- figure out which village types can be used 
-mg_villages.add_village_type = function( type_name, v )
-	local found = true;
-	if( not( v.mods )) then
-		v.mods = {};
-	end
-	for _,m in ipairs( v.mods ) do
-		if( not( minetest.get_modpath( m ))) then
-			-- this village type will not be used because not all required mods are installed
-			return false;
-		end
-	end
-
-	if( not( v.only_single ) and (not(v.min) or not(v.max))) then
-		print('[mg_villages] Error: Village type '..tostring( type_name )..' lacks size information.');
-		return false;
-	end
-	-- this village type is supported by the mods installed and may be used
-	v.supported = 1;
-
-	mg_villages.village_type_data[ type_name ] = v;
-	return true;
-end
-
-
--- build a list of all useable village types
-mg_villages.village_type_data = {};
-for k,v in pairs( mg_villages.village_type_data_list ) do
-	mg_villages.add_village_type( k, v );
-end
-
-
-
-
--- the schematics for buildings of type 'farm_tiny' grow cotton; the farming_plus fruits would be far more fitting
-mg_villages.fruit_list = {'carrot','potatoe','orange','rhubarb','strawberry','tomato','cotton'};
--- is farming_plus available? If not, we can't use this
-if( not( minetest.get_modpath("farming_plus"))) then
-	mg_villages.fruit_list = nil;
-end
-
-
-
-
-
--- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
-mg_villages.medieval_subtype = false;
-
 --  scm="bla"		Name of the file that holds the buildings' schematic. Supported types: .we and .mts (omit the extension!)
 --  sizex, sizez, ysize: obsolete
 --  yoff=0		how deep is the building burried?
@@ -98,7 +6,7 @@ mg_villages.medieval_subtype = false;
 --  inh=2  		maximum amount of inhabitants the building may hold (usually amount of beds present)
 --			if set to i.e. -1, this indicates that a mob is WORKING, but not LIVING here 
 
-mg_villages.ALL_BUILDINGS = {
+local buildings = {
 
 -- the houses the mod came with
 	{yoff= 0, scm="house", orients={2},                 weight={nore=1,   single=2   },         inh=4},
@@ -481,13 +389,14 @@ end
 mg_villages.BUILDINGS = {};
 local mts_path = mg_villages.modpath.."/schems/";
 -- determine the size of the given houses and other necessary values
-for i,v in ipairs( mg_villages.ALL_BUILDINGS ) do
+for i,v in ipairs( buildings ) do
 	v.mts_path = mts_path;
 	mg_villages.add_building( v, i );
 end
+buildings = nil;
 
 
-
+-- TODO: add a better way of adding road and wall
 
 --local gravel = minetest.get_content_id("default:gravel")
 -- this special "gravel" will not be removed by mapgen and will not fall down like gravel usually does
@@ -519,57 +428,3 @@ for i = 1, 6 do
 end
 mg_villages.BUILDINGS["wall"] = {yoff = 1, ysize = 6, scm = wall}
 
-
---local total_weight = 0
---for _, i in ipairs(buildings) do
---	if i.weight == nil then i.weight = 1 end
---	total_weight = total_weight+i.weight
---	i.max_weight = total_weight
---end
---local multiplier = 3000/total_weight
---for _,i in ipairs(buildings) do
---	i.max_weight = i.max_weight*multiplier
---end
-
-
-
-
--- create a list of all used village types
-mg_villages.village_types = {};
-for k,v in pairs( mg_villages.village_type_data ) do
-	if( not( v.only_single ) and v.supported and v.building_list ) then
-		table.insert( mg_villages.village_types, k );
-	end
-end
-print('[mg_villages] Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
-
-
-
-mg_villages.village_types[ #mg_villages.village_types+1 ] = 'single';
-mg_villages.village_types[ #mg_villages.village_types+1 ] = 'fields';
-mg_villages.village_types[ #mg_villages.village_types+1 ] = 'tower';
-for j,v in ipairs( mg_villages.village_types ) do
-	
-	local total_weight = 0
-	for _, i in ipairs(mg_villages.BUILDINGS) do
-		if( not( i.max_weight )) then
-			i.max_weight = {};
-		end
-		if( i.weight and i.weight[ v ] and i.weight[ v ]>0 ) then
-			total_weight = total_weight+i.weight[ v ]
-			i.max_weight[v] = total_weight
-		end
-	end
-	local multiplier = 3000/total_weight
-	for _,i in ipairs(mg_villages.BUILDINGS) do
-		if( i.weight and i.weight[ v ] and i.weight[ v ]>0 ) then
-			i.max_weight[v] = i.max_weight[ v ]*multiplier
-		end
-	end
-end
--- the fields do not exist as an independent type
-mg_villages.village_types[ #mg_villages.village_types ] = nil;
--- neither does the tower type
-mg_villages.village_types[ #mg_villages.village_types ] = nil;
--- and neither does the "single" type (==lone houses outside villages)
-mg_villages.village_types[ #mg_villages.village_types ] = nil;

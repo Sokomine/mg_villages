@@ -27,8 +27,18 @@ dofile(mg_villages.modpath.."/nodes.lua")
 -- the default game no longer provides helpful tree growing code
 dofile(mg_villages.modpath.."/trees.lua")
 
+-- multiple diffrent village types with their own sets of houses are supported
+-- The function mg_villages.add_village_type( village_type_name, village_type_data )
+--   allows other mods to add new village types.
+dofile(mg_villages.modpath.."/village_types.lua")
+
 -- Note: the "buildings" talbe is not in the mg_villages.* namespace
+-- The function mg_villages.add_building( building_data ) allows other mods to add buildings.
 dofile(mg_villages.modpath.."/buildings.lua")
+
+-- mg_villages.init_weights() has to be called AFTER all village types and buildings have
+-- been added using the functions above
+dofile(mg_villages.modpath.."/init_weights.lua")
 
 -- replace some materials for entire villages randomly
 dofile(mg_villages.modpath.."/replacements.lua")

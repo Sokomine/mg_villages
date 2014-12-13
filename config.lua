@@ -83,3 +83,14 @@ if( minetest.get_modpath( 'moretrees' )) then
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:rubber_tree_sapling_ongen' ) ] = 380;
 end
 
+
+-- the schematics for buildings of type 'farm_tiny' grow cotton; the farming_plus fruits would be far more fitting
+mg_villages.fruit_list = {'carrot','potatoe','orange','rhubarb','strawberry','tomato','cotton'};
+-- is farming_plus available? If not, we can't use this
+if( not( minetest.get_modpath("farming_plus"))) then
+	mg_villages.fruit_list = nil;
+end
+
+-- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
+-- currently not really used; does not look as good as expected
+mg_villages.medieval_subtype = false;

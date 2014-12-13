@@ -932,6 +932,14 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	if( minp.y ~= -32 or minp.y < -32 or minp.y > 64) then
 		return;
 	end
+	
+	-- this function has to be called ONCE and AFTER all village types and buildings have been added
+	-- (which might have been done by other mods so we can't do this earlier)
+	if( not( mg_villages.village_types )) then
+		mg_villages.init_weights();
+	end
+
+
 	local villages = {};
 	-- create normal villages
 	if( mg_villages.ENABLE_VILLAGES == true ) then
