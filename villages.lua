@@ -41,10 +41,10 @@ mg_villages.villages_at_point = function(minp, noise1)
 		village_type = mg_villages.village_types[ pr:next(1, #mg_villages.village_types )]; -- select a random type
 	end
 
-	if( not( mg_villages.village_sizes[ village_type ] )) then
-		mg_villages.village_sizes[  village_type ] = { min = mg_villages.VILLAGE_MIN_SIZE, max = mg_villages.VILLAGE_MAX_SIZE };
+	if( not( mg_villages.village_type_data[ village_type ] )) then
+		mg_villages.village_type_data[  village_type ] = { min = mg_villages.VILLAGE_MIN_SIZE, max = mg_villages.VILLAGE_MAX_SIZE };
 	end
-	local size = pr:next(mg_villages.village_sizes[ village_type ].min, mg_villages.village_sizes[ village_type ].max) 
+	local size = pr:next(mg_villages.village_type_data[ village_type ].min, mg_villages.village_type_data[ village_type ].max) 
 --	local height = pr:next(5, 20)
 	local height = pr:next(1, 5)
 	-- villages of a size >= 40 are always placed at a height of 1
@@ -78,8 +78,12 @@ local function choose_building(l, pr, village_type)
 	local btype
 	while true do
 		local p = pr:next(1, 3000)
-		for b, i in ipairs(mg_villages.BUILDINGS) do
-			if i.weight[ village_type ] and i.weight[ village_type ] > 0 and i.max_weight and i.max_weight[ village_type ] and i.max_weight[ village_type ] >= p then
+		
+		for _, b in ipairs( mg_villages.village_type_data[ village_type ][ 'building_list'] ) do
+			if mg_villages.BUILDINGS[ b ].max_weight[ village_type ] >= p then
+
+--		for b, i in ipairs(mg_villages.BUILDINGS) do
+--			if i.weight[ village_type ] and i.weight[ village_type ] > 0 and i.max_weight and i.max_weight[ village_type ] and i.max_weight[ village_type ] >= p then
 				btype = b
 				break
 			end
@@ -596,8 +600,8 @@ mg_villages.generate_village = function(village, vnoise)
 
 	-- in the case of medieval villages, we later on want to add wheat fields with dirt roads; 1 wide dirt roads look odd
 	local space_between_buildings = 1;
-	if( mg_villages.village_sizes[ village_type ]) then
-		space_between_buildings = mg_villages.village_sizes[ village_type ].space_between_buildings;
+	if( mg_villages.village_type_data[ village_type ] and mg_villages.village_type_data[ village_type ].space_between_buildings) then
+		space_between_buildings = mg_villages.village_type_data[ village_type ].space_between_buildings;
 	end
 
 	local bpos = {};

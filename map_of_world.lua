@@ -97,8 +97,8 @@ mg_villages.map_of_world = function( pname )
 
 		-- show only villages which are at max mg_villages.MAP_RANGE away from player
 		if( x and z 
-		   and mg_villages.village_sizes[ data.village_type ]
-		   and mg_villages.village_sizes[ data.village_type ].texture
+		   and mg_villages.village_type_data[ data.village_type ]
+		   and mg_villages.village_type_data[ data.village_type ].texture
 		   and math.abs( x ) < r
 		   and math.abs( z ) < r ) then
 
@@ -115,7 +115,7 @@ mg_villages.map_of_world = function( pname )
 			z = f1 * ( (2*r) -(z+r));
 
 			formspec = formspec..
-				"label["..x..",".. z ..";"..tostring( data.nr ).."]"..mg_villages.draw_tile( nil,  mg_villages.village_sizes[ data.village_type ].texture, x, z, dx, dz );
+				"label["..x..",".. z ..";"..tostring( data.nr ).."]"..mg_villages.draw_tile( nil,  mg_villages.village_type_data[ data.village_type ].texture, x, z, dx, dz );
 
 			shown_villages[ #shown_villages+1 ] = tostring( data.nr )..". "..tostring( v.name or 'unknown' ).."]"; 
 		end
@@ -154,9 +154,9 @@ mg_villages.map_of_world = function( pname )
 	local i = 0.05;
 	formspec = formspec.."label[10,-0.4;Village types:]";
 	-- explain the meaning of the textures
-	for typ,data in pairs(mg_villages.village_sizes) do
+	for _,typ in ipairs(mg_villages.village_types) do 
 		formspec = formspec.."label[10.5,"..tostring(i)..";"..tostring( typ ).."]"..
-			             "image[10.0,"..tostring(i+0.1)..";0.4,0.4;"..tostring( data.texture ).."]";
+			             "image[10.0,"..tostring(i+0.1)..";0.4,0.4;"..tostring( mg_villages.village_type_data[ typ ].texture ).."]";
 		i = i+0.45;
 	end
 
