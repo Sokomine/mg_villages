@@ -75,6 +75,8 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 		end
 	end
 
+--[[
+	-- deco is used by BigFreakingDig; as that one lacks default nodes, it doesn't work out here
 	if( wood_found and minetest.get_modpath('deco')) then
 		local bfd_treelist = {'birch', 'cherry', 'evergreen', 'oak' };
 		for _,v in ipairs( bfd_treelist ) do
@@ -83,6 +85,7 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 			end	
 		end
 	end
+--]]
 		
 	if( wood_found and mg_villages.ethereal_trees ) then
 		for _,v in ipairs( mg_villages.ethereal_trees ) do
@@ -285,10 +288,17 @@ mg_villages.get_replacement_list = function( housetype, pr )
   	table.insert(         replacements, {'default:obsidian_glass',  'default:glass' });
    end
 
+   if( housetype and mg_villages.village_type_data[ housetype ] and mg_villages.village_type_data[ housetype ].replacement_function ) then
+	return mg_villages.village_type_data[ housetype ].replacement_function( housetype, pr, replacements );
+   end
+   return replacements;
+end
 
-   local wood_type = 'default:wood';
-   -- Taokis houses from structure i/o
-   if( housetype == 'taoki' ) then  
+
+
+-- Taokis houses from structure i/o
+mg_villages.replacements_taoki = function( housetype, pr, replacements )
+      local wood_type = 'default:wood';
 
       if( mg_villages.realtest_trees ) then
          wood_type = mg_villages.replace_materials( replacements, pr,
@@ -343,10 +353,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'brick' );
 
       return replacements;
-   end
+ end
 
 
-   if( housetype == 'nore' ) then
+mg_villages.replacements_nore = function( housetype, pr, replacements )
 
       mg_villages.replace_materials( replacements, pr,
 --		{'default:stonebrick'},
@@ -374,11 +384,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
          table.insert( replacements, {'stairs:slab_cobble',  'default:stone_bricks_slab' }); 
       end
       return replacements;
-   end
+end
 
 
-   if( housetype == 'lumberjack' ) then
-
+mg_villages.replacements_lumberjack = function( housetype, pr, replacements )
       -- replace the wood - those are lumberjacks after all
       local wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
@@ -392,10 +401,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
          table.insert( replacements, {'bell:bell',               'default:goldblock' });
       end
       return replacements;
-   end
+end
 
 
-   if( housetype == 'canadian' ) then
+mg_villages.replacements_canadian = function( housetype, pr, replacements )
 
       table.insert( replacements, {'4seasons:slimtree_wood', 'default:fence_wood'});
       if( true) then return replacements; end -- TODO
@@ -447,10 +456,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
       end
 
       return replacements;
-   end
+end
 
 
-   if( housetype == 'logcabin' ) then
+mg_villages.replacements_logcabin = function( housetype, pr, replacements )
 
       -- for logcabins, wood is the most likely type of roof material
       local roof_type = mg_villages.replace_materials( replacements, pr,
@@ -489,10 +498,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'default:junglewood');
       end
       return replacements;
-   end
+end
 
 
-   if( housetype == 'chateau' ) then
+mg_villages.replacements_chateau = function( housetype, pr, replacements )
 
       if( minetest.get_modpath( 'cottages' )) then
 	       -- straw is the most likely building material for roofs for historical buildings
@@ -545,10 +554,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'cobble');
 
       return replacements;
-   end
+end
 
 
-   if( housetype == 'tent' ) then
+mg_villages.replacements_tent = function( housetype, pr, replacements )
       table.insert( replacements, { "glasspanes:wool_pane",  "cottages:wool_tent" });
       table.insert( replacements, { "default:gravel",        "default:sand"       });
       -- realtest needs diffrent fence posts and doors
@@ -562,11 +571,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
          mg_villages.replace_saplings(   replacements, wood_type );
       end
       return replacements;
-   end
+end
 
 
-   if( housetype == 'grasshut' ) then
-
+mg_villages.replacements_grasshut = function( housetype, pr, replacements )
       table.insert( replacements, {'moreblocks:fence_jungle_wood',     'default:fence' });
       if( pr:next( 1, 4) == 1 ) then
          table.insert( replacements, {'dryplants:reed_roof',              'cottages:roof_straw'});
@@ -587,10 +595,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
    
       table.insert( replacements, {'default:desert_sand', 'default:dirt_with_grass' });
       return replacements;
-   end
+end
 
 
-   if( housetype == 'claytrader' ) then
+mg_villages.replacements_claytrader = function( housetype, pr, replacements )
       -- the walls of the clay trader houses are made out of brick
       mg_villages.replace_materials( replacements, pr,
 		{ 'stairs:stair_brick', 'stairs:slab_brick', 'default:brick' }, -- default_materials
@@ -643,10 +651,10 @@ mg_villages.get_replacement_list = function( housetype, pr )
 		'sandstone');
       end
       return replacements;
-   end
+end
 
 
-   if( housetype == 'charachoal' ) then
+mg_villages.replacements_charachoal = function( housetype, pr, replacements )
       if( mg_villages.realtest_trees ) then
          local wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
@@ -660,13 +668,11 @@ mg_villages.get_replacement_list = function( housetype, pr )
          table.insert( replacements, {'stairs:stair_loam',    'cottages:loam'});
       end
       return replacements;
-   end
+end
 
 
-   -- wells can get the same replacements as the sourrounding village; they'll get a fitting roof that way
-   if( housetype ~= 'medieval' and housetype ~= 'well' and housetype ~= 'cottages') then
-      return replacements;
-   end
+-- wells can get the same replacements as the sourrounding village; they'll get a fitting roof that way
+mg_villages.replacements_medieval = function( housetype, pr, replacements )
 
    if( not( minetest.get_modpath('bell' ))) then
       table.insert( replacements, {'bell:bell',               'default:goldblock' });
