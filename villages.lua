@@ -638,8 +638,6 @@ mg_villages.generate_village = function(village, vnoise)
 	-- if the village is new, replacement_list is nil and a new replacement list will be created
 	local replacements = mg_villages.get_replacement_table( village.village_type, p, nil );
 	
-	-- determine which plants will grow in the area around the village
-	local plantlist = {};
 	local sapling_id = mg_villages.get_content_id_replaced( 'default:sapling', replacements );
 	-- 1/sapling_p = probability of a sapling beeing placed
 	local sapling_p  = 25;
@@ -647,41 +645,16 @@ mg_villages.generate_village = function(village, vnoise)
 		sapling_p = mg_villages.sapling_probability[ sapling_id ];
 	end
 
-	-- medieval villages are sourrounded by wheat fields
-	if(     village_type == 'medieval' ) then
-		local c_wheat = mg_villages.get_content_id_replaced( 'farming:wheat_8', replacements);
-		plantlist = {
-			{ id=sapling_id, p=sapling_p*10 }, -- trees are rather rare
-			{ id=c_wheat,    p=1         }};
-	-- lumberjack camps have handy trees nearby
-	elseif( village_type == 'lumberjack' ) then
-		local c_junglegrass = mg_villages.get_content_id_replaced( 'default:junglegrass', replacements);
-		plantlist = {
-			{ id=sapling_id,    p=sapling_p },
-			{ id=c_junglegrass, p=25        }};
-	-- the villages of type taoki grow cotton
-	elseif( village_type == 'taoki' ) then
-		local c_cotton = mg_villages.get_content_id_replaced( 'farming:cotton_8', replacements);
-		plantlist = {
-			{ id=sapling_id, p=sapling_p*5 }, -- not too many trees
-			{ id=c_cotton,   p=1         }};
-	-- default/fallback: grassland
-	else
-		local c_grass = mg_villages.get_content_id_replaced( 'default:grass_5', replacements);
-		plantlist = {
-			{ id=sapling_id, p=sapling_p*10}, -- only few trees
-			{ id=c_grass,    p=3         }};
-	end
+	local c_plant = mg_villages.get_content_id_replaced( mg_villages.village_type_data[ village.village_type ].plant_type, replacements);
+	local plantlist = {
+		{ id=sapling_id, p=sapling_p * mg_villages.village_type_data[ village.village_type ].sapling_divisor }, -- only few trees
+		{ id=c_plant,    p=            mg_villages.village_type_data[ village.village_type ].plant_frequency }};
 
 	if( village.is_single_house and plantlist and #plantlist>0 ) then
-		-- do not grow wheat or cotton around single houses as that looks stupid
-		if( village_type=='medieval' or village_type=='taoki' ) then
-			local c_grass = mg_villages.get_content_id_replaced( 'default:grass_5', replacements);
-			plantlist[2] = { id=c_grass,    p=10        };
+		local c_grass = mg_villages.get_content_id_replaced( 'default:grass_5', replacements);
+		plantlist[2] = { id=c_grass,    p=10        };
 		-- reduce the amount of plants grown so that the area stands out less from the sourroundings
-		else
-			plantlist[2].p = plantlist[2].p*3;
-		end
+		plantlist[2].p = plantlist[2].p*3;
 	end
 
 	-- store the generated data in the village table 

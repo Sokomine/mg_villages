@@ -255,7 +255,7 @@ mg_villages.add_building = function( building_data )
 	-- a building will only be used if it is used by at least one supported village type (=mods required for that village type are installed)
 	local is_used = false;
 	for typ,weight in pairs( building_data.weight ) do
-		if( typ and weight and weight>0 and mg_villages.village_type_data[ typ ] and mg_villages.village_type_data[ typ ].supported ) then
+		if( typ and weight and weight>0 and typ ~= 'single' and mg_villages.village_type_data[ typ ] and mg_villages.village_type_data[ typ ].supported ) then
 			is_used = true;
 		end
 	end
@@ -381,7 +381,7 @@ mg_villages.add_building = function( building_data )
 	end
 
 	-- print it for debugging usage
- 	--print( v.scm .. ': '..tostring(buildings[i].sizex)..' x '..tostring(buildings[i].sizez)..' x '..tostring(buildings[i].ysize)..' h');
+ 	--print( building_data.scm .. ': '..tostring(building_data.sizex)..' x '..tostring(building_data.sizez)..' x '..tostring(building_data.ysize)..' h');
 	return true;
 end
 
