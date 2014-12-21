@@ -28,6 +28,10 @@ end
 local old_is_protected = minetest.is_protected
 minetest.is_protected = function(pos, name)
 
+	if( not( mg_villages.ENABLE_PROTECTION )) then
+		return old_is_protected( pos, name );
+	end
+
 	local village_id = mg_villages.get_town_id_at_pos( pos );
 	if( village_id ) then
 		for nr, p in ipairs( mg_villages.all_villages[ village_id ].to_add_data.bpos ) do
@@ -43,6 +47,11 @@ minetest.is_protected = function(pos, name)
 end             
 
 minetest.register_on_protection_violation( function(pos, name)
+
+	if( not( mg_villages.ENABLE_PROTECTION )) then
+		return;
+	end
+
 	local found = mg_villages.get_town_id_at_pos( pos );
 	if( not( found ) or not( mg_villages.all_villages[ found ]))  then
 		minetest.chat_send_player( name, 'Error: This area does not belong to a village.');
@@ -56,6 +65,10 @@ end );
 
 
 mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
+
+	if( not( mg_villages.ENABLE_PROTECTION )) then
+		return;
+	end
 
 	local meta = minetest.get_meta( pos );
 	if( not( meta )) then
@@ -118,6 +131,9 @@ end
 
 
 mg_villages.form_input_handler = function( player, formname, fields)
+	if( not( mg_villages.ENABLE_PROTECTION )) then
+		return false;
+	end
 	if( (formname == "mg_villages:plotmarker") and fields.pos2str and not( fields.abort )) then
 		local pos = minetest.string_to_pos( fields.pos2str );
 		mg_villages.plotmarker_formspec( pos, formname, fields, player );

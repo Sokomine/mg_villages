@@ -25,6 +25,9 @@ mg_villages.VILLAGE_DETECT_RANGE = 400;
 -- command which allows teleporting to the village with the given number
 mg_villages.REQUIRE_PRIV_FOR_TELEPORT = false;
 
+-- if set to true, players cannot modify spawned villages without buying the house from the village first
+mg_villages.ENABLE_PROTECTION = true;
+
 -- background image for the /vmap command
 -- RealTest comes with a diffrent texture
 if(     minetest.get_modpath('grounds') and minetest.get_modpath('joiner_table')) then
