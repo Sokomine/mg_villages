@@ -34,17 +34,35 @@ minetest.is_protected = function(pos, name)
 
 	local village_id = mg_villages.get_town_id_at_pos( pos );
 	if( village_id ) then
+		local is_houseowner = false;
 		for nr, p in ipairs( mg_villages.all_villages[ village_id ].to_add_data.bpos ) do
-			if( p.owner and p.owner == name
-			    and p.x <= pos.x and (p.x + p.bsizex) >= pos.x
-			    and p.z <= pos.z and (p.z + p.bsizez) >= pos.z) then
-				return false;
+			-- we have located the right plot; the player can build here if he owns this particular plot
+			if(   p.x <= pos.x and (p.x + p.bsizex) >= pos.x
+			  and p.z <= pos.z and (p.z + p.bsizez) >= pos.z) then
+				if( p.owner and p.owner == name ) then
+					return false;
+				end
+			-- if the player just owns another plot in the village, check if it's one where villagers may live
+			elseif( p.owner and p.owner == name ) then
+				local btype = mg_villages.all_villages[ village_id ].to_add_data.bpos[ nr ].btype;
+				if(   btype ~= 'road'
+				  and mg_villages.BUILDINGS[btype]
+				  and mg_villages.BUILDINGS[btype].inh
+				  and mg_villages.BUILDINGS[btype].inh > 0 ) then
+					is_houseowner = true;
+				end
 			end
+		end
+		-- players who own a house in town where villagers may live (not only work!)
+		--  are allowed to modify common ground
+		if( is_houseowner ) then
+			return false;
 		end
 		return true;
 	end
 	return old_is_protected(pos, name);
 end             
+
 
 minetest.register_on_protection_violation( function(pos, name)
 
@@ -58,10 +76,11 @@ minetest.register_on_protection_violation( function(pos, name)
 		return;
 	end
 
-	minetest.chat_send_player( name, "You are inside of the area of the village "..tostring( mg_villages.all_villages[ found ].name )..". The inhabitants do not allow you any modifications.");
+	minetest.chat_send_player( name, "You are inside of the area of the village "..
+		tostring( mg_villages.all_villages[ found ].name )..
+		". The inhabitants do not allow you any modifications.");
 end );
 
--- TODO: add a limited griefing liscence/buying of houses or plots for players
 
 
 mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
@@ -123,6 +142,13 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	else
 		formspec = formspec.."label[1,1;"..tostring( owner ).." owns this plot.]"..
 				"button_exit[3,2.5;1.5,0.5;abort;Exit]";
+	end
+
+	if(   btype ~= 'road'
+	  and mg_villages.BUILDINGS[btype]
+	  and mg_villages.BUILDINGS[btype].inh
+	  and mg_villages.BUILDINGS[btype].inh > 0 ) then
+		formspec = formspec.."label[1,1.5;Owners of this plot count as village inhabitants.]";
 	end
 
 	minetest.show_formspec( pname, "mg_villages:plotmarker", formspec );
