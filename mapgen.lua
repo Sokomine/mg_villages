@@ -681,6 +681,11 @@ time_elapsed = function( t_last, msg )
 end
 
 
+mg_villages.save_data = function()
+	save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
+end
+
+
 mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top )
 	local t1 = minetest.get_us_time();
 
@@ -715,6 +720,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_msnow_10 = minetest.get_content_id( 'moresnow:snow_ramp_outer_top');
 	cid.c_msnow_11 = minetest.get_content_id( 'moresnow:snow_ramp_inner_top');
 
+	cid.c_plotmarker = minetest.get_content_id( 'mg_villages:plotmarker');
 
 	if( minetest.get_modpath('ethereal')) then
 		cid.c_ethereal_clay_red    = minetest.get_content_id( 'bakedclay:red' );
@@ -833,7 +839,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	for _, village in ipairs(villages) do
 
-		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid);
+		-- the village_id will be stored in the plot markers
+		local village_id = tostring( village.vx )..':'..tostring( village.vz );
+		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid, village_id);
 		t1 = time_elapsed( t1, 'place_buildings' );
 
 		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, c_feldweg);
@@ -917,7 +925,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
 	end
 	if( village_data_updated ) then
-		save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
+		mg_villages.save_data();
 	end
 	t1 = time_elapsed( t1, 'save village data' );
 

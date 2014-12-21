@@ -15,7 +15,7 @@ mg_villages.road_node = minetest.get_content_id( 'mg_villages:road' );
 
 minetest.register_node("mg_villages:soil", {
 	description = "Soil found on a field",
-	tiles = {"farming_soil_wet.png", "farming_soil_wet_side.png"},
+	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt_side.png"},
 	drop = "default:dirt",
 	is_ground_content = true,
 	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1},
@@ -24,8 +24,9 @@ minetest.register_node("mg_villages:soil", {
 
 minetest.register_node("mg_villages:desert_sand_soil", {
 	description = "Desert Sand",
-	tiles = {"farming_desert_sand_soil_wet.png", "default_desert_sand.png"},
+	tiles = {"default_desert_sand.png^farming_soil_wet.png", "default_desert_sand.png"},
 	is_ground_content = true,
+	drop   = "default:desert_sand",
 	groups = {crumbly=3, not_in_creative_inventory = 1, sand=1, desert = 1},
 	sounds = default.node_sound_sand_defaults(),
 })
@@ -58,5 +59,30 @@ minetest.register_node("mg_villages:torch", {
 	groups = {choppy=2,dig_immediate=3,flammable=1,attached_node=1},
 	legacy_wallmounted = true,
 	sounds = default.node_sound_defaults(),
+	drop   = "default:torch",
+})
+
+
+minetest.register_node("mg_villages:plotmarker", {
+	description = "Plot marker",
+	drawtype = "nodebox",
+	tiles = {"default_stone_brick.png"},
+	paramtype = "light",
+	paramtype2 = "facedir",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5+2/16, -0.5, -0.5+2/16,  0.5-2/16, -0.5+2/16, 0.5-2/16},
+		},
+	},
+	groups = {stone=2},
+
+	on_rightclick = function( pos, node, clicker, itemstack, pointed_thing)
+		return mg_villages.plotmarker_formspec( pos, nil, {}, clicker )
+	end,
+
+	on_receive_fields = function(pos, formname, fields, sender)
+		return mg_villages.plotmarker_formspec( pos, formname, fields, sender );
+	end,
 })
 

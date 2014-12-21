@@ -75,8 +75,36 @@ mg_villages.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, param2_
 end
 
 
+-- helper function for generate_building
+-- places a marker that allows players to buy plots with houses on them (in order to modify the buildings)
+local function generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id)
+	-- position the plot marker so that players can later buy this plot + building in order to modify it
+	local p = {x=pos.x, y=pos.y+1, z=pos.z};
+	if(     pos.brotate == 0 ) then
+		p.x = p.x - 1;
+		p.z = p.z + pos.bsizez - 1;
+	elseif( pos.brotate == 2 ) then
+		p.x = p.x + pos.bsizex;
+	elseif( pos.brotate == 1 ) then
+		p.z = p.z + pos.bsizez;
+		p.x = p.x + pos.bsizex - 1;
+	elseif( pos.brotate == 3 ) then
+		p.z = p.z - 1;
+	end
+	-- actually position the marker
+	if(   p.x >= minp.x and p.x <= maxp.x and p.z >= minp.z and p.z <= maxp.z and p.y >= minp.y and p.y <= maxp.y) then
+		data[       a:index(p.x, p.y, p.z)] = cid.c_plotmarker;
+		param2_data[a:index(p.x, p.y, p.z)] = pos.brotate;
+		-- store the necessary information in the marker so that it knows for which building it is responsible
+		local meta = minetest.get_meta( p );
+		meta:set_string('village_id', village_id );
+		meta:set_int(   'plot_nr',    building_nr_in_bpos );
+		meta:set_string('infotext',   'Plot No. '..tostring( building_nr_in_bpos ).. ' with '..tostring( mg_villages.BUILDINGS[pos.btype].scm ));
+	end
+end
 
-local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos)
+
+local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id)
 
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
@@ -85,6 +113,17 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	if( binfo.is_mts == 1 ) then
 		return;
 	end
+
+	if( pos.btype ~= "road" ) then
+		generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id );
+	end
+
+	-- skip building if it is not located at least partly in the area that is currently beeing generated
+	if(   pos.x > maxp.x or pos.x + pos.bsizex < minp.x
+	   or pos.z > maxp.z or pos.z + pos.bsizez < minp.z ) then
+		return;
+	end
+
 
 	if( pos.btype ~= "road" and
 	  ((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
@@ -257,7 +296,10 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 						-- TODO: t.node.* may not contain relevant information here	
 						table.insert(extranodes, {node = t.node, meta = t.meta, pos = {x = ax, y = ay, z = az}})
 					end
-					data[       a:index(ax, ay, az)] = new_content;
+					-- do not overwrite plotmarkers
+					if( new_content ~= cid.c_air or data[ a:index(ax,ay,az)] ~= cid.c_plotmarker ) then
+						data[       a:index(ax, ay, az)] = new_content;
+					end
 					if(     t.node.param2list ) then
 						local np2 = t.node.param2list[ pos.brotate + 1];
 						-- mirror
@@ -518,7 +560,7 @@ end
 
 -- actually place the buildings (at least those which came as .we files; .mts files are handled later on)
 -- this code is also responsible for tree placement
-mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, cid)
+mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, cid, village_id)
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
 	local seed = mg_villages.get_bseed({x=vx, z=vz})
@@ -571,7 +613,7 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
 		if( not(pos.btype) or pos.btype ~= 'road' or anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
 			-- replacements are in table format for mapgen-based building spawning
-			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i )
+			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i, village_id )
 		end
 	end
 

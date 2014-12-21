@@ -753,7 +753,8 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
 	for _,v in ipairs(villages) do
 		-- abort if the new building can't be placed here
-		if(   mg_villages.inside_village_area(bx,        bz,        v, vnoise) 
+		if(   mg_villages.inside_village_area(blencenx,  blencenz,  v, vnoise) 
+		   or mg_villages.inside_village_area(bx,        bz,        v, vnoise) 
 		   or mg_villages.inside_village_area(bx+bsizex, bz,        v, vnoise)
 		   or mg_villages.inside_village_area(bx,        bz+bsizez, v, vnoise)
 		   or mg_villages.inside_village_area(bx+bsizex, bz+bsizez, v, vnoise)) then
