@@ -106,9 +106,23 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	end
 	local owner      = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner;
 	local btype      = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].btype;
+
+	local price      = "default:gold_ingot 2";
+	if(   btype ~= 'road'
+	  and mg_villages.BUILDINGS[btype]
+	  and mg_villages.BUILDINGS[btype].price ) then
+		price = mg_villages.BUILDINGS[btype].price;
+	elseif( btype ~= 'road'
+	  and mg_villages.BUILDINGS[btype]
+	  and mg_villages.BUILDINGS[btype].typ
+	  and mg_villages.prices[ mg_villages.BUILDINGS[btype].typ ] )then
+		price = mg_villages.prices[ mg_villages.BUILDINGS[btype].typ ];
+	end
+	--determine prcie depending on building type
+	local price_stack= ItemStack( price );
 	
 	local plot_descr = 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm);
-	local formspec = "size[6,3]"..
+	local formspec = "size[8,3]"..
 			 "label[1.0,0.5;Plot No.: "..tostring( plot_nr ).."]"..
 			 "label[2.5,0.5;Building:]"..
 			 "label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm ).."]"..
@@ -120,11 +134,20 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		mg_villages.save_data();
 
 	elseif( (not(owner) or owner=='') and fields['buy'] ) then
-		-- TODO: check if the price can be paid
-		formspec = formspec.."label[0,0;Congratulations! You have bought this plot.]";
-		mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = pname;
-		meta:set_string('infotext', plot_descr..' (owned by '..tostring( pname )..')');
-		mg_villages.save_data();
+
+		-- check if the price can be paid
+		local inv = player:get_inventory();
+		if( inv and inv:contains_item( 'main', price_stack )) then
+			formspec = formspec.."label[0,0;Congratulations! You have bought this plot.]";
+			mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = pname;
+			meta:set_string('infotext', plot_descr..' (owned by '..tostring( pname )..')');
+			-- save the data so that it survives server restart
+			mg_villages.save_data();
+			-- substract the price from the players inventory
+			inv:remove_item( 'main', price_stack );
+		else
+			formspec = formspec.."label[0,0;Sorry. You are not able to pay the price.]";
+		end
 	end
 	-- update the owner information
 	owner      = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner;
@@ -135,8 +158,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 				"button_exit[2,2.5;2.0,0.5;abandom;Abandom plot]"..
 				"button_exit[4,2.5;1.5,0.5;abort;Exit]";
 	elseif( not( owner ) or owner=="" ) then
-		-- TODO: make price configurable
-		formspec = formspec.."label[1,1;You can buy this plot for 2 gold ingots.]".. 
+		formspec = formspec.."label[1,1;You can buy this plot for]".. 
+				"label[3.8,1;"..tostring( price_stack:get_count() ).." x ]"..
+				"item_image[4.3,0.8;1,1;"..(  price_stack:get_name() ).."]"..
 				"button_exit[2,2.5;1.5,0.5;buy;Buy plot]"..
 				"button_exit[4,2.5;1.5,0.5;abort;Exit]";
 	else
@@ -148,7 +172,11 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	  and mg_villages.BUILDINGS[btype]
 	  and mg_villages.BUILDINGS[btype].inh
 	  and mg_villages.BUILDINGS[btype].inh > 0 ) then
-		formspec = formspec.."label[1,1.5;Owners of this plot count as village inhabitants.]";
+		if( owner==pname ) then
+			formspec = formspec.."label[1,1.5;You are allowed to modify the common village area.]";
+		else
+			formspec = formspec.."label[1,1.5;Owners of this plot count as village inhabitants.]";
+		end
 	end
 
 	minetest.show_formspec( pname, "mg_villages:plotmarker", formspec );

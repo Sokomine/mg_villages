@@ -75,7 +75,7 @@ minetest.register_node("mg_villages:plotmarker", {
 			{-0.5+2/16, -0.5, -0.5+2/16,  0.5-2/16, -0.5+2/16, 0.5-2/16},
 		},
 	},
-	groups = {stone=2},
+	groups = {cracky=3,stone=2},
 
 	on_rightclick = function( pos, node, clicker, itemstack, pointed_thing)
 		return mg_villages.plotmarker_formspec( pos, nil, {}, clicker )
@@ -84,5 +84,14 @@ minetest.register_node("mg_villages:plotmarker", {
 	on_receive_fields = function(pos, formname, fields, sender)
 		return mg_villages.plotmarker_formspec( pos, formname, fields, sender );
 	end,
+
+	-- protect against digging
+	can_dig = function( pos, player )
+			local meta = minetest.get_meta( pos );
+			if( meta and meta:get_string( 'village_id' )~='' and meta:get_int( 'plot_nr' ) and meta:get_int( 'plot_nr' )>0) then
+				return false;
+			end
+			return true;
+		end
 })
 

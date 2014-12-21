@@ -97,3 +97,48 @@ end
 -- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
 -- currently not really used; does not look as good as expected
 mg_villages.medieval_subtype = false;
+
+-- how much does the player have to pay for a plot with a building?
+mg_villages.prices = {
+	empty          = "default:copper_ingot 1", -- plot to build on 
+
+	-- building types which usually have inhabitants (and thus allow the player
+	-- who bought the building to modifiy the entire village area minus other
+	-- buildings)
+	tent           = "default:copper_ingot 1",
+	hut            = "default:copper_ingot 1",
+	farm_full      = "default:gold_ingot 4",
+	farm_tiny      = "default:gold_ingot 2",
+	lumberjack     = "default:gold_ingot 2",
+	house          = "default:gold_ingot 2",
+	house_large    = "default:gold_ingot 4",
+	tavern         = "default:gold_ingot 12",
+	trader         = "default:gold_ingot 2",
+
+	-- more or less community buildings
+	well           = "default:gold_ingot 1",
+	village_square = "default:goldblock 1",
+	secular        = "default:goldblock 2", -- secular buildings, such as libraries ec.
+	church         = "default:goldblock 10",
+
+	-- places for mobs to work at; usually without inhabitants
+	tower          = "default:copper_ingot 1",
+	shed           = "default:copper_ingot 2",
+	pit            = "default:copper_ingot 3", -- claytrader pit
+	mill           = "default:gold_ingot 10",
+	forge          = "default:gold_ingot 10",
+	bakery         = "default:gold_ingot 10",
+	shop           = "default:gold_ingot 20",
+	sawmill        = "default:gold_ingot 30",
+
+	-- decoration
+	wagon          = "default:tree 10",
+	bench          = "default:tree 4",
+
+	-- seperate fields
+	pasture        = "default:copper_ingot 2",
+	field          = "default:copper_ingot 2",
+
+	-- chateaus are expensive
+	chateau        = "default:diamondblock 5",
+}
