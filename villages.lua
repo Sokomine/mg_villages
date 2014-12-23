@@ -35,8 +35,8 @@ mg_villages.villages_at_point = function(minp, noise1)
 	-- fallback: type "nore" (that is what the mod originally came with)
 	local village_type = 'nore';
 	-- if this is the first village for this world, take a medieval one
-	if( (not( mg_villages.all_villages ) or mg_villages.anz_villages < 1) and minetest.get_modpath("cottages") ) then
-		village_type = 'medieval';
+	if( (not( mg_villages.all_villages ) or mg_villages.anz_villages < 1) and minetest.get_modpath("cottages") and mg_villages.FIRST_VILLAGE_TYPE) then
+		village_type = mg_villages.FIRST_VILLAGE_TYPE;
 	else
 		village_type = mg_villages.village_types[ pr:next(1, #mg_villages.village_types )]; -- select a random type
 	end

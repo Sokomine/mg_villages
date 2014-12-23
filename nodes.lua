@@ -15,7 +15,7 @@ mg_villages.road_node = minetest.get_content_id( 'mg_villages:road' );
 
 minetest.register_node("mg_villages:soil", {
 	description = "Soil found on a field",
-	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt_side.png"},
+	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt.png"},
 	drop = "default:dirt",
 	is_ground_content = true,
 	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1},

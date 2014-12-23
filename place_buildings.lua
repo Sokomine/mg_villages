@@ -79,16 +79,17 @@ end
 -- places a marker that allows players to buy plots with houses on them (in order to modify the buildings)
 local function generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id)
 	-- position the plot marker so that players can later buy this plot + building in order to modify it
+	-- pos.o contains the original orientation (determined by the road and the side the building is
 	local p = {x=pos.x, y=pos.y+1, z=pos.z};
-	if(     pos.brotate == 0 ) then
+	if(     pos.o == 0 ) then
 		p.x = p.x - 1;
 		p.z = p.z + pos.bsizez - 1;
-	elseif( pos.brotate == 2 ) then
+	elseif( pos.o == 2 ) then
 		p.x = p.x + pos.bsizex;
-	elseif( pos.brotate == 1 ) then
+	elseif( pos.o == 1 ) then
 		p.z = p.z + pos.bsizez;
 		p.x = p.x + pos.bsizex - 1;
-	elseif( pos.brotate == 3 ) then
+	elseif( pos.o == 3 ) then
 		p.z = p.z - 1;
 	end
 	-- actually position the marker
