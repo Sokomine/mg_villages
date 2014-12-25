@@ -749,11 +749,31 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 		bz = minz + math.floor(FFAPROP * bsizez)
 	end
 
+	village.vx = blencenx;
+	village.vz = blencenz;
+	village.vs = blenrad;
+	local village_id = tostring( village.vx )..':'..tostring( village.vz );
+
+	-- these values have to be determined once per village; afterwards, they need to be fixed
+	-- if a village has been generated already, it will continue to exist
+	if( mg_villages.all_villages[ village_id ] ) then
+		return village;
+	end
+
 	-- now check if this village can be placed here or if it intersects with another village in any critical manner;
 	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
 	for _,v in ipairs(villages) do
+		-- make sure that houses do not spawn inside other villages
+		local min_dist_factor = 10;
+		if( v.is_single_house ) then
+			min_dist_factor = v.vs * 2;
+		else
+			min_dist_factor = v.vs * 3;
+		end
 		-- abort if the new building can't be placed here
-		if(   mg_villages.inside_village_area(blencenx,  blencenz,  v, vnoise) 
+		if(   math.abs( blencenx - v.vx ) < min_dist_factor
+		   or math.abs( blencenz - v.vz ) < min_dist_factor
+		   or mg_villages.inside_village_area(blencenx,  blencenz,  v, vnoise) 
 		   or mg_villages.inside_village_area(bx,        bz,        v, vnoise) 
 		   or mg_villages.inside_village_area(bx+bsizex, bz,        v, vnoise)
 		   or mg_villages.inside_village_area(bx,        bz+bsizez, v, vnoise)
@@ -762,11 +782,6 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 		end
 	end
 
-	village.vx = blencenx;
-	village.vz = blencenz;
-	village.vs = blenrad;
-	local village_id = tostring( village.vx )..':'..tostring( village.vz );
-	-- these values have to be determined once per village; afterwards, they need to be fixed
 	if( mg_villages.all_villages  and mg_villages.all_villages[ village_id ] and mg_villages.all_villages[ village_id ].optimal_height) then
 		village.optimal_height  = mg_villages.all_villages[ village_id ].optimal_height;
 		village.vh              = mg_villages.all_villages[ village_id ].optimal_height;
