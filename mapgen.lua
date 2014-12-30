@@ -808,7 +808,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
 	t1 = time_elapsed( t1, 'get_height' );
+
 	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
+	-- the villages in the first mapchunk are set to a fixed height of 1 so that players will not end up embedded in stone
+	if( not( mg_villages.all_villages ) or mg_villages.anz_villages < 1 ) then
+		villages[1].optimal_height = 1;
+	end
 
 
 	-- change height of those villages where an optimal_height could be determined
