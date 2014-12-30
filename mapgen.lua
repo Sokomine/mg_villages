@@ -485,6 +485,11 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 		end
 		--print('HEIGHT for village '..tostring( village.name )..' min:'..tostring( tmin )..' max:'..tostring(tmax)..' opt:'..tostring(topt)..' count:'..tostring( height_count[ village_nr ]));
 
+		-- the very first village gets a height of 1
+		if( village.nr and village.nr == 1 ) then
+			village.optimal_height = 1;
+		end
+
 		if( village.optimal_height ) then
 		-- villages above a size of 40 are *always* place at a convenient height of 1
 		elseif( village.vs >= 40 and not(village.is_single_house)) then
@@ -803,15 +808,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
 	t1 = time_elapsed( t1, 'get_height' );
-	if( mg_villages.all_villages and ( not(mg_villages.ENABLE_VILLAGES) or mg_villages.anz_villages > 0 )) then
-		mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
-	-- the villages in the first mapchunk are set to a fixed height of 1 so that players will not end up embedded in stone
-	else
-		for _,village in ipairs(villages) do
-			village.optimal_height = 1;
-		end
-	end
-			
+	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
+
+
 	-- change height of those villages where an optimal_height could be determined
 	local village_data_updated = false;
 	for _,village in ipairs(villages) do
