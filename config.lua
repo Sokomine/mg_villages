@@ -68,6 +68,7 @@ mg_villages.sapling_probability = {};
 
 mg_villages.sapling_probability[ minetest.get_content_id( 'default:sapling' )       ] = 25; -- suitable for a relatively dense forrest of normal trees
 mg_villages.sapling_probability[ minetest.get_content_id( 'default:junglesapling' ) ] = 40; -- jungletrees are a bit bigger and need more space
+mg_villages.sapling_probability[ minetest.get_content_id( 'default:pinesapling' )   ] = 30; 
 if( minetest.get_modpath( 'mg' )) then
 	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:savannasapling'     ) ] = 30; 
 	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:pinesapling'        ) ] = 35; 

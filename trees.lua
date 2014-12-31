@@ -74,3 +74,128 @@ mg_villages.grow_jungletree = function(data, a, pos, seed)
     end
     end
 end
+
+-- taken from minetest_game/mods/default/trees.lua
+mg_villages.trees_add_pine_needles = function(data, vi, c_air, c_ignore, c_snow, c_pine_needles)
+	if data[vi] == c_air or data[vi] == c_ignore or data[vi] == c_snow then
+		data[vi] = c_pine_needles
+	end
+end
+
+mg_villages.trees_add_snow = function(data, vi, c_air, c_ignore, c_snow)
+	if data[vi] == c_air or data[vi] == c_ignore then
+		data[vi] = c_snow
+	end
+end
+
+mg_villages.grow_pinetree = function(data, a, pos)
+	local x, y, z = pos.x, pos.y, pos.z
+	local maxy = y + math.random(9, 13) -- Trunk top
+
+	local c_air = minetest.get_content_id("air")
+	local c_ignore = minetest.get_content_id("ignore")
+	local c_pinetree = minetest.get_content_id("default:pinetree")
+	local c_pine_needles  = minetest.get_content_id("default:pine_needles")
+	local c_snow = minetest.get_content_id("default:snow")
+	local c_snowblock = minetest.get_content_id("default:snowblock")
+	local c_dirtsnow = minetest.get_content_id("default:dirt_with_snow")
+
+	-- Scan for snow nodes near sapling
+	local snow = false
+	for yy = y - 1, y + 1 do
+	for zz = z - 1, z + 1 do
+		local vi  = a:index(x - 1, yy, zz)
+		for xx = x - 1, x + 1 do
+			local nodid = data[vi]
+			if nodid == c_snow
+			or nodid == c_snowblock
+			or nodid == c_dirtsnow then
+				snow = true
+			end
+			vi  = vi + 1
+		end
+	end
+	end
+
+	-- Upper branches layer
+	local dev = 3
+	for yy = maxy - 1, maxy + 1 do
+		for zz = z - dev, z + dev do
+			local vi = a:index(x - dev, yy, zz)
+			local via = a:index(x - dev, yy + 1, zz)
+			for xx = x - dev, x + dev do
+				if math.random() < 0.95 - dev * 0.05 then
+					mg_villages.trees_add_pine_needles(data, vi, c_air, c_ignore, c_snow,
+							c_pine_needles)
+					if snow then
+						mg_villages.trees_add_snow(data, via, c_air, c_ignore, c_snow)
+					end
+				end
+				vi  = vi + 1
+				via = via + 1
+			end
+		end
+		dev = dev - 1
+	end
+
+	-- Centre top nodes
+	mg_villages.trees_add_pine_needles(data, a:index(x, maxy + 1, z), c_air, c_ignore, c_snow,
+			c_pine_needles)
+	mg_villages.trees_add_pine_needles(data, a:index(x, maxy + 2, z), c_air, c_ignore, c_snow,
+			c_pine_needles) -- Paramat added a pointy top node
+	if snow then
+		mg_villages.trees_add_snow(data, a:index(x, maxy + 3, z), c_air, c_ignore, c_snow)
+	end
+
+	-- Lower branches layer
+	local my = 0
+	for i = 1, 20 do -- Random 2x2 squares of needles
+		local xi = x + math.random(-3, 2)
+		local yy = maxy + math.random(-6, -5)
+		local zi = z + math.random(-3, 2)
+		if yy > my then
+			my = yy
+		end
+		for zz = zi, zi+1 do
+			local vi = a:index(xi, yy, zz)
+			local via = a:index(xi, yy + 1, zz)
+			for xx = xi, xi + 1 do
+				mg_villages.trees_add_pine_needles(data, vi, c_air, c_ignore, c_snow,
+						c_pine_needles)
+				if snow then
+					mg_villages.trees_add_snow(data, via, c_air, c_ignore, c_snow)
+				end
+				vi  = vi + 1
+				via = via + 1
+			end
+		end
+	end
+
+	local dev = 2
+	for yy = my + 1, my + 2 do
+		for zz = z - dev, z + dev do
+			local vi = a:index(x - dev, yy, zz)
+			local via = a:index(x - dev, yy + 1, zz)
+			for xx = x - dev, x + dev do
+				if math.random() < 0.95 - dev * 0.05 then
+					mg_villages.trees_add_pine_needles(data, vi, c_air, c_ignore, c_snow,
+							c_pine_needles)
+					if snow then
+						mg_villages.trees_add_snow(data, via, c_air, c_ignore, c_snow)
+					end
+				end
+				vi  = vi + 1
+				via = via + 1
+			end
+		end
+		dev = dev - 1
+	end
+
+	-- Trunk
+	for yy = y, maxy do
+		local vi = a:index(x, yy, z)
+		data[vi] = c_pinetree
+	end
+
+end
+

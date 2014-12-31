@@ -142,6 +142,8 @@ end
 mg_villages.replace_tree_trunk = function( replacements, wood_type )
 	if(     wood_type == 'default:junglewood' ) then
 		table.insert( replacements, {'default:tree',  'default:jungletree'});
+	elseif( wood_type == 'default:pinewood' ) then
+		table.insert( replacements, {'default:tree',  'default:pinetree'});
 	elseif( wood_type == 'mg:savannawood' ) then
 		table.insert( replacements, {'default:tree',  'mg:savannatree'});
 	elseif( wood_type == 'mg:pinewood' ) then
@@ -224,6 +226,8 @@ end
 mg_villages.replace_saplings = function( replacements, wood_type )
 	if(     wood_type == 'default:junglewood' ) then
 		table.insert( replacements, {'default:sapling',  'default:junglesapling'});
+	elseif( wood_type == 'default:pinewood' ) then
+		table.insert( replacements, {'default:sapling',  'default:pine_sapling'});
 	elseif( wood_type == 'mg:savannawood' ) then
 		table.insert( replacements, {'default:sapling',  'mg:savannasapling'});
 	elseif( wood_type == 'mg:pinewood' ) then
@@ -246,6 +250,7 @@ mg_villages.replace_saplings = function( replacements, wood_type )
 			if( wood_type == 'trees:'..v..'_planks' ) then
 				table.insert( replacements, {'default:sapling', "trees:"..v.."_sapling"});
 				table.insert( replacements, {'default:junglesapling', "trees:"..v.."_sapling"});
+				table.insert( replacements, {'default:pine_sapling',  "trees:"..v.."_sapling"});
 			end
 		end
 
@@ -315,7 +320,7 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
          wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
 		{''},
-		{'default:wood', 'default:junglewood', 'mg:pinewood', 'mg:savannawood',
+		{'default:wood', 'default:junglewood', 'default:pinewood', 'mg:pinewood', 'mg:savannawood',
 		'default:clay', 'default:brick', 'default:sandstone', 
 		'default:stonebrick', 'default:desert_stonebrick','default:sandstonebrick', 'default:sandstone','default:stone','default:desert_stone',
 		'default:coalblock','default:steelblock','default:goldblock', 'default:bronzeblock', 'default:copperblock', 'wool:white',
@@ -341,7 +346,7 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
       mg_villages.replace_materials( replacements, pr,
 		{'stairs:stair_wood'},
 		{'stairs:stair_'},
-		{'stonebrick', 'stone', 'sandstone', 'cobble', 'wood', 'junglewood' },
+		{'stonebrick', 'stone', 'sandstone', 'cobble', 'wood', 'junglewood', 'pinewood' },
 		'wood');
 
       -- brick roofs are a bit odd; but then...
@@ -349,7 +354,7 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
       mg_villages.replace_materials( replacements, pr,
 		{'stairs:stair_brick',  'stairs:slab_brick', 'default:brick'},
 		{'stairs:stair_',       'stairs:slab_',      'default:'     },
-		{ 'brick', 'stone', 'cobble', 'stonebrick', 'wood', 'junglewood', 'sandstone' },
+		{ 'brick', 'stone', 'cobble', 'stonebrick', 'wood', 'junglewood', 'pinewood', 'sandstone' },
 		'brick' );
 
       return replacements;
@@ -370,7 +375,7 @@ mg_villages.replacements_nore = function( housetype, pr, replacements )
       local wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
 		{''},
-		{ 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood' },
+		{ 'default:wood', 'default:junglewood', 'default:pinewood', 'mg:savannawood', 'mg:pinewood' },
 		'default:wood');
       mg_villages.replace_tree_trunk( replacements, wood_type );
       mg_villages.replace_saplings(   replacements, wood_type );
@@ -392,7 +397,7 @@ mg_villages.replacements_lumberjack = function( housetype, pr, replacements )
       local wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
 		{''},
-		{ 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood' },
+		{ 'default:wood', 'default:junglewood', 'default:pinewood', 'mg:savannawood', 'mg:pinewood' },
 		'default:wood');
       mg_villages.replace_tree_trunk( replacements, wood_type );
       mg_villages.replace_saplings(   replacements, wood_type );
@@ -431,7 +436,7 @@ mg_villages.replacements_canadian = function( housetype, pr, replacements )
       end
 
      -- these contain the majority of nodes used (junglewood is too dark)
-      local materials = {'default:wood', 'mg:pinewood', 'mg:savannawood',
+      local materials = {'default:wood', 'default:pinewood', 'mg:pinewood', 'mg:savannawood',
 		'default:clay', 'default:brick', 'default:sandstone', 
 		'default:stonebrick', 'default:desert_stonebrick','default:sandstonebrick', 'default:sandstone','default:stone','default:desert_stone',
 		'default:coalblock','default:steelblock'};
@@ -531,7 +536,7 @@ mg_villages.replacements_chateau = function( housetype, pr, replacements )
       local wood_type = mg_villages.replace_materials( replacements, pr,
 		{'default:wood'},
 		{''},
-		{ 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood'}, --, 'default:brick', 'default:sandstone', 'default:desert_cobble' }, 
+		{ 'default:wood', 'default:junglewood', 'default:pinewood', 'mg:savannawood', 'mg:pinewood'}, --, 'default:brick', 'default:sandstone', 'default:desert_cobble' }, 
 		'default:wood');
       mg_villages.replace_tree_trunk( replacements, wood_type );
       mg_villages.replace_saplings(   replacements, wood_type );
@@ -705,7 +710,7 @@ mg_villages.replacements_medieval = function( housetype, pr, replacements )
    -- loam and clay are mentioned multiple times because those are the most likely building materials in reality
    local materials = {'cottages:loam', 'cottages:loam', 'cottages:loam', 'cottages:loam', 'cottages:loam', 
                       'default:clay',  'default:clay',  'default:clay',  'default:clay',  'default:clay',
-                      'default:wood','default:junglewood','default:sandstone',
+                      'default:wood','default:junglewood', 'default:pinewood', 'default:sandstone',
                       'default:desert_stone','default:brick','default:cobble','default:stonebrick',
                       'default:desert_stonebrick','default:sandstonebrick','default:stone',
                       'mg:savannawood', 'mg:savannawood', 'mg:savannawood', 'mg:savannawood',

@@ -355,6 +355,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 				elseif( new_content == cid.c_sapling
 				     or new_content == cid.c_jsapling
+				     or new_content == cid.c_psapling
 				     or new_content == cid.c_savannasapling
 				     or new_content == cid.c_pinesapling ) then
 					-- store that a tree is to be grown there
