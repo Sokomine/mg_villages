@@ -688,7 +688,7 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	-- (i.e. church, forge, wagon, ..)
 	local btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'single');
 	if( not( bsizex )) then
-		print('FAILURE to generate a building.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, 'FAILURE to generate a building.');
 		btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'lumberjack');
 	end
 	-- if no building was found, give up
@@ -790,7 +790,9 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 
 	village.to_add_data = {};
 	village.to_add_data.bpos = { {x=bx, y=village.vh, z=bz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
-	print('adding SINGLE HOUSE of type '..tostring( village.village_type )..' to map at '..tostring( village.vx )..':'..tostring( village.vz )..'.'); -- TODO
+	-- there may be quite a lot of single houses added; plus they are less intresting than entire villages. Thus, logfile spam is reduced
+	mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'adding SINGLE HOUSE of type '..tostring( village.village_type )..
+			' to map at '..tostring( village.vx )..':'..tostring( village.vz )..'.');
 
 	return village;
 end

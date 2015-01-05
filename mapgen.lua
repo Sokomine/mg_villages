@@ -553,7 +553,7 @@ end
 
 
 mg_villages.change_village_height = function( village, new_height )
-print('CHANGING HEIGHT from '..tostring( village.vh )..' to '..tostring( new_height ));
+	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, 'CHANGING HEIGHT from '..tostring( village.vh )..' to '..tostring( new_height ));
 	for _, pos in ipairs(village.to_add_data.bpos) do
 		pos.y = new_height;
 	end
@@ -695,7 +695,7 @@ end
 
 time_elapsed = function( t_last, msg )
 	mg_villages.t_now = minetest.get_us_time();
-	print( 'TIME ELAPSED: '..tostring( mg_villages.t_now - t_last )..' '..msg );
+	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, 'TIME ELAPSED: '..tostring( mg_villages.t_now - t_last )..' '..msg );
 	return mg_villages.t_now;
 end
 
@@ -940,7 +940,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			mg_villages.anz_villages = count;
 			mg_villages.all_villages[ village_id ] = minetest.deserialize( minetest.serialize( village ));
 
-			print("Village No. "..tostring( count ).." of type \'"..tostring( village.village_type ).."\' of size "..tostring( village.vs ).." spawned at: x = "..village.vx..", z = "..village.vz)
+			mg_villages.print( mg_villages.DEBUG_LEVEL_NORMAL, "Village No. "..tostring( count ).." of type \'"..
+					tostring( village.village_type ).."\' of size "..tostring( village.vs )..
+					" spawned at: x = "..village.vx..", z = "..village.vz)
 			village_data_updated = true;
 		end
 	end

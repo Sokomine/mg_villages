@@ -83,7 +83,7 @@ mg_villages.add_village_type = function( type_name, v )
 	end
 
 	if( not( v.only_single ) and (not(v.min) or not(v.max))) then
-		print('[mg_villages] Error: Village type '..tostring( type_name )..' lacks size information.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_NORMAL, 'Error: Village type '..tostring( type_name )..' lacks size information.');
 		return false;
 	end
 

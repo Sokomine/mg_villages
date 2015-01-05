@@ -8,7 +8,7 @@ mg_villages.init_weights = function()
 			table.insert( mg_villages.village_types, k );
 		end
 	end
-	print('[mg_villages] Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
+	mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,'Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
 
 
 

@@ -8,6 +8,20 @@ mg_villages.anz_villages = 0;
 
 mg_villages.modpath = minetest.get_modpath( "mg_villages");
 
+
+mg_villages.DEBUG_LEVEL_NONE    = -1 -- -1: disable all printed messages
+mg_villages.DEBUG_LEVEL_NORMAL  =  0 -- 0: print information about which village spawned where plus important errors
+mg_villages.DEBUG_LEVEL_WARNING =  1 -- 1: warnings/errors which may not be particulary helpful for non-developers
+mg_villages.DEBUG_LEVEL_INFO    =  2 -- 2: print even less important warnings
+mg_villages.DEBUG_LEVEL_TIMING  =  3 -- 3: detailled performance information
+
+mg_villages.print = function( level, msg )
+	if( level <= mg_villages.DEBUG_LEVEL ) then
+		print( "[mg_villages] "..msg );
+	end
+end
+
+
 dofile(mg_villages.modpath.."/save_restore.lua")
 mg_villages.all_villages     = save_restore.restore_data( 'mg_all_villages.data' ); -- read mg_villages.all_villages data saved for this world from previous runs
 mg_villages.mg_generated_map = save_restore.restore_data( 'mg_generated_map.data' );

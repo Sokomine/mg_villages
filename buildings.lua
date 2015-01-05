@@ -275,7 +275,7 @@ mg_villages.add_building = function( building_data )
 
 	if( not( is_used )) then
 		-- do nothing; skip this file
-		print('SKIPPING '..tostring( building_data.scm )..' due to village type not supported.');
+		mg_villages.print(mg_villages.DEBUG_LEVEL_INFO, 'SKIPPING '..tostring( building_data.scm )..' due to village type not supported.');
 		-- building cannot be used
 		building_data.not_available = 1;
 		return false;
@@ -292,7 +292,7 @@ mg_villages.add_building = function( building_data )
 	end
 
 	if( not( res )) then
-		print('SKIPPING '..tostring( building_data.scm )..' due to import failure.');
+		mg_villages.print(mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to import failure.');
 		building_data.not_available = 1;
 		return false;
 	-- provided the file could be analyzed successfully
@@ -347,7 +347,7 @@ mg_villages.add_building = function( building_data )
 		or   building_data.sizex == 0 or      building_data.sizez==0) then
 
 		-- no village will use it
-		print('[mg_villages] INFO: No schematic found for building \''..tostring( building_data.scm )..'\'. Will not use that building.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, 'No schematic found for building \''..tostring( building_data.scm )..'\'. Will not use that building.');
 		building_data.weight = {};
 		building_data.not_available = 1;
 		return false;
@@ -359,7 +359,7 @@ mg_villages.add_building = function( building_data )
 
 
 	if( not( building_data.weight ) or type( building_data.weight ) ~= 'table' ) then
-		print('SKIPPING '..tostring( building_data.scm )..' due to missing weight information.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to missing weight information.');
 		building_data.not_available = 1;
 		return false;
 	end

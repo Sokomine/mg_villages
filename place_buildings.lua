@@ -130,7 +130,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	  ((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
 	    or ( binfo.sizez ~= pos.bsizex and binfo.sizez ~= pos.bsizez )
 	    or not( binfo.scm_data_cache ))) then
-		print('ERROR: This village was created using diffrent buildings than those known know. Cannot place unknown building.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'ERROR: This village was created using diffrent buildings than those known know. Cannot place unknown building.');
 		return;
 	end
 
@@ -276,7 +276,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 							end
 						-- we tried our best, but the replacement node is not defined	
 						elseif (new_node_name ~= 'mg:ignore' ) then
-							print('[mg_villages] ERROR: Did not find a suitable replacement for '..tostring( new_node_name )..' (suggested but inexistant: '..tostring( replacements.table[ new_node_name ] )..'). Building: '..tostring( binfo.scm )..'.');
+							mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'ERROR: Did not find a suitable replacement for '..tostring( new_node_name )..' (suggested but inexistant: '..tostring( replacements.table[ new_node_name ] )..'). Building: '..tostring( binfo.scm )..'.');
 							new_content = cid.c_air;
 						end
 

@@ -31,6 +31,9 @@ mg_villages.ENABLE_PROTECTION = true;
 -- the first village - the one the player spawns in - will be of this type
 mg_villages.FIRST_VILLAGE_TYPE = 'medieval';
 
+-- choose the debug level you want
+mg_villages.DEBUG_LEVEL = mg_villages.DEBUG_LEVEL_NORMAL
+
 -- background image for the /vmap command
 -- RealTest comes with a diffrent texture
 if(     minetest.get_modpath('grounds') and minetest.get_modpath('joiner_table')) then
