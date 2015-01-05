@@ -9,6 +9,7 @@ dryplants?
 cavestuff?
 moresnow?
 ethereal?
+forest?
 darkage?
 deco?
 snow?

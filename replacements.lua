@@ -4,6 +4,10 @@ if( minetest.get_modpath( 'ethereal' )) then
 	mg_villages.ethereal_trees = {'willow','redwood','frost','mushroom','yellow','palm','banana'};
 end
 
+if( minetest.get_modpath( 'forest' )) then
+	mg_villages.forest_trees = {'beech','birch','cherry','fir','ginkgo','lavender','mirabelle','oak','plum','willow'};
+end
+
 -- The trees modname is not unique; there are other mods which bear that name.
 -- If all the other mods are present as well, it's a strong indication for realtest beeing the game.
 if(	    minetest.get_modpath( 'trees' )
@@ -103,6 +107,14 @@ mg_villages.replace_materials = function( replacements, pr, original_materials, 
 		end
 	end
 
+	if( wood_found and mg_villages.forest_trees ) then
+		for _,v in ipairs( mg_villages.forest_trees ) do
+			if( minetest.registered_nodes[ 'forest:'..v..'_wood'] ) then
+				table.insert( known_materials, 'forest:'..v..'_wood' );
+			end	
+		end
+	end
+
 	if( wood_found and mg_villages.realtest_trees ) then
 		for _,v in ipairs( mg_villages.realtest_trees ) do
 			if( minetest.registered_nodes[ 'trees:'..v..'_planks'] ) then
@@ -179,6 +191,13 @@ mg_villages.replace_tree_trunk = function( replacements, wood_type )
 			end
 		end
 
+	elseif( mg_villages.forest_trees ) then
+		for _,v in ipairs( mg_villages.forest_trees ) do
+			if( wood_type == "forest:"..v.."_wood" ) then
+				table.insert( replacements, {'default:tree', "forest:"..v.."_tree"});
+			end
+		end
+
 	elseif( mg_villages.realtest_trees ) then
 		for _,v in ipairs( mg_villages.realtest_trees ) do
 			if( wood_type == 'trees:'..v..'_planks' ) then
@@ -241,7 +260,14 @@ mg_villages.replace_saplings = function( replacements, wood_type )
  	elseif( mg_villages.ethereal_trees ) then
 		for _,v in ipairs( mg_villages.ethereal_trees ) do
 			if( wood_type == "ethereal:"..v.."_wood" ) then
-				table.insert( replacements, {'default:sapling', "ethereal"..v.."_sapling"});
+				table.insert( replacements, {'default:sapling', "ethereal:"..v.."_sapling"});
+			end
+		end
+
+ 	elseif( mg_villages.forest_trees ) then
+		for _,v in ipairs( mg_villages.forest_trees ) do
+			if( wood_type == "forest:"..v.."_wood" ) then
+				table.insert( replacements, {'default:sapling', "forest:"..v.."_sapling"});
 			end
 		end
 
