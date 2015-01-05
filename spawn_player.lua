@@ -4,6 +4,12 @@ local function spawnplayer(player)
 	if( minetest.setting_get("static_spawnpoint")) then
 		return;
 	end
+
+	-- make sure the village types are initialized
+	if( not( mg_villages.village_types )) then
+		mg_villages.init_weights();
+	end
+
 	local noise1 = minetest.get_perlin(12345, 6, 0.5, 256)
 	local min_dist = math.huge
 	local min_pos = {x = 0, y = 3, z = 0}
