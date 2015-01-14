@@ -813,7 +813,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		tmin = minp;
 		tmax = maxp;
 	end
-	-- TODO: this needs a modified version for the individual, standalone buildings - or needs a diffrent noise function!
 	-- will set village_area to N where .. is:
 	--  0: not part of any village
 	--  1: flattened area around the village; plants (wheat, cotton, trees, grass, ...) may be planted here
@@ -946,9 +945,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			village_data_updated = true;
 		end
 	end
-	if( village_data_updated ) then
-		mg_villages.save_data();
-	end
+	-- always save the changed village data
+	mg_villages.save_data();
 	t1 = time_elapsed( t1, 'save village data' );
 
 end
