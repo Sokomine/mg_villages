@@ -187,17 +187,17 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	
 	if( target_height < 1 ) then
 		-- no trees or snow below water level
-	elseif( has_snow ) then
-		data[       a:index( x, target_height+1, z)] = cid.c_snow;
 	elseif( tree  and not( mg_villages.ethereal_trees ) and treepos) then
 		data[       a:index( x, target_height+1, z)] = cid.c_sapling
-		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=0});
+		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=0, snow=has_artificial_snow});
 	elseif( jtree and not( mg_villages.ethereal_trees ) and treepos) then
 		data[       a:index( x, target_height+1, z)] = cid.c_jsapling
-		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=1});
+		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=1, snow=has_artificial_snow});
 	elseif( ptree and not( mg_villages.ethereal_trees ) and treepos) then
 		data[       a:index( x, target_height+1, z)] = cid.c_psapling
-		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=2});
+		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=2, snow=has_artificial_snow});
+	elseif( has_snow ) then
+		data[       a:index( x, target_height+1, z)] = cid.c_snow;
 	end
 	data[               a:index( x, target_height,   z)] = surface_node;
 	if( target_height-1 >= minp.y ) then
@@ -264,7 +264,7 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 		elseif( tree.typ == 2 ) then
 			plant_id = cid.c_psapling;
 		end
-		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, plant_id, minp, maxp, data, a, cid, nil ) -- no pseudorandom present
+		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, plant_id, minp, maxp, data, a, cid, nil, tree.snow ) -- no pseudorandom present
 	end
 
 end
@@ -570,26 +570,26 @@ if( minetest.get_modpath( 'mg' )) then
 	mg_villages.add_pinetree    = add_pinetree;
 end
 
-mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr )
+mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr, snow )
 	-- a normal tree; sometimes comes with apples
 	if(     plant_id == cid.c_sapling and minetest.registered_nodes[ 'default:tree']) then
-		mg_villages.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000))
+		mg_villages.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000), snow)
 		return true;
 	-- a normal jungletree
 	elseif( plant_id == cid.c_jsapling and minetest.registered_nodes[ 'default:jungletree']) then
-		mg_villages.grow_jungletree( data, a, pos, math.random(1,100000))
+		mg_villages.grow_jungletree( data, a, pos, math.random(1,100000), snow)
 		return true;
 	-- a pine tree
 	elseif( plant_id == cid.c_psapling and minetest.registered_nodes[ 'default:pinetree']) then
-		mg_villages.grow_pinetree(   data, a, pos);
+		mg_villages.grow_pinetree(   data, a, pos, snow);
 		return true;
 	-- a savannatree from the mg mod
 	elseif( plant_id == cid.c_savannasapling and mg_villages.add_savannatree) then
-		mg_villages.add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+		mg_villages.add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr) -- TODO: snow
 		return true;
 	-- a pine tree from the mg mod
 	elseif( plant_id == cid.c_pinesapling    and mg_villages.add_pinetree   ) then
-		mg_villages.add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr)
+		mg_villages.add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr) -- TODO: snow
 		return true;
 	end
 	return false;
@@ -644,38 +644,56 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				--       Tree type is derived from wood type used in the village
 				local plant_id = data[a:index( x, h+1, z)];
 				local on_soil  = false;
+				local plant_selected = false;
+				local has_snow_cover = false;
 				for _,v in ipairs( village.to_add_data.plantlist ) do
+					if( plant_id == cid.c_snow or g==cid.c_dirt_with_snow) then
+						has_snow_cover = true;
+					end
 					-- select the first plant that fits; if the node is not air, keep what is currently inside
 					if( (plant_id==cid.c_air or plant_id==cid.c_snow) and (( v.p == 1 or pr:next( 1, v.p )==1 ))) then
 						-- TODO: check if the plant grows on that soil
 						plant_id = v.id;
-						-- wheat and cotton require soil
-						if( plant_id == cid.c_wheat or plant_id == cid.c_cotton ) then
-							on_soil = true;
-						end
+						plant_selected = true;
+					end
+					-- wheat and cotton require soil
+					if( plant_id == cid.c_wheat or plant_id == cid.c_cotton ) then
+						on_soil = true;
 					end
 				end
 
 				local pos = {x=x, y=h+1, z=z};
-				if( mg_villages.grow_a_tree( pos, plant_id, minp, maxp, data, a, cid, pr )) then
+				if( not( plant_selected )) then -- in case there is something there already (usually a tree trunk)
+					has_snow_cover = nil;
+
+				elseif( mg_villages.grow_a_tree( pos, plant_id, minp, maxp, data, a, cid, pr, has_snow_cover )) then
+					param2_data[a:index( x, h+1, z)] = 0; -- make sure the tree trunk is not rotated
+					has_snow_cover = nil; -- else the sapling might not grow
 					-- nothing to do; the function has grown the tree already
 	
 				-- grow wheat and cotton on normal wet soil (and re-plant if it had been removed by mudslide)
 				elseif( on_soil and (g==cid.c_dirt_with_grass or g==cid.c_soil_wet or g==cid.c_dirt_with_snow)) then	
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
-					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = cid.c_soil_wet;
-
-					-- put a snow cover on plants where needed
-					if( g==cid.c_dirt_with_snow and cid.c_msnow_1 ~= cid.c_ignore ) then
-						data[a:index( x,  h+2, z)] = cid.c_msnow_1;
+					-- no plants in winter
+					if( has_snow_cover and mg_villages.use_soil_snow) then
+						data[a:index( x,  h+1, z)] = cid.c_msnow_soil;
+						has_snow_cover = nil;
+					else
+						data[a:index( x,  h+1, z)] = plant_id;
 					end
-				
+
 				-- grow wheat and cotton on desert sand soil - or on soil previously placed (before mudslide overflew it; same as above)
 				elseif( on_soil and (g==cid.c_desert_sand or g==cid.c_soil_sand) and cid.c_soil_sand and cid.c_soil_sand > 0) then
 					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
-					data[a:index( x,  h+1, z)] = plant_id;
 					data[a:index( x,  h,   z)] = cid.c_soil_sand;
+					-- no plants in winter
+					if( has_snow_cover and mg_villages.use_soil_snow) then
+						data[a:index( x,  h+1, z)] = cid.c_msnow_soil;
+						has_snow_cover = nil;
+					else
+						data[a:index( x,  h+1, z)] = plant_id;
+					end
 
 				elseif( on_soil ) then
 					if( math.random(1,5)==1 ) then
@@ -684,6 +702,11 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 
 				elseif( plant_id ) then -- place the sapling or plant (moretrees uses spawn_tree)
 					data[a:index( pos.x,  pos.y, pos.z)] = plant_id;
+				end
+
+				-- put a snow cover on plants where needed
+				if( has_snow_cover ) then
+					data[a:index( x,  h+2, z)] = cid.c_msnow_1;
 				end
 			end
 		end
@@ -740,6 +763,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_msnow_9  = minetest.get_content_id( 'moresnow:snow_ramp_top');	
 	cid.c_msnow_10 = minetest.get_content_id( 'moresnow:snow_ramp_outer_top');
 	cid.c_msnow_11 = minetest.get_content_id( 'moresnow:snow_ramp_inner_top');
+	cid.c_msnow_soil=minetest.get_content_id( 'moresnow:snow_soil' );
 
 	cid.c_plotmarker = minetest.get_content_id( 'mg_villages:plotmarker');
 
@@ -868,7 +892,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 		-- grow trees which are part of buildings into saplings
 		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do
-			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, nil ); -- TODO: supply pseudorandom value?
+			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, nil, v.snow ); -- TODO: supply pseudorandom value?
 		end
 	end
 

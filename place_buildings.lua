@@ -359,7 +359,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 				     or new_content == cid.c_savannasapling
 				     or new_content == cid.c_pinesapling ) then
 					-- store that a tree is to be grown there
-					table.insert( extra_calls.trees, {x=ax, y=ay, z=az, typ=new_content});
+					table.insert( extra_calls.trees, {x=ax, y=ay, z=az, typ=new_content, snow=has_snow});
 
 				elseif( new_content == cid.c_chest
 				   or   new_content == cid.c_chest_locked 

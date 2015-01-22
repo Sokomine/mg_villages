@@ -6,21 +6,48 @@ local c_tree = minetest.get_content_id("default:tree")
 local c_leaves = minetest.get_content_id("default:leaves")
 local c_sapling = minetest.get_content_id("default:sapling");
 local c_junglesapling = minetest.get_content_id("default:junglesapling");
+local c_snow = minetest.get_content_id("default:snow");
+local c_msnow_top = minetest.get_content_id( 'moresnow:snow_top' );
 
-mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed)
+local c_msnow_leaves1 = minetest.get_content_id( 'default:leaves' );
+local c_msnow_leaves2 = minetest.get_content_id( 'default:leaves' );
+if( minetest.registered_nodes[ 'moresnow:autumnleaves_tree' ] ) then
+	c_msnow_leaves1 = minetest.get_content_id( 'moresnow:autumnleaves_tree' );
+end
+if( minetest.registered_nodes[ 'moresnow:winterleaves_tree' ] ) then
+	c_msnow_leaves2 = minetest.get_content_id( 'moresnow:winterleaves_tree' );
+end
+
+mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed, snow)
         --[[
                 NOTE: Tree-placing code is currently duplicated in the engine
                 and in games that have saplings; both are deprecated but not
                 replaced yet
         ]]--
+    if(  snow
+      or data[ a:index(pos.x, pos.y,   pos.z) ] == c_snow
+      or data[ a:index(pos.x, pos.y+1, pos.z) ] == c_snow ) then
+       leaves_type = c_msnow_leaves2; 
+    else
+       leaves_type = c_leaves;
+    end
+
     local hight = math.random(4, 5)
     for x_area = -2, 2 do
     for y_area = -1, 2 do
     for z_area = -2, 2 do
         if math.random(1,30) < 23 then  --randomize leaves
             local area_l = a:index(pos.x+x_area, pos.y+hight+y_area-1, pos.z+z_area)  --sets area for leaves
-            if data[area_l] == c_air or data[area_l] == c_ignore then    --sets if it's air or ignore 
-                data[area_l] = c_leaves    --add leaves now
+            if data[area_l] == c_air or data[area_l] == c_ignore or data[area_l]== c_snow then    --sets if it's air or ignore 
+		if( snow and c_msnow_leaves1 and math.random( 1,5 )==1) then
+			data[area_l] = c_msnow_leaves1;
+		else
+	                data[area_l] = leaves_type    --add leaves now
+		end
+            end
+            -- put a snow top on some leaves
+            if ( snow and math.random(1,3)==1 )then
+               mg_villages.trees_add_snow(data, a:index(pos.x+x_area, pos.y+hight+y_area, pos.z+z_area), c_air, c_ignore, c_snow)
             end
          end       
     end
@@ -28,7 +55,7 @@ mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed)
     end
     for tree_h = 0, hight-1 do  -- add the trunk
         local area_t = a:index(pos.x, pos.y+tree_h, pos.z)  --set area for tree
-        if data[area_t] == c_air or data[area_t] == c_leaves or data[area_t] == c_sapling then    --sets if air
+        if data[area_t] == c_air or data[area_t] == c_leaves or data[area_t] == c_sapling or data[area_t] == c_snow or data[area_t] == c_msnow_top or data[area_t] == c_msnow_leaves_1 or data[area_t] == c_msnow_leaves_2 then    --sets if air
             data[area_t] = c_tree    --add tree now
         end
 	end
@@ -37,12 +64,20 @@ end
 local c_jungletree = minetest.get_content_id("default:jungletree")
 local c_jungleleaves = minetest.get_content_id("default:jungleleaves")
 
-mg_villages.grow_jungletree = function(data, a, pos, seed)
+mg_villages.grow_jungletree = function(data, a, pos, seed, snow)
         --[[
                 NOTE: Tree-placing code is currently duplicated in the engine
                 and in games that have saplings; both are deprecated but not
                 replaced yet
         ]]--
+    if(  snow
+      or data[ a:index(pos.x, pos.y,   pos.z) ] == c_snow
+      or data[ a:index(pos.x, pos.y+1, pos.z) ] == c_snow ) then
+       leaves_type = c_msnow_leaves_1;
+    else
+       leaves_type = c_jungleleaves;
+    end
+
     local hight = math.random(8, 12)
     for x_area = -3, 3 do
     for y_area = -2, 2 do
@@ -50,7 +85,7 @@ mg_villages.grow_jungletree = function(data, a, pos, seed)
         if math.random(1,30) < 23 then  --randomize leaves
             local area_l = a:index(pos.x+x_area, pos.y+hight+y_area-1, pos.z+z_area)  --sets area for leaves
             if data[area_l] == c_air or data[area_l] == c_ignore then    --sets if it's air or ignore
-                data[area_l] = c_jungleleaves    --add leaves now
+                data[area_l] = leaves_type    --add leaves now
             end
          end       
     end
@@ -58,7 +93,7 @@ mg_villages.grow_jungletree = function(data, a, pos, seed)
     end
     for tree_h = 0, hight-1 do  -- add the trunk
         local area_t = a:index(pos.x, pos.y+tree_h, pos.z)  --set area for tree
-        if data[area_t] == c_air or data[area_t] == c_jungleleaves or data[area_t] == c_junglesapling then    --sets if air
+        if data[area_t] == c_air or data[area_t] == c_jungleleaves or data[area_t] == c_junglesapling or data[area_t] == c_snow or data[area_t] == c_msnow_top then    --sets if air
             data[area_t] = c_jungletree    --add tree now
         end
     end
@@ -88,7 +123,7 @@ mg_villages.trees_add_snow = function(data, vi, c_air, c_ignore, c_snow)
 	end
 end
 
-mg_villages.grow_pinetree = function(data, a, pos)
+mg_villages.grow_pinetree = function(data, a, pos, snow)
 	local x, y, z = pos.x, pos.y, pos.z
 	local maxy = y + math.random(9, 13) -- Trunk top
 
@@ -101,7 +136,7 @@ mg_villages.grow_pinetree = function(data, a, pos)
 	local c_dirtsnow = minetest.get_content_id("default:dirt_with_snow")
 
 	-- Scan for snow nodes near sapling
-	local snow = false
+--	local snow = false
 	for yy = y - 1, y + 1 do
 	for zz = z - 1, z + 1 do
 		local vi  = a:index(x - 1, yy, zz)
