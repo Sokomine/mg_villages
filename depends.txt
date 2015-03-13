@@ -18,3 +18,4 @@ metals?
 grounds?
 moreblocks?
 worldedit?
+bell?
