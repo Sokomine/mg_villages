@@ -34,11 +34,10 @@ mg_villages.villages_at_point = function(minp, noise1)
 
 	-- fallback: type "nore" (that is what the mod originally came with)
 	local village_type = 'nore';
+	village_type = mg_villages.village_types[ pr:next(1, #mg_villages.village_types )]; -- select a random type
 	-- if this is the first village for this world, take a medieval one
 	if( (not( mg_villages.all_villages ) or mg_villages.anz_villages < 1) and minetest.get_modpath("cottages") and mg_villages.FIRST_VILLAGE_TYPE) then
 		village_type = mg_villages.FIRST_VILLAGE_TYPE;
-	else
-		village_type = mg_villages.village_types[ pr:next(1, #mg_villages.village_types )]; -- select a random type
 	end
 
 	if( not( mg_villages.village_type_data[ village_type ] )) then
@@ -80,7 +79,7 @@ local function choose_building(l, pr, village_type)
 		local p = pr:next(1, 3000)
 		
 		for _, b in ipairs( mg_villages.village_type_data[ village_type ][ 'building_list'] ) do
-			if mg_villages.BUILDINGS[ b ].max_weight[ village_type ] >= p then
+			if (mg_villages.BUILDINGS[ b ].max_weight[ village_type ] and  mg_villages.BUILDINGS[ b ].max_weight[ village_type ] >= p) then
 
 --		for b, i in ipairs(mg_villages.BUILDINGS) do
 --			if i.weight[ village_type ] and i.weight[ village_type ] > 0 and i.max_weight and i.max_weight[ village_type ] and i.max_weight[ village_type ] >= p then
@@ -670,7 +669,7 @@ end
 -- creates individual buildings outside of villages;
 -- the data structure is like that of a village, except that bpos (=buildings to be placed) is already set;
 -- Note: one building per mapchunk is more than enough (else it would look too crowded);
-mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vnoise )
+mg_villages.house_in_one_mapchunk = function( minp, mapchunk_size, vnoise )
 
 	local pr = PseudoRandom(mg_villages.get_bseed(minp))
 	-- only each mg_villages.INVERSE_HOUSE_DENSITY th mapchunk gets a building
@@ -689,7 +688,7 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 	local btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'single');
 	if( not( bsizex )) then
 		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, 'FAILURE to generate a building.');
-		btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'lumberjack');
+		btype, rotation, bsizex, bsizez, mirror = choose_building_rot({}, pr, orient1, 'nore');
 	end
 	-- if no building was found, give up
 	if( not( bsizex ) or not(mg_villages.BUILDINGS[ btype ].weight)) then
@@ -756,31 +755,9 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 
 	-- these values have to be determined once per village; afterwards, they need to be fixed
 	-- if a village has been generated already, it will continue to exist
-	if( mg_villages.all_villages[ village_id ] ) then
-		return village;
-	end
-
-	-- now check if this village can be placed here or if it intersects with another village in any critical manner;
-	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
-	for _,v in ipairs(villages) do
-		-- make sure that houses do not spawn inside other villages
-		local min_dist_factor = 10;
-		if( v.is_single_house ) then
-			min_dist_factor = v.vs * 2;
-		else
-			min_dist_factor = v.vs * 3;
-		end
-		-- abort if the new building can't be placed here
-		if(   math.abs( blencenx - v.vx ) < min_dist_factor
-		   or math.abs( blencenz - v.vz ) < min_dist_factor
-		   or mg_villages.inside_village_area(blencenx,  blencenz,  v, vnoise) 
-		   or mg_villages.inside_village_area(bx,        bz,        v, vnoise) 
-		   or mg_villages.inside_village_area(bx+bsizex, bz,        v, vnoise)
-		   or mg_villages.inside_village_area(bx,        bz+bsizez, v, vnoise)
-		   or mg_villages.inside_village_area(bx+bsizex, bz+bsizez, v, vnoise)) then
-			return {};
-		end
-	end
+--	if( mg_villages.all_villages[ village_id ] ) then
+--		return village;
+--	end
 
 	if( mg_villages.all_villages  and mg_villages.all_villages[ village_id ] and mg_villages.all_villages[ village_id ].optimal_height) then
 		village.optimal_height  = mg_villages.all_villages[ village_id ].optimal_height;
@@ -790,11 +767,60 @@ mg_villages.houses_in_one_mapchunk = function( minp, mapchunk_size, villages, vn
 
 	village.to_add_data = {};
 	village.to_add_data.bpos = { {x=bx, y=village.vh, z=bz,  btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 0, side=1, o=orient1, mirror=mirror }}
-	-- there may be quite a lot of single houses added; plus they are less intresting than entire villages. Thus, logfile spam is reduced
-	mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'adding SINGLE HOUSE of type '..tostring( village.village_type )..
-			' to map at '..tostring( village.vx )..':'..tostring( village.vz )..'.');
-
 	return village;
+end
+
+
+mg_villages.house_in_mapchunk_mark_intersection = function( villages, c, vnoise ) -- c: candidate for a new one-house-village
+	-- now check if this village can be placed here or if it intersects with another village in any critical manner;
+	-- the village area may intersect (=unproblematic; may even look nice), but the actual building must not be inside another village
+
+	-- exclude misconfigured villages
+	if( not( c ) or not( c.to_add_data )) then
+		--print('WRONG DATA: '..minetest.serialize( c ));
+		c.areas_intersect = 1;
+		return;
+	end
+
+	local bx     = c.to_add_data.bpos[1].x;
+	local bz     = c.to_add_data.bpos[1].z;
+	local bsizex = c.to_add_data.bpos[1].bsizex;
+	local bsizez = c.to_add_data.bpos[1].bsizez;
+
+	-- make sure that the house does not intersect with the area of a village
+	for _,v in ipairs( villages ) do
+		local id = v.vx..':'..v.vz;
+		if( id and mg_villages.all_villages and mg_villages.all_villages[ id ] ) then
+			v = mg_villages.all_villages[ id ];
+		end
+
+		if( v.vx ~= c.vx and v.vz ~= c.vz ) then
+			local dist = math.sqrt(  ( c.vx - v.vx ) * ( c.vx - v.vx )
+			                       + ( c.vz - v.vz ) * ( c.vz - v.vz ));
+			if( dist < ( c.vs + v.vs )*1.1 ) then
+				mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'DROPPING house at '..c.vx..':'..c.vz..' because it is too close to '..v.vx..':'..c.vx);
+				c.areas_intersect = 1;
+				-- the other village can't be spawned either as we don't know which one will be loaded first
+				if( v.is_single_house ) then
+					v.areas_intersect = 1;
+				end
+			end
+	
+			if(  mg_villages.inside_village_area( c.vx,       c.vz,        v, vnoise)
+			  or mg_villages.inside_village_area( bx,         bz,          v, vnoise)
+			  or mg_villages.inside_village_area((bx+bsizex), bz,          v, vnoise)
+			  or mg_villages.inside_village_area((bx+bsizex), (bz+bsizez), v, vnoise)
+			  or mg_villages.inside_village_area( bx,         (bz+bsizez), v, vnoise)) then
+	
+				mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'DROPPING house at '..c.vx..':'..c.vz..' due to intersection with village at '..id);
+				c.areas_intersect = 1;
+				-- the other village can't be spawned either as we don't know which one will be loaded first
+				if( v.is_single_house ) then
+					v.areas_intersect = 1;
+				end
+			end
+		end
+	end
 end
 
 
@@ -802,18 +828,42 @@ end
 -- they may be so close to the border that they will affect this mapchunk
 mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 	local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
-	local vcr = 1; --mg_villages.VILLAGE_CHECK_RADIUS
+
+	local village_candidates = {};
+	local vcr = 2; --mg_villages.VILLAGE_CHECK_RADIUS
         for xi = -vcr, vcr do
         for zi = -vcr, vcr do
-			local new_village = mg_villages.houses_in_one_mapchunk(
+			local new_village = mg_villages.house_in_one_mapchunk(
 					{x=minp.x+(xi*mapchunk_size), y=minp.y, z=minp.z+(zi*mapchunk_size)},
 					mapchunk_size,
-					villages,
 					village_noise );
 			if( new_village and new_village.vs and new_village.vx and new_village.vz ) then
-				table.insert( villages, new_village );
+				table.insert( village_candidates, new_village );
 			end
+		end
+	end
+
+	for _,candidate in ipairs(village_candidates) do
+		-- mark all one-house-village-candidates that intersect with villages in this mapchunk
+		mg_villages.house_in_mapchunk_mark_intersection( villages,           candidate, village_noise );
+		-- mark all one-house-village-candidates that intersect with other candidates in this mapchunk
+		mg_villages.house_in_mapchunk_mark_intersection( village_candidates, candidate, village_noise );
+	end
+
+	-- now add those villages that do not intersect with others and which *may* at least be part of this mapchunk
+	local d = math.ceil( mapchunk_size / 2 );
+	for _,candidate in ipairs(village_candidates) do
+		if( not( candidate.areas_intersect )
+		    and (candidate.vx > minp.x - d or candidate.vx < (mapchunk_size+d) )
+		    and (candidate.vz > minp.z - d or candidate.vz < (mapchunk_size+d) )) then
+			table.insert( villages, candidate );
+
+			-- there may be quite a lot of single houses added; plus they are less intresting than entire villages. Thus, logfile spam is reduced
+			mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'adding SINGLE HOUSE of type '..tostring( candidate.village_type )..
+				' to map at '..tostring( candidate.vx )..':'..tostring( candidate.vz )..'.');
 		end
 	end
 	return villages;
 end
+
+
