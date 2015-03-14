@@ -1,4 +1,6 @@
-
+-----------------------------------------------------------------------------
+-- configuration values which you can adjust according to your liking
+-----------------------------------------------------------------------------
 -- set to false if you do not want to have any villages spawning
 mg_villages.ENABLE_VILLAGES = true;
 
@@ -15,10 +17,6 @@ mg_villages.use_soil_snow = false;
 -- only place roads if there are at least that many buildings in the village
 mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT = 4;
 
--- if set to false, villages will not be integrated into the terrain - which looks very bad
-mg_villages.ENABLE_TERRAIN_BLEND = true;
--- if set to false, holes digged by cavegen and mudflow inside the village will not be repaired; houses will be destroyed
-mg_villages.UNDO_CAVEGEN_AND_MUDFLOW = true;
 
 -- players without the mg_villages priv can only see villages which are less than that many blocks away
 -- from them when using the /vmap command
@@ -47,29 +45,16 @@ else
 	mg_villages.MAP_BACKGROUND_IMAGE = "";
 end
 
+-- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
+-- currently not really used; does not look as good as expected
+mg_villages.medieval_subtype = false;
 
-mg_villages.VILLAGE_CHECK_RADIUS = 2
-mg_villages.VILLAGE_CHECK_COUNT = 1
---mg_villages.VILLAGE_CHANCE = 28
---mg_villages.VILLAGE_MIN_SIZE = 20
---mg_villages.VILLAGE_MAX_SIZE = 40
-mg_villages.VILLAGE_CHANCE = 28
--- min and max size are only used in case of them beeing not provided by the village type (see buildings.lua)
-mg_villages.VILLAGE_MIN_SIZE = 25
-mg_villages.VILLAGE_MAX_SIZE = 90 --55
-mg_villages.FIRST_ROADSIZE = 3
-mg_villages.BIG_ROAD_CHANCE = 0
 
--- Enable that for really big villages (there are also really slow to generate)
---[[mg_villages.VILLAGE_CHECK_RADIUS = 3
-mg_villages.VILLAGE_CHECK_COUNT = 3
-mg_villages.VILLAGE_CHANCE = 28
-mg_villages.VILLAGE_MIN_SIZE = 100
-mg_villages.VILLAGE_MAX_SIZE = 150
-mg_villages.FIRST_ROADSIZE = 5
-mg_villages.BIG_ROAD_CHANCE = 50]]
-
--- on average, every n.th node may be one of these trees - and it will be a relatively dense packed forrest
+-----------------------------------------------------------------------------
+-- decrese these values slightly if you want MORE trees around your villages;
+-- increase it if you want to DECREASE the amount of trees around villages
+-----------------------------------------------------------------------------
+-- on average, every n.th node inside a village area may be one of these trees - and it will be a relatively dense packed forrest
 mg_villages.sapling_probability = {};
 
 mg_villages.sapling_probability[ minetest.get_content_id( 'default:sapling' )       ] = 25; -- suitable for a relatively dense forrest of normal trees
@@ -97,6 +82,9 @@ if( minetest.get_modpath( 'moretrees' )) then
 end
 
 
+-----------------------------------------------------------------------------
+-- no need to change this, unless you add new farming_plus fruits
+-----------------------------------------------------------------------------
 -- the schematics for buildings of type 'farm_tiny' grow cotton; the farming_plus fruits would be far more fitting
 mg_villages.fruit_list = {'carrot','potatoe','orange','rhubarb','strawberry','tomato','cotton'};
 -- is farming_plus available? If not, we can't use this
@@ -104,10 +92,11 @@ if( not( minetest.get_modpath("farming_plus"))) then
 	mg_villages.fruit_list = nil;
 end
 
--- if set to true, the outer buildings in medieval villages will be fields; this is not very convincing yet
--- currently not really used; does not look as good as expected
-mg_villages.medieval_subtype = false;
 
+-----------------------------------------------------------------------------
+-- players can buy plots in villages with houses on for this  price;
+-- set according to your liking
+-----------------------------------------------------------------------------
 -- how much does the player have to pay for a plot with a building?
 mg_villages.prices = {
 	empty          = "default:copper_ingot 1", -- plot to build on 
@@ -152,3 +141,36 @@ mg_villages.prices = {
 	-- chateaus are expensive
 	chateau        = "default:diamondblock 5",
 }
+
+
+-----------------------------------------------------------------------------
+-- The values below seldom need adjustment; don't change them unless you
+-- know exactly what you are doing.
+-----------------------------------------------------------------------------
+-- if set to false, villages will not be integrated into the terrain - which looks very bad
+mg_villages.ENABLE_TERRAIN_BLEND = true;
+-- if set to false, holes digged by cavegen and mudflow inside the village will not be repaired; houses will be destroyed
+mg_villages.UNDO_CAVEGEN_AND_MUDFLOW = true;
+
+-- internal variables for village generation
+
+mg_villages.VILLAGE_CHECK_RADIUS = 2
+mg_villages.VILLAGE_CHECK_COUNT = 1
+--mg_villages.VILLAGE_CHANCE = 28
+--mg_villages.VILLAGE_MIN_SIZE = 20
+--mg_villages.VILLAGE_MAX_SIZE = 40
+mg_villages.VILLAGE_CHANCE = 28
+-- min and max size are only used in case of them beeing not provided by the village type (see buildings.lua)
+mg_villages.VILLAGE_MIN_SIZE = 25
+mg_villages.VILLAGE_MAX_SIZE = 90 --55
+mg_villages.FIRST_ROADSIZE = 3
+mg_villages.BIG_ROAD_CHANCE = 0
+
+-- Enable that for really big villages (there are also really slow to generate)
+--[[mg_villages.VILLAGE_CHECK_RADIUS = 3
+mg_villages.VILLAGE_CHECK_COUNT = 3
+mg_villages.VILLAGE_CHANCE = 28
+mg_villages.VILLAGE_MIN_SIZE = 100
+mg_villages.VILLAGE_MAX_SIZE = 150
+mg_villages.FIRST_ROADSIZE = 5
+mg_villages.BIG_ROAD_CHANCE = 50]]
