@@ -807,11 +807,11 @@ mg_villages.house_in_mapchunk_mark_intersection = function( villages, c, vnoise 
 			end
 	
 			if( not( v.is_single_house ) and
-			   ( mg_villages.inside_village_area( c.vx,       c.vz,        v, vnoise)
-			  or mg_villages.inside_village_area( bx,         bz,          v, vnoise)
-			  or mg_villages.inside_village_area((bx+bsizex), bz,          v, vnoise)
-			  or mg_villages.inside_village_area((bx+bsizex), (bz+bsizez), v, vnoise)
-			  or mg_villages.inside_village_area( bx,         (bz+bsizez), v, vnoise))) then
+			   ( mg_villages.inside_village_terrain_blend_area( c.vx,       c.vz,        v, vnoise)
+			  or mg_villages.inside_village_terrain_blend_area( bx,         bz,          v, vnoise)
+			  or mg_villages.inside_village_terrain_blend_area((bx+bsizex), bz,          v, vnoise)
+			  or mg_villages.inside_village_terrain_blend_area((bx+bsizex), (bz+bsizez), v, vnoise)
+			  or mg_villages.inside_village_terrain_blend_area( bx,         (bz+bsizez), v, vnoise))) then
 	
 				mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'DROPPING house at '..c.vx..':'..c.vz..' due to intersection with village at '..id);
 				c.areas_intersect = 1;
