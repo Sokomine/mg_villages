@@ -15,6 +15,8 @@ function mg_villages.get_bseed2(minp)
 end
 
 
+-- if you change any of the 3 constants below, also change them in the function
+--   mg_villages.village_area_mark_inside_village_area
 mg_villages.inside_village = function(x, z, village, vnoise)
         return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 40
 end
@@ -22,6 +24,11 @@ end
 mg_villages.inside_village_area = function(x, z, village, vnoise)
         return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 80
 end
+
+mg_villages.inside_village_terrain_blend_area = function(x, z, village, vnoise)
+        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 160
+end
+
 
 mg_villages.get_vnoise = function(x, z, village, vnoise) -- PM v
         return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village)
@@ -394,15 +401,15 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 						-- do nothing here; the village area will be specificly marked later on
 
 					-- the village core; this is where the houses stand (but there's no house or road at this particular spot)
-					elseif( vn <= 40 ) then
+					elseif( vn <= 40 ) then -- see mg_villages.inside_village
 						village_area[ x ][ z ] = { village_nr, 6};
 
 					-- the flattened land around the village where wheat, cotton, trees or grass may be grown (depending on village type)
-					elseif( vn <= 80 ) then
+					elseif( vn <= 80 ) then -- see mg_villages.inside_village_area
 						village_area[ x ][ z ] = { village_nr, 1};
 
 					-- terrain blending for the flattened land
-					elseif( vn <= 160 and mg_villages.ENABLE_TERRAIN_BLEND) then
+					elseif( vn <= 160 and mg_villages.ENABLE_TERRAIN_BLEND) then -- see mg_villages.inside_village_terrain_blend_area
 						if n_rawnoise > -0.5 then -- leave some cliffs unblended
 							local blend = (( vn - 80) / 80) ^ 2 -- 0 at village edge, 1 at normal terrain
 							-- assign a negative value to terrain that needs to be adjusted in height
