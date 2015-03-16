@@ -154,10 +154,12 @@ mg_villages.map_of_world = function( pname )
 	local i = 0.05;
 	formspec = formspec.."label[10,-0.4;Village types:]";
 	-- explain the meaning of the textures
-	for _,typ in ipairs(mg_villages.village_types) do 
-		formspec = formspec.."label[10.5,"..tostring(i)..";"..tostring( typ ).."]"..
-			             "image[10.0,"..tostring(i+0.1)..";0.4,0.4;"..tostring( mg_villages.village_type_data[ typ ].texture ).."]";
-		i = i+0.45;
+	if mg_villages.village_types ~= nil then
+		for _,typ in ipairs(mg_villages.village_types) do 
+			formspec = formspec.."label[10.5,"..tostring(i)..";"..tostring( typ ).."]"..
+				             "image[10.0,"..tostring(i+0.1)..";0.4,0.4;"..tostring( mg_villages.village_type_data[ typ ].texture ).."]";
+			i = i+0.45;
+		end
 	end
 
 	i = i+0.45;
