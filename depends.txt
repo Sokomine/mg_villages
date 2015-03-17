@@ -17,5 +17,4 @@ deco?
 metals?
 grounds?
 moreblocks?
-worldedit?
 bell?

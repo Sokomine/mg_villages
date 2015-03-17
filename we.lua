@@ -26,20 +26,7 @@ mg_villages.import_scm = function(scm, we_origin)
 	local value = f:read("*a")
 	f:close()
 
-	local version = worldedit.read_header(value)
-	-- some very old worldedit schematics may have an internal offset and not start at 0,0,0
-	if( version==3 or version=="3") then
-		originx = 0;
-		originy = 0;
-		originz = 0;
-		if( we_origin and #we_origin == 3 ) then
-			originx = we_origin[1];
-			originy = we_origin[2];
-			originz = we_origin[3];
-		end
-	end
-		
-	local nodes = worldedit.load_schematic(value)
+	local nodes = worldedit_file.load_schematic(value, we_origin)
 
 	scm = {}
 	local maxx, maxy, maxz = -1, -1, -1
