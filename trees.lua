@@ -55,7 +55,7 @@ mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed, snow)
     end
     for tree_h = 0, hight-1 do  -- add the trunk
         local area_t = a:index(pos.x, pos.y+tree_h, pos.z)  --set area for tree
-        if data[area_t] == c_air or data[area_t] == c_leaves or data[area_t] == c_sapling or data[area_t] == c_snow or data[area_t] == c_msnow_top or data[area_t] == c_msnow_leaves_1 or data[area_t] == c_msnow_leaves_2 then    --sets if air
+        if data[area_t] == c_air or data[area_t] == c_leaves or data[area_t] == c_sapling or data[area_t] == c_snow or data[area_t] == c_msnow_top or data[area_t] == c_msnow_leaves1 or data[area_t] == c_msnow_leaves_2 then    --sets if air
             data[area_t] = c_tree    --add tree now
         end
 	end
@@ -73,7 +73,7 @@ mg_villages.grow_jungletree = function(data, a, pos, seed, snow)
     if(  snow
       or data[ a:index(pos.x, pos.y,   pos.z) ] == c_snow
       or data[ a:index(pos.x, pos.y+1, pos.z) ] == c_snow ) then
-       leaves_type = c_msnow_leaves_1;
+       leaves_type = c_msnow_leaves1;
     else
        leaves_type = c_jungleleaves;
     end
