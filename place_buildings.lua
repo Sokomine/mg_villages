@@ -345,6 +345,9 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					if( t and t==c_dirt or t==c_dirt_with_grass ) then
 						new_content = ground_type;
 					end
+					if( data[a:index(ax,ay,az)]==c_snow ) then
+						has_snow = true;
+					end
 					data[a:index(ax, ay, az)] = new_content;
 					-- param2 is not set here
 				end
@@ -402,7 +405,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 			y_bottom = minp.y;
 		end
 		if( has_snow and ax >= minp.x and ax <= maxp.x and az >= minp.z and az <= maxp.z ) then
-			local res = mg_villages.mg_drop_moresnow( ax, az, y_top, y_bottom, a, data, param2_data);
+			local res = mg_villages.mg_drop_moresnow( ax, az, y_top, y_bottom-1, a, data, param2_data);
 			if( res and data[ a:index(ax, res.height, az)]==cid.c_air) then
 				data[       a:index(ax, res.height, az)] = res.suggested.new_id;
 				param2_data[a:index(ax, res.height, az)] = res.suggested.param2;
