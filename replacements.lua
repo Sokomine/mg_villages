@@ -459,6 +459,10 @@ mg_villages.replacements_lumberjack = function( housetype, pr, replacements )
       if( not( minetest.get_modpath('bell' ))) then
          table.insert( replacements, {'bell:bell',               'default:goldblock' });
       end
+      if( mg_villages.realtest_trees ) then
+         table.insert( replacements, {'stairs:stair_cobble', 'default:stone_bricks_stair' }); 
+         table.insert( replacements, {'stairs:slab_cobble',  'default:stone_bricks_slab' }); 
+      end
       return replacements;
 end
 
