@@ -105,6 +105,120 @@ local function generate_building_plotmarker( pos, minp, maxp, data, param2_data,
 end
 
 
+
+-- we do have a list of all nodenames the building contains (the .mts file provided it);
+-- we can thus apply all replacements to these nodenames;
+-- this also checks param2 and sets some other variables to indicate that it's i.e. a tree or a chest
+-- (which both need special handling later on)
+local function generate_building_translate_nodenames( nodenames, replacements, cid, binfo_scm, mirror_x, mirror_z )
+	
+	if( not( nodenames )) then
+		return;
+	end
+	local i;
+	local v;
+	local new_nodes   = {};
+	for i,node_name in ipairs( nodenames ) do
+
+		new_nodes[ i ] = {}; -- array for collecting information about the new content id for nodes with number "i" in their .mts savefile
+
+		-- some nodes may be called differently when mirrored; needed for doors
+		local new_node_name = node_name;
+		if( new_node_name and ( mirror_x or mirror_z ) and mg_villages.mirrored_node[ new_node_name ] ) then
+			new_node_name = mg_villages.mirrored_node[ node_name ];
+			new_nodes[ i ].is_mirrored = 1; -- currently unused
+		end
+
+		-- apply the replacements
+		if( new_node_name and replacements.table[ new_node_name ] ) then
+			new_node_name = replacements.table[ new_node_name ];
+			new_nodes[ i ].is_replaced = 1; -- currently unused
+		end
+
+		-- only existing nodes can be placed
+		if( new_node_name and minetest.registered_nodes[ new_node_name ]) then
+							
+			local regnode = minetest.registered_nodes[ new_node_name ];
+
+			new_nodes[ i ].new_node_name = new_node_name;
+			new_nodes[ i ].new_content   = minetest.get_content_id( new_node_name );
+			if( regnode.on_construct ) then
+				new_nodes[ i ].on_construct = 1;
+			end
+
+			local new_content = new_nodes[ i ].new_content;
+			if( new_content == cid.c_dirt or new_content == cid.c_dirt_with_grass ) then
+				new_nodes[ i ].is_grass     = 1;
+		
+			elseif( new_content == cid.c_sapling
+			     or new_content == cid.c_jsapling
+			     or new_content == cid.c_psapling
+			     or new_content == cid.c_savannasapling
+			     or new_content == cid.c_pinesapling ) then
+				-- store that a tree is to be grown there
+				new_nodes[ i ].is_tree      = 1;
+
+			elseif( new_content == cid.c_chest
+			   or   new_content == cid.c_chest_locked 
+			   or   new_content == cid.c_chest_shelf
+			   or   new_content == cid.c_chest_ash
+			   or   new_content == cid.c_chest_aspen
+			   or   new_content == cid.c_chest_birch
+			   or   new_content == cid.c_chest_maple
+			   or   new_content == cid.c_chest_chestnut
+			   or   new_content == cid.c_chest_pine
+			   or   new_content == cid.c_chest_spruce) then
+				-- we're dealing with a chest that might need filling
+				new_nodes[ i ].is_chestlike = 1;
+
+			elseif( new_content == cid.c_chest_private
+			   or   new_content == cid.c_chest_work
+			   or   new_content == cid.c_chest_storage ) then
+				-- we're dealing with a chest that might need filling
+				new_nodes[ i ].is_chestlike = 1;
+				-- TODO: perhaps use a locked chest owned by the mob living there?
+				-- place a normal chest here
+				new_nodes[ i ].new_content  = cid.c_chest;
+
+			elseif( new_content == cid.c_sign ) then
+				-- the sign may require some text to be written on it
+				new_nodes[ i ].is_sign      = 1;
+			end
+
+
+			-- mg_villages.get_param2_rotated( 'facedir', param2 ) needs to be called for nodes
+			-- which use either facedir or wallmounted;
+			-- realtest rotates some nodes diffrently and does not come with default:ladder
+			if(    node_name == 'default:ladder' and not( minetest.registered_nodes[ node_name ])) then
+				new_nodes[ i ].change_param2 = {}; --{ 2->1, 5->2, 3->3, 4->0 }	
+				new_nodes[ i ].change_param2[2] = 1;
+				new_nodes[ i ].change_param2[5] = 2;
+				new_nodes[ i ].change_param2[3] = 3;
+				new_nodes[ i ].change_param2[4] = 0;
+				new_nodes[ i ].paramtype2 = 'facedir';
+			-- ..except if they are stairs or ladders
+			elseif( node_name == 'default:ladder' or string.sub( node_name, 1, 7 ) == 'stairs:' or string.sub( node_name, 1, 6 ) == 'doors:') then
+				new_nodes[ i ].paramtype2 = 'facedir';
+			-- normal nodes
+			elseif( regnode and regnode.paramtype2 and (regnode.paramtype2=='facedir' or regnode.paramtype2=='wallmounted')) then
+				new_nodes[ i ].paramtype2 = regnode.paramtype2;
+			end
+		
+		-- we tried our best, but the replacement node is not defined	
+		elseif( new_node_name ~= 'mg:ignore' ) then
+			mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'ERROR: Did not find a suitable replacement for '..tostring( node_name )..' (suggested but inexistant: '..tostring( new_node_name )..'). Building: '..tostring( binfo_scm )..'.');
+			new_nodes[ i ].ignore = 1; -- keep the old content
+		else -- handle mg:ignore
+			new_nodes[ i ].ignore = 1;
+		end
+
+		
+	end
+	return new_nodes;
+end
+
+
+
 local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id)
 
 	local binfo = mg_villages.BUILDINGS[pos.btype]
@@ -180,6 +294,9 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		end
 	end
 
+	-- translate all nodenames and apply the replacements
+	local new_nodes = generate_building_translate_nodenames( binfo.nodenames, replacements, cid, binfo.scm, mirror_x, mirror_z );
+
 	for x = 0, pos.bsizex-1 do
 	scm_x = scm_x + step_x;
 	scm_z = scm_z_start;
@@ -249,6 +366,89 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					ground_type = node_content;
 				end
 	
+				if( t and type(t)=='table' and #t==2 and t[1] and t[2]) then
+					local n = new_nodes[ t[1] ]; -- t[1]: id of the old node
+					if( not( n.ignore )) then
+						new_content = n.new_content;
+					end
+
+					-- replace all dirt and dirt with grass at that x,z coordinate with the stored ground grass node;
+					if( n.is_grass ) then
+						new_content = ground_type;
+					end
+
+					if( n.on_construct ) then
+						if( not( extra_calls.on_constr[ new_content ] )) then
+							extra_calls.on_constr[ new_content ] = { {x=ax, y=ay, z=az}};
+						else
+							table.insert( extra_calls.on_constr[ new_content ], {x=ax, y=ay, z=az});
+						end
+					end
+
+					-- do not overwrite plotmarkers
+					if( new_content ~= cid.c_air or data[ a:index(ax,ay,az)] ~= cid.c_plotmarker ) then
+						data[       a:index(ax, ay, az)] = new_content;
+					end
+
+					-- store that a tree is to be grown there
+					if(     n.is_tree ) then
+						table.insert( extra_calls.trees,  {x=ax, y=ay, z=az, typ=new_content, snow=has_snow});
+
+					-- we're dealing with a chest that might need filling
+					elseif( n.is_chestlike ) then
+						table.insert( extra_calls.chests, {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
+
+					-- the sign may require some text to be written on it
+					elseif( n.is_sign ) then
+						table.insert( extra_calls.signs,  {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
+					end
+
+					-- handle rotation
+					if(     n.paramtype2 ) then
+						local param2list = mg_villages.get_param2_rotated( n.paramtype2, t[2] ); -- t[2] contains param2
+						local np2 = param2list[ pos.brotate + 1];
+						-- mirror
+						if(     mirror_x ) then
+							if(     #param2list==5) then
+								np2 = mg_villages.mirror_facedir[ ((pos.brotate+1)%2)+1 ][ np2+1 ];
+							elseif( #param2list<5 
+							       and  ((pos.brotate%2==1 and (np2==4 or np2==5)) 
+						 	          or (pos.brotate%2==0 and (np2==2 or np2==3)))) then 
+								np2 = param2list[ (pos.brotate + 2)%4 +1];
+							end
+
+						elseif( mirror_z ) then
+							if(     #param2list==5) then
+								np2 = mg_villages.mirror_facedir[ (pos.brotate     %2)+1 ][ np2+1 ];
+							elseif( #param2list<5 
+							       and  ((pos.brotate%2==0 and (np2==4 or np2==5)) 
+						 	          or (pos.brotate%2==1 and (np2==2 or np2==3)))) then 
+								np2 = param2list[ (pos.brotate + 2)%4 +1];
+							end
+						end
+						param2_data[a:index(ax, ay, az)] = np2;
+					else
+						param2_data[a:index(ax, ay, az)] = t[2];
+					end
+
+				-- air and gravel (the road is structured like this)
+				elseif (type(t) ~= 'table' and t ~= c_ignore) then
+	
+					new_content = t;
+					if( t and replacements.ids[ t ] ) then
+						new_content = replacements.ids[ t ];
+					end
+					if( t and t==c_dirt or t==c_dirt_with_grass ) then
+						new_content = ground_type;
+					end
+					if( data[a:index(ax,ay,az)]==c_snow ) then
+						has_snow = true;
+					end
+					data[a:index(ax, ay, az)] = new_content;
+					-- param2 is not set here
+				end
+
+				--[[
 				if (type(t) == "table" and t.node) then
 					new_content = t.node.content;
 					local new_node_name    = t.node.name;
@@ -264,10 +464,10 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					-- replace unkown nodes by name
 					if( not( new_content) or new_content == c_ignore 
 					    and new_node_name and new_node_name ~= 'mg:ignore') then
-						if( replacements.table[ new_node_name ] and minetest.registered_nodes[ replacements.table[ new_node_name ]]) then
+						if( replacements.table[ new_node_name ] and minetest.registered_nodes[ replacements.table[ new_node_name ] ]) then
 							
 							new_content = minetest.get_content_id(  replacements.table[ new_node_name ] );
-							if( minetest.registered_nodes[ replacements.table[ new_node_name ]].on_construct ) then
+							if( minetest.registered_nodes[ replacements.table[ new_node_name ] ].on_construct ) then
 								if( not( extra_calls.on_constr[ new_content ] )) then
 									extra_calls.on_constr[ new_content ] = { {x=ax, y=ay, z=az}};
 								else
@@ -391,6 +591,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					-- the sign may require some text to be written on it
 					table.insert( extra_calls.signs,  {x=ax, y=ay, z=az, typ=new_content, bpos_i=building_nr_in_bpos});
 				end
+				--]]
 			end
 		end
 

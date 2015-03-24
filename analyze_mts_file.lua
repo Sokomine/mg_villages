@@ -125,7 +125,7 @@ handle_schematics.analyze_mts_file = function( path )
 		local p2 = string.byte( data_string, p2offset + math.floor(i/2));
 		id = id+1;
 
-		scm[y][x][z] = mg_villages.decode_one_node( nodenames[ id ], p2, nil );
+		scm[y][x][z] = {id, p2}; -- TODO: handle possible meta values contained in another file
 	end
 	end
 	end

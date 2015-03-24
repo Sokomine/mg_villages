@@ -28,6 +28,16 @@ mg_villages.import_scm = function(scm, we_origin)
 
 	local nodes = worldedit_file.load_schematic(value, we_origin)
 
+	-- create a list of nodenames
+	local nodenames    = {};
+	local nodenames_id = {};
+	for i,ent in ipairs( nodes ) do
+		if( ent and ent.name and not( nodenames_id[ ent.name ])) then
+			nodenames_id[ ent.name ] = #nodenames + 1;
+			nodenames[ nodenames_id[ ent.name ] ] = ent.name;
+		end
+	end
+
 	scm = {}
 	local maxx, maxy, maxz = -1, -1, -1
 	for i = 1, #nodes do
@@ -57,7 +67,7 @@ mg_villages.import_scm = function(scm, we_origin)
 			ent.meta = {fields={}, inventory={}}
 		end
 
-		scm[ent.y][ent.x][ent.z] = mg_villages.decode_one_node( ent.name, ent.param2, ent.meta );
+		scm[ent.y][ent.x][ent.z] = { nodenames_id[ ent.name ], ent.param2 }; --TODO ent.meta
 
 	end
 	local c_air = minetest.get_content_id("air")
@@ -76,5 +86,11 @@ mg_villages.import_scm = function(scm, we_origin)
 			end
 		end
 	end
-	return scm
+
+	local size = {};
+	size.y = #scm;
+	size.x = #scm[1];
+	size.z = #scm[1][1];
+
+	return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = {}, after_place_node = {}, rotated=0, burried=0, scm_data_cache = scm };
 end
