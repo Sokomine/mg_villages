@@ -1,12 +1,4 @@
-local function numk(tbl)
-	local i = 0
-	for a, b in pairs(tbl) do
-		i = i + 1
-	end
-	return i
-end
-
-mg_villages.import_scm = function(scm, we_origin)
+mg_villages.analyze_we_file = function(scm, we_origin)
 	local c_ignore = minetest.get_content_id("ignore")
 
 	-- this table will contain the nodes read
@@ -19,7 +11,7 @@ mg_villages.import_scm = function(scm, we_origin)
 		f, err = io.open( scm..".wem", "r")
 		if not f then
 			error("Could not open schematic '" .. scm .. ".we': " .. err)
-			return {};
+			return nil;
 		end
 	end
 

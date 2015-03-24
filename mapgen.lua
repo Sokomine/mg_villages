@@ -950,7 +950,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		-- now add those buildings which are .mts files and need to be placed by minetest.place_schematic(...)
 		-- place_schematics is no longer needed	
 		--mg_villages.place_schematics( village.to_add_data.bpos, village.to_add_data.replacements, a, pr );
-		t1 = time_elapsed( t1, 'place_schematics' );
+		--t1 = time_elapsed( t1, 'place_schematics' );
 
 		if( not( mg_villages.all_villages )) then
 			mg_villages.all_villages = {};

@@ -29,7 +29,7 @@ mg_villages.mg_generated_map = save_restore.restore_data( 'mg_generated_map.data
 dofile(mg_villages.modpath.."/config.lua")
 
 dofile(mg_villages.modpath.."/worldedit_file.lua") -- deserialize worldedit savefiles
-dofile(mg_villages.modpath.."/we.lua")
+dofile(mg_villages.modpath.."/analyze_we_file.lua")
 dofile(mg_villages.modpath.."/rotate.lua")
 
 -- read size from schematics files directly

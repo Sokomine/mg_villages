@@ -88,7 +88,8 @@ handle_schematics.analyze_mts_file = function( path )
 	-- decompression was recently added; if it is not yet present, we need to use normal place_schematic
 	if( minetest.decompress == nil) then
 		file.close(file);
-		return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = nil };
+		return nil; -- normal place_schematic is no longer supported as minetest.decompress is now part of the release version of minetest
+--		return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = nil };
 	end
 
 	local compressed_data = file:read( "*all" );
@@ -131,90 +132,4 @@ handle_schematics.analyze_mts_file = function( path )
 	end
 
 	return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = scm };
-end
-
-
-
-mg_villages.decode_one_node = function( node_name, param2, node_meta )
-	if( not( node_name ) or node_name == 'mg:ignore') then
-		return minetest.get_content_id( 'ignore' );
-	end
-
-	local regnode = minetest.registered_nodes[ node_name ];
-	local paramtype2 = nil;
-	-- unkown nodes have to be treated specially; they are not allowed to be of type wallmounted or facedir or to need on_construct
-	if( not( regnode )) then
-		-- realtest rotates some nodes diffrently
-		if( node_name == 'default:ladder' ) then
-			paramtype2 = 'facedir';
-			if(     param2 == 2 ) then
-				param2 =  1;
-			elseif( param2 == 5 ) then
-				param2 =  2;
-			elseif( param2 == 3 ) then
-				param2 =  3;
-			elseif( param2 == 4 ) then
-				param2 =  0;
-			else
-				-- do not rotate the ladder at all
-				paramtype2 = nil;
-			end
-		end
-
-		-- ..except if they are stairs or ladders
-		if( node_name == 'default:ladder' or string.sub( node_name, 1, 7 ) == 'stairs:' or string.sub( node_name, 1, 6 ) == 'doors:') then
-			return { node = {
-					name    = node_name,
-					param2  = param2,
-					param2list = mg_villages.get_param2_rotated( 'facedir', param2 ),
-				}};
-		end
-		return { node = {
-					name    = node_name,
-					param2  = param2,
-				}};
- 	end
-	
-	paramtype2 = regnode.paramtype2;
-	local new_node = { node = {}};	
-	new_node.node.param2     = param2;
-
-	if( paramtype2 and (paramtype2 == "facedir" or paramtype2 == "wallmounted" )) then
-		new_node.node.param2list = mg_villages.get_param2_rotated( paramtype2, param2 );
-	end
-	
-	if( regnode.on_construct ) then
-		new_node.node.name      = node_name; -- so that we know what to call on_construct for
-		new_node.node.on_constr = true;
-	end
-
-	if( node_meta and node_name and node_name == 'default:chest') then
-
-		local has_metadata = false;
-		for _,x in pairs( node_meta.fields ) do
-			has_metadata = true;
-		end
-		for _,x in pairs( node_meta.inventory ) do
-			has_metadata = true;
-		end
-		if( has_metadata == true) then
-			new_node.meta      = node_meta;
-			new_node.extranode = true;
-		end
-	end
-
-	local id = minetest.get_content_id( node_name );
-	if( id ) then
-		-- if there is no extra information, the data can get very short
-		if(    not( new_node.node.param2list )
-		   and not( new_node.node.name )
-		   and not( new_node.node.on_constr )
-		   and not( new_node.meta )
-		   and not( new_node.extranode )) then
-			return id;
-		end
-		new_node.node.content   = id;
-	end
-
-	return new_node;
 end

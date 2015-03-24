@@ -299,14 +299,14 @@ mg_villages.add_building = function( building_data )
 	res  = handle_schematics.analyze_mts_file( building_data.mts_path .. building_data.scm ); 
 	-- alternatively, read the mts file
 	if( not( res )) then
-		res = mg_villages.import_scm(      building_data.mts_path .. building_data.scm, building_data.we_origin );
+		res = mg_villages.analyze_we_file( building_data.mts_path .. building_data.scm, building_data.we_origin );
 	end
 
 	if( not( res )) then
 		mg_villages.print(mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to import failure.');
 		building_data.not_available = 1;
 		return false;
-	-- provided the file could be analyzed successfully
+	-- provided the file could be analyzed successfully (now covers both .mts and .we files)
 	elseif( res and res.size and res.size.x ) then
 		-- the file has to be placed with minetest.place_schematic(...)
 		building_data.is_mts = 1;
@@ -337,21 +337,6 @@ mg_villages.add_building = function( building_data )
 			building_data.scm_data_cache   = res.scm_data_cache;
 			building_data.is_mts = 0;
 		end
-	-- determine size of worldedit schematics
-	elseif( res and #res and #res>0 and #res[1] and #res[1][1]) then
-
-		-- scm has the following structure: scm[y][x][z] 
-		building_data.ysize = #res;
-		building_data.sizex = #res[1];
-		building_data.sizez = #res[1][1];
-
-		building_data.is_mts = 0;
-
-		-- cache the data for later placement
-		building_data.scm_data_cache = res;
-		-- deep copy the schematics data here so that the file does not have to be read again
-		-- caching cannot be done here as not all nodes from other mods have been registered yet!
-		--buildings[ i ].scm_data_cache = minetest.serialize( res );
 
 	-- missing data regarding building size - do not use this building for anything
 	elseif( not( building_data.sizex )    or not( building_data.sizez )
