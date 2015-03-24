@@ -405,7 +405,11 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 					-- handle rotation
 					if(     n.paramtype2 ) then
-						local param2list = mg_villages.get_param2_rotated( n.paramtype2, t[2] ); -- t[2] contains param2
+						local param2 = t[2];
+						if( n.change_param2 and  n.change_param2[ t[2] ]) then
+							param2 = n.change_param2[ param2 ];
+						end
+						local param2list = mg_villages.get_param2_rotated( n.paramtype2, param2);
 						local np2 = param2list[ pos.brotate + 1];
 						-- mirror
 						if(     mirror_x ) then
