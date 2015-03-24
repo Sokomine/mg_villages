@@ -790,7 +790,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for village_nr, village in ipairs(villages) do
 		-- generate the village structure: determine positions of buildings and roads
 		mg_villages.generate_village( village, village_noise);
-		t1 = time_elapsed( t1, 'generate_village' );
 
 		if( not( village.is_single_house )) then
 			-- only add artificial snow if the village has at least a size of 15 (else it might look too artificial)
@@ -808,13 +807,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			--  4: a road
 			--  5: border around a road
 			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
-			t1 = time_elapsed( t1, 'mark_buildings' );
 			-- will set village_area to N where .. is:
 			--  8: a dirt road
 			mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
-			t1 = time_elapsed( t1, 'mark_dirt_roads' );
 		end
         end
+	t1 = time_elapsed( t1, 'generate_village, mark_buildings and mark_dirt_roads' );
 
 	local emin;
 	local emax;
@@ -892,16 +890,15 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		-- the village_id will be stored in the plot markers
 		local village_id = tostring( village.vx )..':'..tostring( village.vz );
 		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid, village_id);
-		t1 = time_elapsed( t1, 'place_buildings' );
 
 		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, c_feldweg);
-		t1 = time_elapsed( t1, 'place_dirt_roads' );
 
 		-- grow trees which are part of buildings into saplings
 		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do
 			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, nil, v.snow ); -- TODO: supply pseudorandom value?
 		end
 	end
+	t1 = time_elapsed( t1, 'place_buildings and place_dirt_roads' );
 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	t1 = time_elapsed( t1, 'fill_with_plants' );
@@ -977,6 +974,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
 	end
 	-- always save the changed village data
+	t1 = time_elapsed( t1, 'update village data' );
 	mg_villages.save_data();
 	t1 = time_elapsed( t1, 'save village data' );
 
