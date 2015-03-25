@@ -897,6 +897,27 @@ mg_villages.replacements_medieval = function( housetype, pr, replacements )
 end
 
 
+mg_villages.replacements_tower = function( housetype, pr, replacements )
+      -- replace the wood - this is needed in particular for the fences
+      local wood_type = mg_villages.replace_materials( replacements, pr,
+                {'default:wood'},
+                {''},
+                { 'default:wood', 'default:junglewood', 'mg:savannawood', 'mg:pinewood' },
+                'default:wood');
+      mg_villages.replace_tree_trunk( replacements, wood_type );
+      mg_villages.replace_saplings(   replacements, wood_type );
+
+      mg_villages.replace_materials( replacements, pr,
+                {'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
+                {'stairs:stair_',         'stairs:slab_',      'default:'     },
+                {'stonebrick', 'desert_stonebrick','sandstonebrick', 'sandstone','stone','desert_stone','stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks'},
+                'stonebrick');
+
+      return replacements;
+end
+
+
+
 -- Translate replacement function from above (which aims at place_schematic) for the villages in Nores mapgen
 mg_villages.get_replacement_ids = function( housetype, pr )
 

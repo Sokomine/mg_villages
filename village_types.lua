@@ -44,7 +44,8 @@ local village_type_data_list = {
 			 replacement_function = mg_villages.replacements_tent },
 
 	-- these sub-types may occour as single houses placed far from villages
-	tower        = { only_single = 1, name_prefix = 'Tower at ',      mods={'cottages'},  texture = 'default_mese.png'},
+	tower        = { only_single = 1, name_prefix = 'Tower at ',      mods={'cottages'},  texture = 'default_mese.png',
+			 replacement_function = mg_villages.replacements_tower },
 	chateau      = { only_single = 1, name_prefix = 'Chateau ',                           texture = 'default_gold_block.png',
 			 replacement_function = mg_villages.replacements_chateau },
 	forge        = { only_single = 1, name_prefix = 'Forge at '},
