@@ -197,7 +197,7 @@ local function generate_building_translate_nodenames( nodenames, replacements, c
 				new_nodes[ i ].change_param2[4] = 0;
 				new_nodes[ i ].paramtype2 = 'facedir';
 			-- ..except if they are stairs or ladders
-			elseif( node_name == 'default:ladder' or string.sub( node_name, 1, 7 ) == 'stairs:' or string.sub( node_name, 1, 6 ) == 'doors:') then
+			elseif( string.sub( node_name, 1, 7 ) == 'stairs:' or string.sub( node_name, 1, 6 ) == 'doors:') then
 				new_nodes[ i ].paramtype2 = 'facedir';
 			-- normal nodes
 			elseif( regnode and regnode.paramtype2 and (regnode.paramtype2=='facedir' or regnode.paramtype2=='wallmounted')) then
