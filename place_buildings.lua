@@ -409,6 +409,16 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 						if( n.change_param2 and  n.change_param2[ t[2] ]) then
 							param2 = n.change_param2[ param2 ];
 						end
+	
+						if(     mirror_x ) then
+							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 2 ];
+						elseif( mirror_z ) then
+							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 3 ];
+						else
+							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 1 ];
+						end
+
+--[[
 						local param2list = mg_villages.get_param2_rotated( n.paramtype2, param2);
 						local np2 = param2list[ pos.brotate + 1];
 						-- mirror
@@ -430,6 +440,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 								np2 = param2list[ (pos.brotate + 2)%4 +1];
 							end
 						end
+--]]
+
 						param2_data[a:index(ax, ay, az)] = np2;
 					else
 						param2_data[a:index(ax, ay, az)] = t[2];

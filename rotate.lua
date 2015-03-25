@@ -71,3 +71,48 @@ for _,material in ipairs( door_materials ) do
 	mg_villages.add_mirrored_node_type( 'doors:door_'..material..'_b_2', 'doors:door_'..material..'_b_1' );
 	mg_villages.add_mirrored_node_type( 'doors:door_'..material..'_t_2', 'doors:door_'..material..'_t_1' );
 end
+
+
+
+
+rotation_table = {};
+rotation_table[ 'facedir'     ] = {};
+rotation_table[ 'wallmounted' ] = {};
+
+
+for paramtype2,v in pairs( rotation_table ) do
+	for param2 = 0,23 do
+
+		if( param2 < 6 or  paramtype2 == 'facedir' ) then
+			local param2list = mg_villages.get_param2_rotated( paramtype2, param2);
+
+			rotation_table[ paramtype2 ][ param2+1 ] = {};
+
+			for rotation = 0,3 do
+				local np2 = param2list[ rotation + 1];
+				local mirror_x = np2;
+				local mirror_z = np2;
+
+				-- mirror_x
+				if(     #param2list==5) then
+					mirror_x = mg_villages.mirror_facedir[ (( rotation +1)%2)+1 ][ np2+1 ];
+				elseif( #param2list<5
+				  and  (( rotation%2==1 and (np2==4 or np2==5))
+				     or ( rotation%2==0 and (np2==2 or np2==3)))) then
+					mirror_x = param2list[ ( rotation + 2)%4 +1];
+				end
+
+				-- mirror_z
+				if(     #param2list==5) then
+					mirror_z = mg_villages.mirror_facedir[ (rotation      %2)+1 ][ np2+1 ];
+				elseif( #param2list<5
+				  and  (( rotation%2==0 and (np2==4 or np2==5))
+				     or ( rotation%2==1 and (np2==2 or np2==3)))) then
+					mirror_z = param2list[ ( rotation + 2)%4 +1];
+				end
+
+				rotation_table[ paramtype2 ][ param2+1 ][ rotation+1 ] = { np2, mirror_x, mirror_z };
+			end
+		end
+	end
+end
