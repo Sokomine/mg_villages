@@ -811,6 +811,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			-- will set village_area to N where .. is:
 			--  8: a dirt road
 			mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
+		else -- mark the terrain below single houses
+			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
 		end
         end
 	t1 = time_elapsed( t1, 'generate_village, mark_buildings and mark_dirt_roads' );
