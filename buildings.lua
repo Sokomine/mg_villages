@@ -9,6 +9,8 @@
 --  price               Stack that has to be paid in order to become owner of the plot the building stands on and the building;
 --                      overrides mg_villages.prices[ building_typ ].
 
+mg_villages.all_buildings_list = {}
+
 local buildings = {
 
 -- the houses the mod came with
@@ -308,6 +310,7 @@ mg_villages.add_building = function( building_data )
 		return false;
 	-- provided the file could be analyzed successfully (now covers both .mts and .we files)
 	elseif( res and res.size and res.size.x ) then
+
 		-- the file has to be placed with minetest.place_schematic(...)
 		building_data.is_mts = 1;
 
@@ -361,14 +364,34 @@ mg_villages.add_building = function( building_data )
 	end
 
 
--- TODO: handle duplicates; make sure buildings always get the same number
+	-- handle duplicates; make sure buildings always get the same number;
+	-- check if the building has been used in previous runs and got an ID there
+
+	-- create a not very unique, but for this case sufficient "id";
+	-- (buildings with the same size and name are considered to be drop-in-replacements
+	local building_id = building_data.sizex..'x'..building_data.sizez..'_'..building_data.scm;
+	-- if the building is new, it will get the next free id
+	local building_nr = #mg_villages.all_buildings_list + 1;
+	for i,v in ipairs( mg_villages.all_buildings_list ) do
+		if( v==building_id ) then
+			-- we found the building
+			building_nr = i;
+		end
+	end
+
+	-- if it is a new building, then save the list
+	if( building_nr == #mg_villages.all_buildings_list+1 ) then
+		mg_villages.all_buildings_list[ building_nr ] = building_id;
+		-- save information about previously imported buildings
+		save_restore.save_data( 'mg_villages_all_buildings_list.data', mg_villages.all_buildings_list );
+	end
+
 	-- determine the internal number for the building; this number is used as a key and can be found in the mg_all_villages.data file
 	if( not( mg_villages.BUILDINGS )) then
 		mg_villages.BUILDINGS = {};
 	end
-	local internal_number = #mg_villages.BUILDINGS + 1;
 	-- actually store the building data
-	mg_villages.BUILDINGS[ internal_number ] = minetest.deserialize( minetest.serialize( building_data ));
+	mg_villages.BUILDINGS[ building_nr ] = minetest.deserialize( minetest.serialize( building_data ));
 
 
 	-- create lists for all village types containing the buildings which may be used for that village
@@ -384,7 +407,7 @@ mg_villages.add_building = function( building_data )
 
 		if( building_data.weight[ typ ] and building_data.weight[ typ ] > 0 ) then
 			local index = #data.building_list+1;
-			data.building_list[   index ] = internal_number; 
+			data.building_list[   index ] = building_nr; 
 			data.max_weight_list[ index ] = total_weight + building_data.weight[ typ ];
 		end
 	end
@@ -394,6 +417,9 @@ mg_villages.add_building = function( building_data )
 	return true;
 end
 
+
+-- this list contains some information about previously imported buildings so that they will get the same id
+mg_villages.all_buildings_list =  save_restore.restore_data( 'mg_villages_all_buildings_list.data' );
 
 -- import all the buildings
 mg_villages.BUILDINGS = {};

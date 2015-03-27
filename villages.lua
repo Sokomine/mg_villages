@@ -79,7 +79,8 @@ local function choose_building(l, pr, village_type)
 		local p = pr:next(1, 3000)
 		
 		for _, b in ipairs( mg_villages.village_type_data[ village_type ][ 'building_list'] ) do
-			if (mg_villages.BUILDINGS[ b ].max_weight[ village_type ] and  mg_villages.BUILDINGS[ b ].max_weight[ village_type ] >= p) then
+			if (   mg_villages.BUILDINGS[ b ] and mg_villages.BUILDINGS[ b ].max_weight
+			   and mg_villages.BUILDINGS[ b ].max_weight[ village_type ] and  mg_villages.BUILDINGS[ b ].max_weight[ village_type ] >= p) then
 
 --		for b, i in ipairs(mg_villages.BUILDINGS) do
 --			if i.weight[ village_type ] and i.weight[ village_type ] > 0 and i.max_weight and i.max_weight[ village_type ] and i.max_weight[ village_type ] >= p then
@@ -90,7 +91,8 @@ local function choose_building(l, pr, village_type)
 		-- in case no building was found: take the last one that fits
 		if( not( btype )) then
 			for i=#mg_villages.BUILDINGS,1,-1 do
-				if( mg_villages.BUILDINGS[i].weight and mg_villages.BUILDINGS[i].weight[ village_type ] and mg_villages.BUILDINGS[i].weight[ village_type ] > 0 ) then
+				if (  mg_villages.BUILDINGS[i] and mg_villages.BUILDINGS[i].weight
+				  and mg_villages.BUILDINGS[i].weight[ village_type ] and mg_villages.BUILDINGS[i].weight[ village_type ] > 0 ) then
 					btype = i;
 					i = 1;
 				end

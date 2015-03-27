@@ -224,6 +224,11 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	local binfo = mg_villages.BUILDINGS[pos.btype]
 	local scm
 
+	-- the building got removed from mg_villages.BUILDINGS in the meantime
+	if( not( binfo )) then
+		return;
+	end
+
 	-- schematics of .mts type are not handled here; they need to be placed using place_schematics
 	if( binfo.is_mts == 1 ) then
 		return;
