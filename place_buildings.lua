@@ -415,6 +415,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 							param2 = n.change_param2[ param2 ];
 						end
 	
+						local np2 = 0;
 						if(     mirror_x ) then
 							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 2 ];
 						elseif( mirror_z ) then
