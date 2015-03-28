@@ -1,4 +1,35 @@
 
+--[[ taken from src/mg_schematic.cpp:
+        Minetest Schematic File Format
+
+        All values are stored in big-endian byte order.
+        [u32] signature: 'MTSM'
+        [u16] version: 3
+        [u16] size X
+        [u16] size Y
+        [u16] size Z
+        For each Y:
+                [u8] slice probability value
+        [Name-ID table] Name ID Mapping Table
+                [u16] name-id count
+                For each name-id mapping:
+                        [u16] name length
+                        [u8[] ] name
+        ZLib deflated {
+        For each node in schematic:  (for z, y, x)
+                [u16] content
+        For each node in schematic:
+                [u8] probability of occurance (param1)
+        For each node in schematic:
+                [u8] param2
+        }
+
+        Version changes:
+        1 - Initial version
+        2 - Fixed messy never/always place; 0 probability is now never, 0xFF is always
+        3 - Added y-slice probabilities; this allows for variable height structures
+--]]
+
 handle_schematics = {}
 
 -- taken from https://github.com/MirceaKitsune/minetest_mods_structures/blob/master/structures_io.lua (Taokis Sructures I/O mod)
@@ -132,4 +163,92 @@ handle_schematics.analyze_mts_file = function( path )
 	end
 
 	return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = on_constr, after_place_node = after_place_node, rotated=rotated, burried=burried, scm_data_cache = scm };
+end
+
+
+
+handle_schematics.store_mts_file = function( path, data )
+
+	data.nodenames[ #data.nodenames ] = 'air';
+
+	local file = io.open(path..'.mts', "wb")
+	if (file == nil) then
+		return nil
+	end
+
+	local write_s16 = function( fi, a )
+		fi:write( string.char( math.floor( a/256) ));
+		fi:write( string.char( a%256 ));	
+	end
+
+	data.size.version = 3; -- we only support version 3 of the .mts file format
+
+	file:write( "MTSM" );
+	write_s16( file, data.size.version ); 
+	write_s16( file, data.size.x );
+	write_s16( file, data.size.y );
+	write_s16( file, data.size.z );
+
+	
+	-- set the slice probability for each y value that was introduced in version 3
+	if( data.size.version >= 3 ) then
+		-- the probability is not very intresting for buildings so we just skip it
+		for i=1,data.size.y do
+			file:write( string.char(255) );
+		end
+	end
+
+	-- set how many diffrent nodenames (node_name_count) are present in the file
+	write_s16( file, #data.nodenames );
+
+	for i = 1, #data.nodenames do
+		-- the length of the next name
+		write_s16( file, string.len( data.nodenames[ i ] ));
+		file:write( data.nodenames[ i ] );
+	end
+
+	-- this string will later be compressed
+	local node_data = "";
+
+	-- actual node data
+	for z = 1, data.size.z do
+	for y = 1, data.size.y do
+	for x = 1, data.size.x do
+		local a = data.scm_data_cache[y][x][z];
+		if( type( a ) == 'table') then
+			node_data = node_data..string.char( math.floor( a[1]/256) )..string.char( a[1]%256-1);	
+		else
+			node_data = node_data..string.char( 0 )..string.char( 125);
+		end
+	end
+	end
+	end
+
+	-- probability of occurance
+	for z = 1, data.size.z do
+	for y = 1, data.size.y do
+	for x = 1, data.size.x do
+		node_data = node_data..string.char( 255 );
+	end
+	end
+	end
+
+	-- param2
+	for z = 1, data.size.z do
+	for y = 1, data.size.y do
+	for x = 1, data.size.x do
+		local a = data.scm_data_cache[y][x][z];
+		if( type( a) == 'table' ) then
+			node_data = node_data..string.char( a[2] );	
+		else
+			node_data = node_data..string.char( 0 );	
+		end
+	end
+	end
+	end
+
+	local compressed_data = minetest.compress( node_data, "deflate" );
+	file:write( compressed_data );
+	file.close(file);
+	print('SAVING '..path..'.mts (converted from .we).'); 
 end
