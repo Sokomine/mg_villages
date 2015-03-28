@@ -169,7 +169,7 @@ end
 
 handle_schematics.store_mts_file = function( path, data )
 
-	data.nodenames[ #data.nodenames ] = 'air';
+	data.nodenames[ #data.nodenames+1 ] = 'air';
 
 	local file = io.open(path..'.mts', "wb")
 	if (file == nil) then
@@ -218,7 +218,7 @@ handle_schematics.store_mts_file = function( path, data )
 		if( type( a ) == 'table') then
 			node_data = node_data..string.char( math.floor( a[1]/256) )..string.char( a[1]%256-1);	
 		else
-			node_data = node_data..string.char( 0 )..string.char( 125);
+			node_data = node_data..string.char( 0 )..string.char( #data.nodenames-1 );
 		end
 	end
 	end
