@@ -712,7 +712,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				end
 
 				-- put a snow cover on plants where needed
-				if( has_snow_cover ) then
+				if( has_snow_cover and cid.c_msnow_1 ~= cid.c_ignore) then
 					data[a:index( x,  h+2, z)] = cid.c_msnow_1;
 				end
 			end
