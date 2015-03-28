@@ -69,12 +69,11 @@ mg_villages.grow_jungletree = function(data, a, pos, seed, snow)
                 and in games that have saplings; both are deprecated but not
                 replaced yet
         ]]--
+    local leaves_type = c_jungleleaves;
     if(  snow
       or data[ a:index(pos.x, pos.y,   pos.z) ] == c_snow
       or data[ a:index(pos.x, pos.y+1, pos.z) ] == c_snow ) then
        leaves_type = c_msnow_leaves1;
-    else
-       leaves_type = c_jungleleaves;
     end
 
     local hight = math.random(8, 12)
