@@ -302,6 +302,10 @@ mg_villages.add_building = function( building_data )
 	-- alternatively, read the mts file
 	if( not( res )) then
 		res = mg_villages.analyze_we_file( building_data.mts_path .. building_data.scm, building_data.we_origin );
+		-- convert to .mts for later usage
+		if( res ) then
+			handle_schematics.store_mts_file(  building_data.mts_path .. building_data.scm, res );
+		end
 	end
 
 	if( not( res )) then
