@@ -227,11 +227,6 @@ local buildings = {
 	{scm="r_manorhouse",               yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='house_large',  weight={canadian=3}, inh=4},
 	{scm="r_triplex",                  yoff=  1, orients={0}, farming_plus=0, avoid='',     typ='house_large',  weight={canadian=3}, inh=10},
 
-	{scm="field_1",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-	{scm="field_2",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-	{scm="field_3",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-	{scm="field_4",         yoff=-2, orients={0,1,2,3}, farming_plus=0, avoid='',        typ='field',    weight={fields=1}},
-
 	{scm="tent_tiny_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
 	{scm="tent_tiny_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
 	{scm="tent_big_1",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1}},           -- no sleeping place
@@ -272,19 +267,32 @@ local buildings = {
 }
 
 
-
-
 -- read the data files and fill in information like size and nodes that need on_construct to be called after placing;
 -- skip buildings that cannot be used due to missing mods
 mg_villages.add_building = function( building_data )
 
+	local file_name = building_data.mts_path .. building_data.scm;
 	-- a building will only be used if it is used by at least one supported village type (=mods required for that village type are installed)
 	local is_used = false;
 	for typ,weight in pairs( building_data.weight ) do
-		if( typ and weight and weight>0 and typ ~= 'single' and mg_villages.village_type_data[ typ ] and mg_villages.village_type_data[ typ ].supported ) then
+		if( typ and weight and typ ~= 'single' and mg_villages.village_type_data[ typ ] and mg_villages.village_type_data[ typ ].supported ) then
 			is_used = true;
 		end
+		-- add the building to the menu list for the build chest ("single" would be too many houses)
+		-- the empty plots are added to each village and of no intrest here
+		if( build_chest and build_chest.add_entry and typ and typ ~= 'single' and (not( building_data.typ ) or building_data.typ ~= 'empty')) then
+			build_chest.add_entry( {'main','mg_villages', typ, building_data.scm, file_name });
+		end
 	end
+	-- buildings as such may have a type as well
+	if( build_chest and build_chest.add_entry and building_data.typ ) then
+		build_chest.add_entry( {'main','mg_villages', building_data.typ, building_data.scm, file_name });
+	end
+	-- store information about all buildings - no matter weather they can be used or not - for later presentation in the build_chest's menu
+	if( build_chest and build_chest.add_building ) then
+		build_chest.add_building( file_name, building_data );
+	end
+
 
 	if( not( is_used )) then
 		-- do nothing; skip this file
@@ -298,10 +306,10 @@ mg_villages.add_building = function( building_data )
 	-- determine the size of the building
 	local res = nil;
 	-- read the size of the building
-	res  = handle_schematics.analyze_mts_file( building_data.mts_path .. building_data.scm ); 
+	res  = handle_schematics.analyze_mts_file( file_name ); 
 	-- alternatively, read the mts file
 	if( not( res )) then
-		res = mg_villages.analyze_we_file( building_data.mts_path .. building_data.scm, building_data.we_origin );
+		res = mg_villages.analyze_we_file( file_name, building_data.we_origin );
 		-- convert to .mts for later usage
 		if( res ) then
 			handle_schematics.store_mts_file(  building_data.mts_path .. building_data.scm, res );
