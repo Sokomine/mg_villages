@@ -1,7 +1,7 @@
 
 -- ethereal comes with some intresting trees
 if( minetest.get_modpath( 'ethereal' )) then
-	mg_villages.ethereal_trees = {'willow','redwood','frost','mushroom','yellow','palm','banana'};
+	mg_villages.ethereal_trees = {'acacia','willow','redwood','frost','mushroom','yellow','palm','banana'};
 end
 
 if( minetest.get_modpath( 'forest' )) then
