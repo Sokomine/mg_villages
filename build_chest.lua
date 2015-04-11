@@ -260,6 +260,94 @@ build_chest.apply_replacement = function( pos, meta, old_material, new_material 
 end
 	
 
+build_chest.wood_replacements = {};
+build_chest.wood_replacements_extended = {};
+
+-- wood (and its corresponding tree trunk) is a very good candidate for replacement in most houses
+-- helper function for build_chest.get_wood_type_list
+build_chest.add_wood_type = function( candidate_list, mod_prefix, w_pre, w_post, t_pre, t_post, l_pre, l_post, s_pre, s_post )
+	if( candidate_list ) then
+		for _,v in ipairs( candidate_list ) do
+			local wood_name = mod_prefix..w_pre..v..w_post;
+			if( minetest.registered_nodes[ wood_name ]) then
+				table.insert( build_chest.wood_replacements, wood_name );
+				local data = {};
+				-- store the corresponding tree
+				if( minetest.registered_nodes[ mod_prefix..t_pre  ..v..t_post ]) then
+					data.tree    = mod_prefix..t_pre..v..t_post;
+				end
+				if( minetest.registered_nodes[ mod_prefix..l_pre..v..l_post ]) then
+					data.leaves  = mod_prefix..l_pre..v..l_post;
+				end
+				if( minetest.registered_nodes[ mod_prefix..s_pre..v..s_post ]) then
+					data.sapling = mod_prefix..s_pre..v..s_post;
+				end
+				build_chest.wood_replacements_extended[ wood_name ] = data;
+			end
+		end
+	end
+end
+
+-- create a list of all available wood types
+build_chest.construct_wood_type_list = function()
+
+	-- https://github.com/minetest/minetest_game
+	-- default tree and jungletree
+	build_chest.add_wood_type( {'', 'jungle' },     'default:', '','wood','', 'tree',  '','leaves',  '','sapling' );
+	-- default:pine_needles instead of leaves
+	build_chest.add_wood_type( {'pine' },           'default:', '','wood','', 'tree',  '','_needles','','_sapling' );
+
+	-- https://github.com/Novatux/mg
+	-- trees from nores mapgen
+	build_chest.add_wood_type( {'savanna', 'pine' },'mg:',      '','wood','', 'tree',  '','leaves',  '','sapling' );
+
+
+	-- https://github.com/VanessaE/moretrees
+	-- moretrees comes with its own tree list, of which we are only intrested in the first part
+	local moretrees_treelist = {};
+	if( moretrees and moretrees.treelist ) then
+		for i,v in ipairs( moretrees.treelist ) do
+			-- except for the jungletree; that one is taken from default
+			if( v[1] ~= 'jungletree' ) then
+				table.insert( moretrees_treelist, v[1] );
+			end
+		end
+	end
+	build_chest.add_wood_type( moretrees_treelist,  'moretrees:', '', '_planks', '','_trunk', '','_leaves','','_sapling' );
+	
+
+	-- https://github.com/tenplus1/ethereal
+	-- ethereal does not have a common naming convention for leaves
+	build_chest.add_wood_type( {'acacia','redwood'},'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_sapling' );
+	-- frost has another sapling type...
+	build_chest.add_wood_type( {'frost'},           'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_tree_sapling' );
+	-- those tree types do not use typ_leaves, but typleaves instead...
+	build_chest.add_wood_type( {'yellow','banana'}, 'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling' );
+	-- palm has another name for the sapling again...
+	build_chest.add_wood_type( {'palm'},            'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_sapling' );
+	-- the leaves are called willow_twig here...
+	build_chest.add_wood_type( {'willow'},          'ethereal:',  '','_wood',   '','_trunk', '','_twig',   '','_sapling' );
+	-- mushroom has its own name; it works quite well as a wood replacement; the red cap is used as leaves
+	build_chest.add_wood_type( {'mushroom'},        'ethereal:',  '','_pore',   '','_trunk', '','',        '','_sapling' );
+
+	
+	-- https://github.com/VanessaE/realtest_game
+	local realtest_trees = {'ash','aspen','birch','maple','chestnut','pine','spruce'};
+	build_chest.add_wood_type( realtest_trees,      'trees:',     '','_planks', '','_log',   '','_leaves', '','_sapling' );
+	-- TODO: realtest requires further replacements
+
+	
+	-- https://github.com/Gael-de-Sailly/Forest
+	local forest_trees = {'oak','birch','willow','fir','mirabelle','cherry','plum','beech','ginkgo','lavender'};
+	build_chest.add_wood_type( forest_trees,        'forest:',    '', '_wood',  '','_tree',  '','_leaves', '','_sapling' ); 
+
+	-- https://github.com/bas080/trees
+	build_chest.add_wood_type( {'mangrove','palm','conifer'},'trees:',  'wood_','',   'tree_','',  'leaves_','', 'sapling_','' );
+end
+
+build_chest.construct_wood_type_list(); -- TODO
+
+
 -- this function makes sure that the building will always extend to the right and in front of the build chest
 handle_schematics.translate_param2_to_rotation = function( param2, mirror, start_pos, orig_max, rotated, burried, orients )
 
@@ -1206,7 +1294,9 @@ print('CREATING schematic '..tostring( filename )..' from '..minetest.serialize(
 		-- place the building
 -- TODO: use scaffolding here (exchange some replacements)
 print('USING ROTATION: '..tostring( meta:get_string('rotate')));
-		minetest.place_schematic( start_pos, building_name..'.mts', meta:get_string('rotate'), meta:get_string('replacements'), true );
+		minetest.place_schematic( start_pos, building_name..'.mts', meta:get_string('rotate'), minetest.deserialize( meta:get_string('replacements')), true );
+-- TODO: all those calls to on_construct need to be done now!
+-- TODO: handle metadata
 		meta:set_string('backup', filename );
 		build_chest.update_formspec( pos, 'main', player );
 
