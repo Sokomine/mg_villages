@@ -222,7 +222,7 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 			end
 			
 			-- find out if there are any wood nodes that may need replacement
-			for k,w in ipairs( build_chest.wood_replacements_all ) do
+			for k,w in ipairs( replacements_wood.all ) do
 				if( name == w ) then
 					set_wood_type_offset = set_wood_type_offset + 1;
 					extra_buttons = extra_buttons.."button[9.9,"..
@@ -279,236 +279,11 @@ build_chest.apply_replacement = function( pos, meta, old_material, new_material 
 end
 	
 
-build_chest.wood_replacements = {};
-build_chest.wood_replacements_all      = {};
-build_chest.wood_replacements_extended = {};
-
--- wood (and its corresponding tree trunk) is a very good candidate for replacement in most houses
--- helper function for build_chest.get_wood_type_list
-build_chest.add_wood_type = function( candidate_list, mod_prefix, w_pre, w_post, t_pre, t_post, l_pre, l_post,
-					s_pre, s_post, stair_pre, stair_post, slab_pre, slab_post,
-					fence_pre, fence_post, gate_pre, gate_post )
-	if( not( candidate_list )) then
-		return;
-	end
-	for _,v in ipairs( candidate_list ) do
-		local wood_name = mod_prefix..w_pre..v..w_post;
-		-- create a complete list of all possible wood names
-		table.insert( build_chest.wood_replacements_all, wood_name );
-		-- create a list of all *installed* wood types
-		if( minetest.registered_nodes[ wood_name ]) then
-			table.insert( build_chest.wood_replacements, wood_name );
-		end
-			
-		-- there is no check if the node names created here actually exist
-		local data = { v,                             -- 1. base name of the node
-				mod_prefix,                   -- 2. mod name
-				wood_name,                    -- 3. replacement for default:wood
-				mod_prefix..t_pre..v..t_post, -- 4.     "  "    for default:tree
-				mod_prefix..l_pre..v..l_post, -- 5.     "  "    for default:leaves
-				mod_prefix..s_pre..v..s_post, -- 6.     "  "    for default:sapling
-				stair_pre..v..stair_post,     -- 7.     "  "    for stairs:stair_wood
-				slab_pre..v..slab_post,       -- 8.     "  "    for stairs:slab_wood
-				fence_pre..v..fence_post,     -- 9.     "  "    for default:fence_wood
-				gate_pre..v..gate_post..'_open',  -- 10.  "  "    for cottages:gate_open
-				gate_pre..v..gate_post..'_closed',-- 11.  "  "    for cottages:gate_closed
-		};
-
-		-- normal wood does have a number of nodes which might get replaced by more specialized wood types
-		if( mod_prefix=='default:' and v=='' ) then
-			local w = 'wood';
-			data[10] = 'cottages:gate_open';
-			data[11] = 'cottages:gate_closed';
-			data[12] = 'default:ladder';
-			data[13] = 'doors:door_'..w..'_t_1';
-			data[14] = 'doors:door_'..w..'_t_2';
-			data[15] = 'doors:door_'..w..'_b_1';
-			data[16] = 'doors:door_'..w..'_b_2';
-			data[17] = 'default:bookshelf';
-			data[18] = 'default:chest';
-			data[19] = 'default:chest_locked';
-			data[20] = 'stairs:stair_'..w..'upside_down';
-			data[21] = 'stairs:slab_'..w..'upside_down';
-		-- realtest has some further replacements
-		elseif( mod_prefix=='trees:' and w_post=='_planks' and t_post=='_log' ) then
-			data[12] = 'trees:'..v..'_ladder';
-			data[13] = 'doors:door_'..v..'_t_1';
-			data[14] = 'doors:door_'..v..'_t_2';
-			data[15] = 'doors:door_'..v..'_b_1';
-			data[16] = 'doors:door_'..v..'_b_2';
-			data[17] = 'decorations:bookshelf_'..v;
-			data[18] = 'trees:'..v..'_chest';
-			data[19] = 'trees:'..v..'_chest_locked';
-			data[20] = 'trees:'..v..'_planks_stair_upside_down';
-			data[21] = 'trees:'..v..'_planks_slab_upside_down';
---[[ TODO
-                                -- not really wood-realted, but needs to be replaced as well
-                                table.insert( replacements, {'default:furnace',      'oven:oven'});
-                                -- farming is also handled diffrently
-                                table.insert( replacements, {'farming:soil_wet',     'farming:soil'});
-                                table.insert( replacements, {'farming:cotton_1',     'farming:flax_1'});
-                                table.insert( replacements, {'farming:cotton_2',     'farming:flax_1'});
-                                table.insert( replacements, {'farming:cotton_3',     'farming:flax_2'});
-                                table.insert( replacements, {'farming:cotton_4',     'farming:flax_2'});
-                                table.insert( replacements, {'farming:cotton_5',     'farming:flax_3'});
-                                table.insert( replacements, {'farming:cotton_6',     'farming:flax_3'});
-                                table.insert( replacements, {'farming:cotton_7',     'farming:flax_4'});
-                                table.insert( replacements, {'farming:cotton_8',     'farming:flax_4'});
---]]
-		end
-		build_chest.wood_replacements_extended[ wood_name ] = data;
-	end
-end
-
---[[
-				local data = {};
-				-- from that base name, furhter node names for stairs, slabs, fences, doors etc. can be constructed
-				data.base_name       = v;
-				-- store the corresponding tree
-				if( minetest.registered_nodes[ mod_prefix..t_pre  ..v..t_post ]) then
-					data.tree    = mod_prefix..t_pre..v..t_post;
-				end
-				if( minetest.registered_nodes[ mod_prefix..l_pre..v..l_post ]) then
-					data.leaves  = mod_prefix..l_pre..v..l_post;
-				end
-				if( minetest.registered_nodes[ mod_prefix..s_pre..v..s_post ]) then
-					data.sapling = mod_prefix..s_pre..v..s_post;
-				end
-				local stair_name    = 'stairs:stair_'..v..'_wood';
-				local slab_name     = 'stairs:slab_' ..v..'_wood';
-				if( mod_prefix=='moretrees:' ) then
-					stair_name  = 'moretrees:stair_'..v..'_planks';
-					slab_name   = 'moretrees:slab_' ..v..'_planks';
-				-- covers realtest (which provides stairs and slabs) and bas080' trees (which come without)
-				elseif( mod_prefix=='trees:' ) then
-					stair_name  = 'trees:'..v..'_planks_stair';
-					slab_name   = 'trees:'..v..'_planks_slab';
-				end
-				if( minetest.registered_nodes[ stair_name ]) then
-					data.stair  = stair_name;
-				end
-				if( minetest.registered_nodes[ slab_name ]) then
-					data.slab   = slab_name;
-				end
-
-				build_chest.wood_replacements_extended[ wood_name ] = data;
-			end
-		end
-	end
---]]
---[[
-TODO: there are also upside-down variants sometimes
-	default:
-		stairs:stair_WOODNAME_wood
-		stairs:slab_WOODNAME_wood	
-		ONLY default:fence_wood
-		ONLY cottages:gate_closed
-		ONLY doors:door_wood
-		ONLY doors:trapdoor
-		ONLY default:chest
-		ONLY default:chest_locked
-		ONLY default:ladder
-	mg:
-		no special nodes apart from default stairs and slabs
-	moretrees:
-		TODO - especially in combination with moreblocks i guess!
-		moretrees:stair_WOODNAME_planks	
-		moretrees:slab_WOODNAME_planks	
-	ethereal:
-		stairs:stair_WOODNAME_wood
-		stairs:slab_WOODNAME_wood	
-		ethereal:fence_WOODNAME_wood
-		ethereal:WOODNAMEwoodgate_closed
-		no other special wood nodes
-	realtest:
-		ladder, chest, chest_locked, fence, bookshelf, door, 
-		diffrent kind of replacement: default:furnace -> oven, soil, cotton->flax, wheat->?,
-			{'stairs:stair_wood',    'trees:'..v..'_planks_stair'});
-                        {'stairs:slab_wood',     'trees:'..v..'_planks_slab'});
-                        {'stairs:stair_woodupside_down','trees:'..v..'_planks_stair_upside_down' } );
-                        {'stairs:slab_woodupside_down', 'trees:'..v..'_planks_slab_upside_down' } );
-
-	forest:
-		stairs:stair_WOODNAME_wood
-		stairs:slab_WOODNAME_wood	
-		
-	(tiny)trees:
-		none provided
---]]
-
--- create a list of all available wood types
-build_chest.construct_wood_type_list = function()
-
-	-- https://github.com/minetest/minetest_game
-	-- default tree and jungletree; no gates available
-	build_chest.add_wood_type( {'', 'jungle' },     'default:', '','wood','', 'tree',  '','leaves',  '','sapling',
-		'stairs:stair_', 'wood', 'stairs:slab_', 'wood',   'default:fence_','wood',  'NONE', '' );
-	-- default:pine_needles instead of leaves; no gates available
-	build_chest.add_wood_type( {'pine' },           'default:', '','wood','', 'tree',  '','_needles','','_sapling',
-		'stairs:stair_', 'wood', 'stairs:slab_', 'wood',   'default:fence_','wood',  'NONE','' );
-
-	-- https://github.com/Novatux/mg
-	-- trees from nores mapgen
-	build_chest.add_wood_type( {'savanna', 'pine' },'mg:',     '','wood','', 'tree',  '','leaves',  '','sapling',
-		'stairs:stair_','wood',  'stairs:slab_','wood',    'NONE','',  'NONE','');
-
-
-	-- https://github.com/VanessaE/moretrees
-	-- minus the jungletree (already in default)
-	local moretrees_treelist = {"beech","apple_tree","oak","sequoia","birch","palm","spruce","pine","willow","acacia","rubber_tree","fir" };
-	build_chest.add_wood_type( moretrees_treelist,  'moretrees:', '', '_planks', '','_trunk', '','_leaves','','_sapling',
-		'moretrees:stair_','_planks', 'moretrees:slab_','_planks',   'NONE','',  'NONE','');
-	
-
-	-- https://github.com/tenplus1/ethereal
-	-- ethereal does not have a common naming convention for leaves
-	build_chest.add_wood_type( {'acacia','redwood'},'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','',     'ethereal:','gate');
-	-- frost has another sapling type...
-	build_chest.add_wood_type( {'frost'},           'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_tree_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','woodgate' );
-	-- those tree types do not use typ_leaves, but typleaves instead...
-	build_chest.add_wood_type( {'yellow'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','gate' );
-	-- banana has a diffrent fence type....
-	build_chest.add_wood_type( {'banana'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
-	-- palm has another name for the sapling again...
-	build_chest.add_wood_type( {'palm'},            'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
-	-- the leaves are called willow_twig here...
-	build_chest.add_wood_type( {'willow'},          'ethereal:',  '','_wood',   '','_trunk', '','_twig',   '','_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
-	-- mushroom has its own name; it works quite well as a wood replacement; the red cap is used as leaves
-	-- the stairs are also called slightly diffrently (end in _trunk instead of _wood)
-	build_chest.add_wood_type( {'mushroom'},        'ethereal:',  '','_pore',   '','_trunk', '','',        '','_sapling',
-		'stairs:stair_','_trunk', 'stairs:slab_','_trunk', 'ethereal:fence_', '',    'ethereal:','gate' );
-
-	
-	-- https://github.com/VanessaE/realtest_game
-	local realtest_trees = {'ash','aspen','birch','maple','chestnut','pine','spruce'};
-	build_chest.add_wood_type( realtest_trees,      'trees:',     '','_planks', '','_log',   '','_leaves', '','_sapling',
-		'trees:','_planks_stair', 'trees:','_planks_slab', 'fences:','_fence',    'NONE','' );
-	-- TODO: realtest requires further replacements
-
-	
-	-- https://github.com/Gael-de-Sailly/Forest
-	local forest_trees = {'oak','birch','willow','fir','mirabelle','cherry','plum','beech','ginkgo','lavender'};
-	build_chest.add_wood_type( forest_trees,        'forest:',    '', '_wood',  '','_tree',  '','_leaves', '','_sapling',
-		'stairs:stair_','_wood',  'stairs:slab_','_wood',    'NONE','',            'NONE',''        );
-
-	-- https://github.com/bas080/trees
-	build_chest.add_wood_type( {'mangrove','palm','conifer'},'trees:',  'wood_','',   'tree_','',  'leaves_','', 'sapling_','', 
-		'stairs:stair_','_wood',  'stairs:slab_','_wood',    'NONE','',            'NONE',''        );
-end
-
-build_chest.construct_wood_type_list(); -- TODO
-
 
 build_chest.get_wood_list_formspec = function( pos, set_wood )
 	local formspec = "label[1,2.2;Select replacement for "..tostring( set_wood )..".]"..
 			 "label[1,2.5;Trees, saplings and other blocks will be replaced accordingly as well.]";
-	for i,v in ipairs( build_chest.wood_replacements ) do
+	for i,v in ipairs( replacements_wood.found ) do
 		formspec = formspec.."item_image_button["..tostring(((i-1)%8)+1)..","..
 			tostring(3+math.floor((i-1)/8))..";1,1;"..
 			tostring( v )..";wood_selection;"..tostring(i).."]";
@@ -519,36 +294,14 @@ end
 
 build_chest.apply_replacement_for_wood = function( pos, meta, old_material, new_material )
 
-	if(  not( old_material ) or not( build_chest.wood_replacements_extended[ old_material ])
-	  or not( new_material ) or not( build_chest.wood_replacements_extended[ new_material ])
-	  or old_material == new_material ) then
-		return;
+	local replacements  = minetest.deserialize( meta:get_string( 'replacements' ));
+	if( not( replacements )) then
+		replacements = {};
 	end
+	replacements_wood.replace_wood( replacements, old_material, new_material );
 
-	local replacements_orig  = minetest.deserialize( meta:get_string( 'replacements' ));
-
-	local old_nodes = build_chest.wood_replacements_extended[ old_material ];
-	local new_nodes = build_chest.wood_replacements_extended[ new_material ];
-	for i=3,#old_nodes do
-		local old = old_nodes[i];
-		local new = old;
-		if( i<=#new_nodes and new_nodes[i] and minetest.registered_nodes[ new_nodes[i]] ) then
-			new = new_nodes[i];
-			local found = false;
-			for i,v in ipairs(replacements_orig) do
-				if( v and v[1]==old ) then
-					v[2] = new;
-					found = true;
-				end
-			end
-			if( not( found )) then
-				table.insert( replacements_orig, { old, new });
-			end
-		end
-	end
-		
 	-- store the new set of replacements
-	meta:set_string( 'replacements', minetest.serialize( replacements_orig ));
+	meta:set_string( 'replacements', minetest.serialize( replacements ));
 end
 
 
@@ -1495,8 +1248,8 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 
 	elseif( fields.wood_selection ) then
 		local nr = tonumber( fields.wood_selection );
-		if( nr > 0 and nr <= #build_chest.wood_replacements ) then
-			local new_wood = build_chest.wood_replacements[ nr ];
+		if( nr > 0 and nr <= #replacements_wood.found ) then
+			local new_wood = replacements_wood.found[ nr ];
 			local set_wood = meta:get_string( 'set_wood' );
 			if( set_wood and new_wood ~= set_wood ) then
 				build_chest.apply_replacement_for_wood( pos, meta, set_wood, new_wood );
