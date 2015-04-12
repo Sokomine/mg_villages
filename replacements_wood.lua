@@ -93,6 +93,8 @@ replacements_wood.add_wood_type = function( candidate_list, mod_prefix, w_pre, w
 			data[19] = 'default:chest_locked';
 			data[20] = 'stairs:stair_'..w..'upside_down';
 			data[21] = 'stairs:slab_'..w..'upside_down';
+			data[22] = 'doors:trapdoor_open';
+			data[23] = 'doors:trapdoor';
 		-- realtest has some further replacements
 		elseif( mod_prefix=='trees:' and w_post=='_planks' and t_post=='_log' ) then
 			data[12] = 'trees:'..v..'_ladder';
@@ -105,6 +107,8 @@ replacements_wood.add_wood_type = function( candidate_list, mod_prefix, w_pre, w
 			data[19] = 'trees:'..v..'_chest_locked';
 			data[20] = 'trees:'..v..'_planks_stair_upside_down';
 			data[21] = 'trees:'..v..'_planks_slab_upside_down';
+			data[22] = 'hatches:'..v..'_hatch_opened_top';
+			data[23] = 'hatches:'..v..'_hatch_opened_bottom';
 		end
 		replacements_wood.data[ wood_name ] = data;
 	end
