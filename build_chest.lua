@@ -310,20 +310,38 @@ build_chest.add_wood_type = function( candidate_list, mod_prefix, w_pre, w_post,
 				stair_pre..v..stair_post,     -- 7.     "  "    for stairs:stair_wood
 				slab_pre..v..slab_post,       -- 8.     "  "    for stairs:slab_wood
 				fence_pre..v..fence_post,     -- 9.     "  "    for default:fence_wood
-				gate_pre..v..gate_post,       -- 10.    "  "    for cottages:gate_closed
+				gate_pre..v..gate_post..'_open',  -- 10.  "  "    for cottages:gate_open
+				gate_pre..v..gate_post..'_closed',-- 11.  "  "    for cottages:gate_closed
 		};
---[[
-		-- realtest has some further replacements
-		if( mod_prefix=='trees:' and w_post=='_planks' and t_post=='_log' ) then
 
-                                table.insert( replacements, {'default:ladder',       'trees:'..v..'_ladder'});
-                                table.insert( replacements, {'default:chest',        'trees:'..v..'_chest'});
-                                table.insert( replacements, {'default:chest_locked', 'trees:'..v..'_chest_locked'});
-                                table.insert( replacements, {'default:bookshelf',    'decorations:bookshelf_'..v});
-                                table.insert( replacements, {'doors:door_wood_t_1',  'doors:door_'..v..'_t_1'});
-                                table.insert( replacements, {'doors:door_wood_b_1',  'doors:door_'..v..'_b_1'});
-                                table.insert( replacements, {'doors:door_wood_t_2',  'doors:door_'..v..'_t_2'});
-                                table.insert( replacements, {'doors:door_wood_b_2',  'doors:door_'..v..'_b_2'});
+		-- normal wood does have a number of nodes which might get replaced by more specialized wood types
+		if( mod_prefix=='default:' and v=='' ) then
+			local w = 'wood';
+			data[10] = 'cottages:gate_open';
+			data[11] = 'cottages:gate_closed';
+			data[12] = 'default:ladder';
+			data[13] = 'doors:door_'..w..'_t_1';
+			data[14] = 'doors:door_'..w..'_t_2';
+			data[15] = 'doors:door_'..w..'_b_1';
+			data[16] = 'doors:door_'..w..'_b_2';
+			data[17] = 'default:bookshelf';
+			data[18] = 'default:chest';
+			data[19] = 'default:chest_locked';
+			data[20] = 'stairs:stair_'..w..'upside_down';
+			data[21] = 'stairs:slab_'..w..'upside_down';
+		-- realtest has some further replacements
+		elseif( mod_prefix=='trees:' and w_post=='_planks' and t_post=='_log' ) then
+			data[12] = 'trees:'..v..'_ladder';
+			data[13] = 'doors:door_'..v..'_t_1';
+			data[14] = 'doors:door_'..v..'_t_2';
+			data[15] = 'doors:door_'..v..'_b_1';
+			data[16] = 'doors:door_'..v..'_b_2';
+			data[17] = 'decorations:bookshelf_'..v;
+			data[18] = 'trees:'..v..'_chest';
+			data[19] = 'trees:'..v..'_chest_locked';
+			data[20] = 'trees:'..v..'_planks_stair_upside_down';
+			data[21] = 'trees:'..v..'_planks_slab_upside_down';
+--[[ TODO
                                 -- not really wood-realted, but needs to be replaced as well
                                 table.insert( replacements, {'default:furnace',      'oven:oven'});
                                 -- farming is also handled diffrently
@@ -336,14 +354,8 @@ build_chest.add_wood_type = function( candidate_list, mod_prefix, w_pre, w_post,
                                 table.insert( replacements, {'farming:cotton_6',     'farming:flax_3'});
                                 table.insert( replacements, {'farming:cotton_7',     'farming:flax_4'});
                                 table.insert( replacements, {'farming:cotton_8',     'farming:flax_4'});
-                                -- stairs and slabs made out of default wood
-                                table.insert( replacements, {'stairs:stair_woodupside_down','trees:'..v..'_planks_stair_upside_down' } );
-                                table.insert( replacements, {'stairs:slab_woodupside_down', 'trees:'..v..'_planks_slab_upside_down' } );
-
-		-- normal nodes
-		else
-		end
 --]]
+		end
 		build_chest.wood_replacements_extended[ wood_name ] = data;
 	end
 end
@@ -451,26 +463,26 @@ build_chest.construct_wood_type_list = function()
 	-- https://github.com/tenplus1/ethereal
 	-- ethereal does not have a common naming convention for leaves
 	build_chest.add_wood_type( {'acacia','redwood'},'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','',     'ethereal:','gate_closed');
+		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','',     'ethereal:','gate');
 	-- frost has another sapling type...
 	build_chest.add_wood_type( {'frost'},           'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_tree_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','woodgate_closed' );
+		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','woodgate' );
 	-- those tree types do not use typ_leaves, but typleaves instead...
 	build_chest.add_wood_type( {'yellow'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','gate_closed' );
+		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','gate' );
 	-- banana has a diffrent fence type....
 	build_chest.add_wood_type( {'banana'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate_closed' );
+		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
 	-- palm has another name for the sapling again...
 	build_chest.add_wood_type( {'palm'},            'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate_closed' );
+		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
 	-- the leaves are called willow_twig here...
 	build_chest.add_wood_type( {'willow'},          'ethereal:',  '','_wood',   '','_trunk', '','_twig',   '','_sapling',
-		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate_closed' );
+		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
 	-- mushroom has its own name; it works quite well as a wood replacement; the red cap is used as leaves
 	-- the stairs are also called slightly diffrently (end in _trunk instead of _wood)
 	build_chest.add_wood_type( {'mushroom'},        'ethereal:',  '','_pore',   '','_trunk', '','',        '','_sapling',
-		'stairs:stair_','_trunk', 'stairs:slab_','_trunk', 'ethereal:fence_', '',    'ethereal:','gate_closed' );
+		'stairs:stair_','_trunk', 'stairs:slab_','_trunk', 'ethereal:fence_', '',    'ethereal:','gate' );
 
 	
 	-- https://github.com/VanessaE/realtest_game
@@ -520,7 +532,7 @@ build_chest.apply_replacement_for_wood = function( pos, meta, old_material, new_
 	for i=3,#old_nodes do
 		local old = old_nodes[i];
 		local new = old;
-		if( new_nodes[i] and minetest.registered_nodes[ new_nodes[i]] ) then
+		if( i<=#new_nodes and new_nodes[i] and minetest.registered_nodes[ new_nodes[i]] ) then
 			new = new_nodes[i];
 			local found = false;
 			for i,v in ipairs(replacements_orig) do
