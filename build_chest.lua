@@ -900,6 +900,11 @@ build_chest.update_formspec = function( pos, page, player )
 			local start_pos = build_chest.get_start_pos( pos );
 			if( start_pos and start_pos.x ) then
 -- TODO: also show size and such
+				-- do replacements for realtest where necessary (this needs to be done only once)
+				local replacements = {};
+				replacements_realtest.replace( replacements );
+				meta:set_string( 'replacements', minetest.serialize( replacements ));
+
 				formspec = formspec..build_chest.get_replacement_list_formspec( pos );
 				meta:set_string('formspec', formspec );
 				-- TODO minetest.place_schematic( start_pos, options[1]..'.mts', meta:get_string('rotate'), meta:get_string('replacements'), true );
