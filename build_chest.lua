@@ -177,6 +177,9 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 	-- used for setting wood type or plant type etc.
 	local set_wood_type_offset = 0;
 	local extra_buttons        = "";
+	-- there may be wood types that only occour as stairs and/or slabs etc.,
+	-- without full blocks
+	local wood_types_found     = {};
 
 	for i,v in ipairs( build_chest.building[ building_name ].statistic ) do
 		local name = build_chest.building[ building_name ].nodenames[ v[1]];	
@@ -223,11 +226,25 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 			
 			-- find out if there are any wood nodes that may need replacement
 			for k,w in ipairs( replacements_wood.all ) do
+				local found_wood_type = "";
+				-- we have found the full block of that wood type
 				if( name == w ) then
+					found_wood_type = w;
+				-- no wood found; there may still be stairs and slabs
+				else
+					for nr,t in ipairs( replacements_wood.data[ w ] ) do
+						if( name==t and not( wood_types_found[ w ])) then
+							found_wood_type = w;
+						end
+					end
+				end
+				if( found_wood_type ~= "" ) then
 					set_wood_type_offset = set_wood_type_offset + 1;
 					extra_buttons = extra_buttons.."button[9.9,"..
 						tostring( (set_wood_type_offset*0.9)+2.8 )..";3.0,0.5;set_wood;"..
 						minetest.formspec_escape( w ).."]";
+					-- remember that we found and offered this wood type already; avoid duplicates
+					wood_types_found[ w ] = 1;
 				end
 			end
 			j=j+1;
