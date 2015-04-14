@@ -1366,17 +1366,21 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		local start_pos     = minetest.deserialize( meta:get_string('start_pos'));
 		local end_pos       = minetest.deserialize( meta:get_string('end_pos'));
 -- TODO: <worldname>/schems/playername_x_y_z_burried_rotation.mts
-		local filename      = "todo.mts";
+		local filename      = meta:get_string('backup' );
+		if( not( filename ) or filename == "" ) then
+			filename      = "todo.mts";
 print('CREATING schematic '..tostring( filename )..' from '..minetest.serialize( start_pos )..' to '..minetest.serialize( end_pos ));
-		-- store a backup of the original landscape
-		minetest.create_schematic( start_pos, end_pos, nil, filename, nil);
+			-- store a backup of the original landscape
+			minetest.create_schematic( start_pos, end_pos, nil, filename, nil);
+-- TODO: what if the creation of the backup failed?
+			meta:set_string('backup', filename );
+		end
 		-- place the building
 -- TODO: use scaffolding here (exchange some replacements)
 print('USING ROTATION: '..tostring( meta:get_string('rotate')));
 		minetest.place_schematic( start_pos, building_name..'.mts', meta:get_string('rotate'), minetest.deserialize( meta:get_string('replacements')), true );
 -- TODO: all those calls to on_construct need to be done now!
 -- TODO: handle metadata
-		meta:set_string('backup', filename );
 		build_chest.update_formspec( pos, 'main', player );
 
 	-- restore the original landscape
