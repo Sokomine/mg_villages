@@ -1384,7 +1384,7 @@ print('USING ROTATION: '..tostring( meta:get_string('rotate')));
 		local start_pos     = minetest.deserialize( meta:get_string('start_pos'));
 		local end_pos       = minetest.deserialize( meta:get_string('end_pos'));
 		local backup_file   = meta:get_string( 'backup' );
-		if( start_pos and end_pos and start_pos.x and end_pos.x and backup_file ) then
+		if( start_pos and end_pos and start_pos.x and end_pos.x and backup_file and backup_file ~= "") then
 			minetest.place_schematic( start_pos, backup_file, "0", {}, true );
 			meta:set_string('backup', nil );
 		end
