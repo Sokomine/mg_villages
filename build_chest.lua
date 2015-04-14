@@ -132,6 +132,36 @@ build_chest.read_building = function( building_name )
 end
 
 
+build_chest.get_replacement_extra_buttons = function( group, name, types_found_list, button_name, extra_buttons )
+	-- find out if there are any nodes that may need a group replacement
+	local found_type = "";
+	for k,w in ipairs( replacements_group[ group ].all ) do
+		-- we have found the full block of that group type
+		if( name == w ) then
+			found_type = w;
+		-- no primary node found; there may still be subordinate types
+		else
+			for nr,t in ipairs( replacements_group[ group ].data[ w ] ) do
+				if( name==t and not( types_found_list[ w ])) then
+					found_type = w;
+				end
+			end
+		end
+	end
+	if( found_type ~= "" and not( types_found_list[ found_type ])) then
+		extra_buttons.offset = extra_buttons.offset + 1;
+		extra_buttons.text = extra_buttons.text.."button[9.9,"..
+				tostring( (extra_buttons.offset*0.9)+2.8 )..";3.0,0.5;"..
+					tostring( button_name )..";"..
+					minetest.formspec_escape( found_type ).."]";
+		-- remember that we found and offered this type already; avoid duplicates
+		types_found_list[ found_type ] = 1;
+	end
+	return extra_buttons;
+end
+
+
+
 build_chest.get_replacement_list_formspec = function( pos, selected_row )
 	if( not( pos )) then
 		return "";
@@ -174,13 +204,11 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 		build_chest.read_building( building_name );
 	end
 
-	-- used for setting wood type or plant type etc.
-	local set_wood_type_offset = 0;
-	local extra_buttons        = "";
-	-- there may be wood types that only occour as stairs and/or slabs etc.,
-	-- without full blocks
-	local wood_types_found     = {};
-	local fruit_types_found    = {};
+	-- used for setting wood type or plant(farming) type etc.
+	local extra_buttons  = { text = "", offset = 0};
+	-- there may be wood types that only occour as stairs and/or slabs etc., without full blocks
+	local types_found_list_wood    = {};
+	local types_found_list_farming = {};
 
 	for i,v in ipairs( build_chest.building[ building_name ].statistic ) do
 		local name = build_chest.building[ building_name ].nodenames[ v[1]];	
@@ -225,52 +253,8 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 				end
 			end
 			
-			-- find out if there are any wood nodes that may need replacement
-			local found_wood_type = "";
-			for k,w in ipairs( replacements_wood.all ) do
-				-- we have found the full block of that wood type
-				if( name == w ) then
-					found_wood_type = w;
-				-- no wood found; there may still be stairs and slabs
-				else
-					for nr,t in ipairs( replacements_wood.data[ w ] ) do
-						if( name==t and not( wood_types_found[ w ])) then
-							found_wood_type = w;
-						end
-					end
-				end
-			end
-			if( found_wood_type ~= "" and not( wood_types_found[ found_wood_type ])) then
-				set_wood_type_offset = set_wood_type_offset + 1;
-				extra_buttons = extra_buttons.."button[9.9,"..
-					tostring( (set_wood_type_offset*0.9)+2.8 )..";3.0,0.5;set_wood;"..
-					minetest.formspec_escape( found_wood_type ).."]";
-				-- remember that we found and offered this wood type already; avoid duplicates
-				wood_types_found[ found_wood_type ] = 1;
-			end
-
-
-			-- find out if there are any farming nodes that need replacement
-			local found_fruit_type = "";
-			for k,w in ipairs( replacements_farming.all ) do
-				if( name == w ) then
-					found_fruit_type = w;
-				else
-					for nr,t in ipairs( replacements_farming.data[ w ]) do
-						if( name==t and not( fruit_types_found[ w ])) then
-							found_fruit_type = w;
-						end
-					end
-				end
-			end
-			if( found_fruit_type ~= "" and not( fruit_types_found[ found_fruit_type ])) then
-				set_wood_type_offset = set_wood_type_offset + 1;
-				extra_buttons = extra_buttons.."button[9.9,"..
-					tostring( (set_wood_type_offset*0.9)+2.8 )..";3.0,0.5;set_fruit;"..
-					minetest.formspec_escape( found_fruit_type ).."]";
-				-- remember that we found and offered this fruit type already; avoid duplicates
-				fruit_types_found[ found_fruit_type ] = 1;
-			end
+			extra_buttons = build_chest.get_replacement_extra_buttons( 'wood',    name, types_found_list_wood,    'set_wood',    extra_buttons );
+			extra_buttons = build_chest.get_replacement_extra_buttons( 'farming', name, types_found_list_farming, 'set_farming', extra_buttons );
 
 			j=j+1;
 		end
@@ -280,8 +264,8 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 	if( may_proceed ) then
 		formspec = formspec.."button[9.9,9.0;2.0,0.5;proceed_with_scaffolding;Proceed]";
 	end
-	if( extra_buttons ) then
-		formspec = formspec..extra_buttons..
+	if( extra_buttons.text and extra_buttons.text ~= "" ) then
+		formspec = formspec..extra_buttons.text..
 			"label[9.9,2.8;Replace by type:]";
 	end
 	if( replace_row_material ) then
@@ -321,53 +305,43 @@ build_chest.apply_replacement = function( pos, meta, old_material, new_material 
 end
 	
 
-
-build_chest.get_wood_list_formspec = function( pos, set_wood )
-	local formspec = "label[1,2.2;Select replacement for "..tostring( set_wood )..".]"..
-			 "label[1,2.5;Trees, saplings and other blocks will be replaced accordingly as well.]";
-	for i,v in ipairs( replacements_wood.found ) do
+build_chest.get_group_list_formspec = function( pos, group, button_name )
+	local formspec = "";
+	for i,v in ipairs( replacements_group[ group ].found ) do
 		formspec = formspec.."item_image_button["..tostring(((i-1)%8)+1)..","..
 			tostring(3+math.floor((i-1)/8))..";1,1;"..
-			tostring( v )..";wood_selection;"..tostring(i).."]";
+			tostring( v )..";"..tostring( button_name )..";"..tostring(i).."]";
 	end
 	return formspec;
 end
 
+ 
+build_chest.apply_replacement_for_group = function( pos, meta, group, selected, button_name )
+	local nr = tonumber( selected );
+	if( not(nr) or nr <= 0 or nr > #replacements_group[ group ].found ) then
+		return;
+	end	
 
-build_chest.apply_replacement_for_wood = function( pos, meta, old_material, new_material )
+	local new_material = replacements_group[ group ].found[ nr ];
+	local old_material = meta:get_string( button_name );
+
+	-- go back in the menu (even if the same material has been selected)
+	meta:set_string( button_name, nil );
+
+	if( old_material and old_material == new_material ) then
+		return;
+	end
 
 	local replacements  = minetest.deserialize( meta:get_string( 'replacements' ));
 	if( not( replacements )) then
 		replacements = {};
 	end
-	replacements_wood.replace_wood( replacements, old_material, new_material );
+	replacements_group[ group ].replace_material( replacements, old_material, new_material );
 
 	-- store the new set of replacements
 	meta:set_string( 'replacements', minetest.serialize( replacements ));
 end
 
-
-build_chest.get_fruit_list_formspec = function( pos, set_fruit )
-	local formspec = "label[1,2.5;Select the fruit the farm is going to grow:]";
-	for i,v in ipairs( replacements_farming.found ) do
-		formspec = formspec.."item_image_button["..tostring(((i-1)%8)+1)..","..
-			tostring(3+math.floor((i-1)/8))..";1,1;"..
-			tostring( v )..";fruit_selection;"..tostring(i).."]";
-	end
-	return formspec;
-end
-
-build_chest.apply_replacement_for_fruit = function( pos, meta, old_material, new_material )
-
-	local replacements  = minetest.deserialize( meta:get_string( 'replacements' ));
-	if( not( replacements )) then
-		replacements = {};
-	end
-	replacements_farming.replace_fruit( replacements, old_material, new_material );
-
-	-- store the new set of replacements
-	meta:set_string( 'replacements', minetest.serialize( replacements ));
-end
 
 
 -- this function makes sure that the building will always extend to the right and in front of the build chest
@@ -934,14 +908,19 @@ build_chest.update_formspec = function( pos, page, player )
 
 		local set_wood      = meta:get_string('set_wood' );
 		if( set_wood and set_wood ~= "" ) then
-			formspec = formspec..build_chest.get_wood_list_formspec( pos, set_wood );
+			formspec = formspec..
+				"label[1,2.2;Select replacement for "..tostring( set_wood )..".]"..
+				"label[1,2.5;Trees, saplings and other blocks will be replaced accordingly as well.]"..
+				build_chest.get_group_list_formspec( pos, 'wood',    'wood_selection' );
 			meta:set_string('formspec', formspec );
 			return;
 		end
 
-		local set_fruit     = meta:get_string('set_fruit' );
-		if( set_fruit and set_fruit ~= "" ) then
-			formspec = formspec..build_chest.get_fruit_list_formspec( pos, set_fruit );
+		local set_farming     = meta:get_string('set_farming' );
+		if( set_farming and set_farming ~= "" ) then
+			formspec = formspec..
+				"label[1,2.5;Select the fruit the farm is going to grow:]"..
+				build_chest.get_group_list_formspec( pos, 'farming', 'farming_selection' );
 			meta:set_string('formspec', formspec );
 			return;
 		end
@@ -1269,7 +1248,7 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		meta:set_string( 'current_path', minetest.serialize( current_path ));
 		meta:set_string( 'building_name', '');
 		meta:set_string( 'set_wood',      '');
-		meta:set_string( 'set_fruit',     '');
+		meta:set_string( 'set_farming',     '');
 		meta:set_int(    'replace_row', 0 );
 		meta:set_int(    'page_nr',     0 );
 		build_chest.update_formspec( pos, 'main', player );
@@ -1325,16 +1304,7 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 
 
 	elseif( fields.wood_selection ) then
-		local nr = tonumber( fields.wood_selection );
-		if( nr > 0 and nr <= #replacements_wood.found ) then
-			local new_wood = replacements_wood.found[ nr ];
-			local set_wood = meta:get_string( 'set_wood' );
-			if( set_wood and new_wood ~= set_wood ) then
-				build_chest.apply_replacement_for_wood( pos, meta, set_wood, new_wood );
-			end
-			-- go back in the menu
-			meta:set_string( 'set_wood', nil );
-		end
+		build_chest.apply_replacement_for_group( pos, meta, 'wood',    fields.wood_selection, 'set_wood' );
 		build_chest.update_formspec( pos, 'main', player );
 
 
@@ -1343,21 +1313,12 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		build_chest.update_formspec( pos, 'main', player );
 
 
-	elseif( fields.set_fruit ) then
-		meta:set_string('set_fruit', fields.set_fruit );
+	elseif( fields.set_farming ) then
+		meta:set_string('set_farming', fields.set_farming );
 		build_chest.update_formspec( pos, 'main', player );
 
-	elseif( fields.fruit_selection ) then
-		local nr = tonumber( fields.fruit_selection );
-		if( nr > 0 and nr <= #replacements_farming.found ) then
-			local new_fruit = replacements_farming.found[ nr ];
-			local set_fruit = meta:get_string( 'set_fruit' );
-			if( set_fruit and new_fruit ~= set_fruit ) then
-				build_chest.apply_replacement_for_fruit( pos, meta, set_fruit, new_fruit );
-			end
-			-- go back in the menu
-			meta:set_string( 'set_fruit', nil );
-		end
+	elseif( fields.farming_selection ) then
+		build_chest.apply_replacement_for_group( pos, meta, 'farming', fields.farming_selection, 'set_farming' );
 		build_chest.update_formspec( pos, 'main', player );
 
 

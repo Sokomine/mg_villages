@@ -43,6 +43,7 @@ dofile(mg_villages.modpath.."/nodes.lua")
 dofile(mg_villages.modpath.."/trees.lua")
 
 -- replace some materials for entire villages randomly
+replacements_group = {};
 dofile(mg_villages.modpath.."/replacements_wood.lua")
 dofile(mg_villages.modpath.."/replacements_realtest.lua")
 dofile(mg_villages.modpath.."/replacements_farming.lua")

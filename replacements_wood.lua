@@ -1,28 +1,28 @@
-replacements_wood = {}
+replacements_group['wood'] = {}
 
 -- this contains a list of all found/available nodenames that may act as a replacement for default:wood
-replacements_wood.found = {};
+replacements_group['wood'].found = {};
 -- contains a list of *all* known wood names - even of mods that may not be installed
-replacements_wood.all   = {};
+replacements_group['wood'].all   = {};
 
 -- contains information about how a particular node is called if a particular wood is used;
-replacements_wood.data  = {};
+replacements_group['wood'].data  = {};
 
 ------------------------------------------------------------------------------
 -- external function; call it in order to replace old_wood with new_wood;
 -- other nodes (trees, saplings, fences, doors, ...) are replaced accordingly,
 -- depending on what new_wood has to offer
 ------------------------------------------------------------------------------
-replacements_wood.replace_wood = function( replacements, old_wood, new_wood )
+replacements_group['wood'].replace_material = function( replacements, old_wood, new_wood )
 
-	if(  not( old_wood ) or not( replacements_wood.data[ old_wood ])
-	  or not( new_wood ) or not( replacements_wood.data[ new_wood ])
+	if(  not( old_wood ) or not( replacements_group['wood'].data[ old_wood ])
+	  or not( new_wood ) or not( replacements_group['wood'].data[ new_wood ])
 	  or old_wood == new_wood ) then
 		return replacements;
 	end
 
-	local old_nodes = replacements_wood.data[ old_wood ];
-	local new_nodes = replacements_wood.data[ new_wood ];
+	local old_nodes = replacements_group['wood'].data[ old_wood ];
+	local new_nodes = replacements_group['wood'].data[ new_wood ];
 	for i=3,#old_nodes do
 		local old = old_nodes[i];
 		local new = old;
@@ -48,8 +48,8 @@ end
 -- internal functions
 ---------------------
 -- wood (and its corresponding tree trunk) is a very good candidate for replacement in most houses
--- helper function for replacements_wood.get_wood_type_list
-replacements_wood.add_wood_type = function( candidate_list, mod_prefix, w_pre, w_post, t_pre, t_post, l_pre, l_post,
+-- helper function for replacements_group['wood'].get_wood_type_list
+replacements_group['wood'].add_material = function( candidate_list, mod_prefix, w_pre, w_post, t_pre, t_post, l_pre, l_post,
 					s_pre, s_post, stair_pre, stair_post, slab_pre, slab_post,
 					fence_pre, fence_post, gate_pre, gate_post )
 	if( not( candidate_list )) then
@@ -58,10 +58,10 @@ replacements_wood.add_wood_type = function( candidate_list, mod_prefix, w_pre, w
 	for _,v in ipairs( candidate_list ) do
 		local wood_name = mod_prefix..w_pre..v..w_post;
 		-- create a complete list of all possible wood names
-		table.insert( replacements_wood.all, wood_name );
+		table.insert( replacements_group['wood'].all, wood_name );
 		-- create a list of all *installed* wood types
 		if( minetest.registered_nodes[ wood_name ]) then
-			table.insert( replacements_wood.found, wood_name );
+			table.insert( replacements_group['wood'].found, wood_name );
 		end
 			
 		-- there is no check if the node names created here actually exist
@@ -110,7 +110,7 @@ replacements_wood.add_wood_type = function( candidate_list, mod_prefix, w_pre, w
 			data[22] = 'hatches:'..v..'_hatch_opened_top';
 			data[23] = 'hatches:'..v..'_hatch_opened_bottom';
 		end
-		replacements_wood.data[ wood_name ] = data;
+		replacements_group['wood'].data[ wood_name ] = data;
 	end
 end
 
@@ -118,70 +118,76 @@ end
 -- TODO: moreblocks - those may be installed and offer further replacements
 
 -- create a list of all available wood types
-replacements_wood.construct_wood_type_list = function()
+replacements_group['wood'].construct_wood_type_list = function()
 
 	-- https://github.com/minetest/minetest_game
 	-- default tree and jungletree; no gates available
-	replacements_wood.add_wood_type( {'', 'jungle' },     'default:', '','wood','', 'tree',  '','leaves',  '','sapling',
+	replacements_group['wood'].add_material( {'', 'jungle' },     'default:', '','wood','', 'tree',  '','leaves',  '','sapling',
 		'stairs:stair_', 'wood', 'stairs:slab_', 'wood',   'default:fence_','wood',  'NONE', '' );
 	-- default:pine_needles instead of leaves; no gates available
-	replacements_wood.add_wood_type( {'pine' },           'default:', '','wood','', 'tree',  '','_needles','','_sapling',
+	replacements_group['wood'].add_material( {'pine' },           'default:', '','wood','', 'tree',  '','_needles','','_sapling',
 		'stairs:stair_', 'wood', 'stairs:slab_', 'wood',   'default:fence_','wood',  'NONE','' );
 
 	-- https://github.com/Novatux/mg
 	-- trees from nores mapgen
-	replacements_wood.add_wood_type( {'savanna', 'pine' },'mg:',     '','wood','', 'tree',  '','leaves',  '','sapling',
+	replacements_group['wood'].add_material( {'savanna', 'pine' },'mg:',     '','wood','', 'tree',  '','leaves',  '','sapling',
 		'stairs:stair_','wood',  'stairs:slab_','wood',    'NONE','',  'NONE','');
 
 
 	-- https://github.com/VanessaE/moretrees
 	-- minus the jungletree (already in default)
 	local moretrees_treelist = {"beech","apple_tree","oak","sequoia","birch","palm","spruce","pine","willow","acacia","rubber_tree","fir" };
-	replacements_wood.add_wood_type( moretrees_treelist,  'moretrees:', '', '_planks', '','_trunk', '','_leaves','','_sapling',
+	replacements_group['wood'].add_material( moretrees_treelist,  'moretrees:', '', '_planks', '','_trunk', '','_leaves','','_sapling',
 		'moretrees:stair_','_planks', 'moretrees:slab_','_planks',   'NONE','',  'NONE','');
 	
 
 	-- https://github.com/tenplus1/ethereal
 	-- ethereal does not have a common naming convention for leaves
-	replacements_wood.add_wood_type( {'acacia','redwood'},'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_sapling',
+	replacements_group['wood'].add_material( {'acacia','redwood'},'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','',     'ethereal:','gate');
 	-- frost has another sapling type...
-	replacements_wood.add_wood_type( {'frost'},           'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_tree_sapling',
+	replacements_group['wood'].add_material( {'frost'},           'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_tree_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','woodgate' );
 	-- those tree types do not use typ_leaves, but typleaves instead...
-	replacements_wood.add_wood_type( {'yellow'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
+	replacements_group['wood'].add_material( {'yellow'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','gate' );
 	-- banana has a diffrent fence type....
-	replacements_wood.add_wood_type( {'banana'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
+	replacements_group['wood'].add_material( {'banana'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
 	-- palm has another name for the sapling again...
-	replacements_wood.add_wood_type( {'palm'},            'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_sapling',
+	replacements_group['wood'].add_material( {'palm'},            'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
 	-- the leaves are called willow_twig here...
-	replacements_wood.add_wood_type( {'willow'},          'ethereal:',  '','_wood',   '','_trunk', '','_twig',   '','_sapling',
+	replacements_group['wood'].add_material( {'willow'},          'ethereal:',  '','_wood',   '','_trunk', '','_twig',   '','_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_', '',    'ethereal:','gate' );
 	-- mushroom has its own name; it works quite well as a wood replacement; the red cap is used as leaves
 	-- the stairs are also called slightly diffrently (end in _trunk instead of _wood)
-	replacements_wood.add_wood_type( {'mushroom'},        'ethereal:',  '','_pore',   '','_trunk', '','',        '','_sapling',
+	replacements_group['wood'].add_material( {'mushroom'},        'ethereal:',  '','_pore',   '','_trunk', '','',        '','_sapling',
 		'stairs:stair_','_trunk', 'stairs:slab_','_trunk', 'ethereal:fence_', '',    'ethereal:','gate' );
 
 	
 	-- https://github.com/VanessaE/realtest_game
 	local realtest_trees = {'ash','aspen','birch','maple','chestnut','pine','spruce'};
-	replacements_wood.add_wood_type( realtest_trees,      'trees:',     '','_planks', '','_log',   '','_leaves', '','_sapling',
+	replacements_group['wood'].add_material( realtest_trees,      'trees:',     '','_planks', '','_log',   '','_leaves', '','_sapling',
 		'trees:','_planks_stair', 'trees:','_planks_slab', 'fences:','_fence',    'NONE','' );
 
 	
 	-- https://github.com/Gael-de-Sailly/Forest
 	local forest_trees = {'oak','birch','willow','fir','mirabelle','cherry','plum','beech','ginkgo','lavender'};
-	replacements_wood.add_wood_type( forest_trees,        'forest:',    '', '_wood',  '','_tree',  '','_leaves', '','_sapling',
+	replacements_group['wood'].add_material( forest_trees,        'forest:',    '', '_wood',  '','_tree',  '','_leaves', '','_sapling',
 		'stairs:stair_','_wood',  'stairs:slab_','_wood',    'NONE','',            'NONE',''        );
 
 	-- https://github.com/bas080/trees
-	replacements_wood.add_wood_type( {'mangrove','palm','conifer'},'trees:',  'wood_','',   'tree_','',  'leaves_','', 'sapling_','', 
+	replacements_group['wood'].add_material( {'mangrove','palm','conifer'},'trees:',  'wood_','',   'tree_','',  'leaves_','', 'sapling_','', 
 		'stairs:stair_','_wood',  'stairs:slab_','_wood',    'NONE','',            'NONE',''        );
+
+
+	-- https://github.com/PilzAdam/farming_plus
+	-- TODO: this does not come with its own wood... banana and cocoa trees (only leaves, sapling and fruit)
+	-- TODO:      farming_plus:TREETYP_sapling   farming_plus:TREETYP_leaves   farming_plus:TREETYP 
+	-- TODO: in general: add fruits as replacements for apples
 end
 
 -- actually construct the data structure once
-replacements_wood.construct_wood_type_list();
+replacements_group['wood'].construct_wood_type_list();
 
