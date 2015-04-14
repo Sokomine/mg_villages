@@ -209,6 +209,7 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 	-- there may be wood types that only occour as stairs and/or slabs etc., without full blocks
 	local types_found_list_wood    = {};
 	local types_found_list_farming = {};
+	local types_found_list_roof    = {};
 
 	for i,v in ipairs( build_chest.building[ building_name ].statistic ) do
 		local name = build_chest.building[ building_name ].nodenames[ v[1]];	
@@ -255,6 +256,7 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 			
 			extra_buttons = build_chest.get_replacement_extra_buttons( 'wood',    name, types_found_list_wood,    'set_wood',    extra_buttons );
 			extra_buttons = build_chest.get_replacement_extra_buttons( 'farming', name, types_found_list_farming, 'set_farming', extra_buttons );
+			extra_buttons = build_chest.get_replacement_extra_buttons( 'roof',    name, types_found_list_farming, 'set_roof',    extra_buttons );
 
 			j=j+1;
 		end
@@ -925,6 +927,15 @@ build_chest.update_formspec = function( pos, page, player )
 			return;
 		end
 
+		local set_roof        = meta:get_string('set_roof' );
+		if( set_roof and set_roof ~= "" ) then
+			formspec = formspec..
+				"label[1,2.5;Select a roof type for the house:]"..
+				build_chest.get_group_list_formspec( pos, 'roof',    'roof_selection' );
+			meta:set_string('formspec', formspec );
+			return;
+		end
+
 		if( building_name and building_name ~= '' and start_pos and start_pos ~= '' and meta:get_string('replacements')) then
 			formspec = formspec..build_chest.get_replacement_list_formspec( pos );
 			meta:set_string('formspec', formspec );
@@ -1248,7 +1259,8 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		meta:set_string( 'current_path', minetest.serialize( current_path ));
 		meta:set_string( 'building_name', '');
 		meta:set_string( 'set_wood',      '');
-		meta:set_string( 'set_farming',     '');
+		meta:set_string( 'set_farming',   '');
+		meta:set_string( 'set_roof',      '');
 		meta:set_int(    'replace_row', 0 );
 		meta:set_int(    'page_nr',     0 );
 		build_chest.update_formspec( pos, 'main', player );
@@ -1303,22 +1315,29 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		build_chest.update_formspec( pos, 'main', player );
 
 
-	elseif( fields.wood_selection ) then
-		build_chest.apply_replacement_for_group( pos, meta, 'wood',    fields.wood_selection, 'set_wood' );
-		build_chest.update_formspec( pos, 'main', player );
-
-
 	elseif( fields.set_wood ) then
 		meta:set_string('set_wood', fields.set_wood );
 		build_chest.update_formspec( pos, 'main', player );
-
 
 	elseif( fields.set_farming ) then
 		meta:set_string('set_farming', fields.set_farming );
 		build_chest.update_formspec( pos, 'main', player );
 
+	elseif( fields.set_roof ) then
+		meta:set_string('set_roof',    fields.set_roof );
+		build_chest.update_formspec( pos, 'main', player );
+
+
+	elseif( fields.wood_selection ) then
+		build_chest.apply_replacement_for_group( pos, meta, 'wood',    fields.wood_selection,    'set_wood' );
+		build_chest.update_formspec( pos, 'main', player );
+
 	elseif( fields.farming_selection ) then
 		build_chest.apply_replacement_for_group( pos, meta, 'farming', fields.farming_selection, 'set_farming' );
+		build_chest.update_formspec( pos, 'main', player );
+
+	elseif( fields.roof_selection ) then
+		build_chest.apply_replacement_for_group( pos, meta, 'roof',    fields.roof_selection,    'set_roof' );
 		build_chest.update_formspec( pos, 'main', player );
 
 

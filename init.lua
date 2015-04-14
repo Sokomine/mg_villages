@@ -47,6 +47,7 @@ replacements_group = {};
 dofile(mg_villages.modpath.."/replacements_wood.lua")
 dofile(mg_villages.modpath.."/replacements_realtest.lua")
 dofile(mg_villages.modpath.."/replacements_farming.lua")
+dofile(mg_villages.modpath.."/replacements_roof.lua")
 dofile(mg_villages.modpath.."/replacements.lua")
 
 -- multiple diffrent village types with their own sets of houses are supported
