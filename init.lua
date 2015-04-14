@@ -45,6 +45,7 @@ dofile(mg_villages.modpath.."/trees.lua")
 -- replace some materials for entire villages randomly
 dofile(mg_villages.modpath.."/replacements_wood.lua")
 dofile(mg_villages.modpath.."/replacements_realtest.lua")
+dofile(mg_villages.modpath.."/replacements_farming.lua")
 dofile(mg_villages.modpath.."/replacements.lua")
 
 -- multiple diffrent village types with their own sets of houses are supported

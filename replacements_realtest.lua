@@ -47,6 +47,10 @@ replacements_realtest.replace = function( replacements )
 	if( to_realtest ) then
 		table.insert( repl, {'default:furnace',          'oven:oven'});
 		table.insert( repl, {'default:clay',             'grounds:clay'});
+		-- Realtest does not know about these nodes yet
+		table.insert( repl, {'farming:soil_wet',            'farming:soil'});
+		table.insert( repl, {'farming:desert_sand_soil',    'farming:soil'});
+		table.insert( repl, {'farming:desert_sand_soil_wet','farming:soil'});
 		for i=1,5 do
                 	table.insert( repl, {'default:grass_'..i,'air' });
 		end
@@ -55,7 +59,9 @@ replacements_realtest.replace = function( replacements )
 	else
 		table.insert(         repl, {'oven:oven',        'default:furnace'});
 		table.insert(         repl, {'grounds:clay',     'default:clay'});
+		table.insert(         repl, {'farming:soil',     'farming:soil_wet'});
         end
+
 
 	for i,v in ipairs( repl ) do
 		if( v and v[2] and minetest.registered_nodes[ v[2]] ) then
