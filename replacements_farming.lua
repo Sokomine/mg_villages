@@ -49,18 +49,30 @@ end
 ---------------------
 replacements_farming.add_fruit_type = function( fruit, fruit_item, prefix, seperator, postfix  )
 
-	table.insert( replacements_farming.found, fruit_item );
+	local is_loaded = false;
+	if(     minetest.registered_items[ fruit_item ] 
+	    and minetest.registered_nodes[ prefix..fruit..seperator.."1"..postfix ] ) then
+		is_loaded = true;
+		table.insert( replacements_farming.found, fruit_item );
+	end
+	table.insert( replacements_farming.all, fruit_item );
 
 	local data = {};
 	for i=1,8 do
 		local node_name = prefix..fruit..seperator..tostring(i)..postfix;
-		if( minetest.registered_nodes[ node_name ]) then
+		if( is_loaded and minetest.registered_nodes[ node_name ]) then
+			table.insert( data, node_name );
+		-- if the mod is not loaded, we do not know how many growth stages it has;
+		-- in order to be on the safe side, store them all
+		elseif( not( is_loaded )) then
 			table.insert( data, node_name );
 		end
 	end
 	-- the last plant stage (the one that gives the fruit) usually has no number
 	local node_name = prefix..fruit;
-	if( minetest.registered_nodes[ node_name ]) then
+	if( is_loaded and minetest.registered_nodes[ node_name ]) then
+		table.insert( data, node_name );
+	elseif( not( is_loaded )) then
 		table.insert( data, node_name );
 	end
 	replacements_farming.data[ fruit_item ] = data;
@@ -71,58 +83,42 @@ end
 
 -- create a list of all available fruit types
 replacements_farming.construct_farming_type_list = function()
-	local fruits = {'carrot','coffee','corn','cucumber','lemon','melon','orange','peach',
-			'potato','potatoe', -- diffrent mods spell them diffrently
-			'pumpkin','raspberry','rhubarb','strawberry','tomato','walnut',
-			-- docfarming
-			'corn',
-			-- from default
-			'cotton','wheat',
-			-- from realtest
-			'flax','spelt','soy'};
 
+	-- farming from minetest_game
+	replacements_farming.add_fruit_type( 'wheat',  'farming:wheat',                   'farming:', '_', '' );
+	replacements_farming.add_fruit_type( 'cotton', 'farming:cotton',                  'farming:', '_', '' );
+
+	-- RealTest
+	replacements_farming.add_fruit_type( 'flax',   'farming:string',                  'farming:', '_', '' );
+	replacements_farming.add_fruit_type( 'spelt',  'farming:wheat',                   'farming:', '_', '' );
+	replacements_farming.add_fruit_type( 'soy',    'farming:soy',                     'farming:', '_', '' );
+
+
+	-- diffrent versions of farming_plus:
+	--    PilzAdam:  https://forum.minetest.net/viewtopic.php?t=2787
+	--    TenPlus1:  https://forum.minetest.net/viewtopic.php?t=9019
+	--    MTDad:     https://forum.minetest.net/viewtopic.php?t=10187
+	local fruits = { 'strawberry', 'raspberry',
+			'carrot', 'rhubarb', 'cucumber',
+			'pumpkin', 'melon',
+			'orange', 'lemon', 'peach', 'walnut',
+			'potato','potatoe', -- diffrent mods spell them diffrently
+			'tomato', 'corn'
+			};
 	for i,fruit in ipairs( fruits ) do
-		-- diffrent versions of farming_plus:
-		-- PilzAdam:  https://forum.minetest.net/viewtopic.php?t=2787
-		-- TenPlus1:  https://forum.minetest.net/viewtopic.php?t=9019
-		-- MTDad:     https://forum.minetest.net/viewtopic.php?t=10187
 		if(     minetest.registered_nodes[ 'farming_plus:'..fruit ]
 		    and minetest.registered_nodes[ 'farming_plus:'..fruit..'_1' ]
 		    and minetest.registered_items[ 'farming_plus:'..fruit..'_item' ] ) then
 			replacements_farming.add_fruit_type( fruit, 'farming_plus:'..fruit..'_item',   'farming_plus:', '_', '' );
-
-		elseif( minetest.registered_nodes[ 'farming_plus:'..fruit ]
-		    and minetest.registered_nodes[ 'farming_plus:'..fruit..'_1' ]
-		    and minetest.registered_items[ 'farming_plus:'..fruit..'_beans' ] ) then
-			table.insert( replacements_farming.found, 'farming_plus:'..fruit..'_beans'  );
-			replacements_farming.add_fruit_type( fruit, 'farming_plus:'..fruit..'_beans',  'farming_plus:', '_', '' );
-                                                                      
-		-- Docfarming: https://forum.minetest.net/viewtopic.php?t=3948 
-		elseif( minetest.registered_items[ 'docfarming:'  ..fruit ]
-		    and minetest.registered_nodes[ 'docfarming:'  ..fruit..'1' ]) then
-			replacements_farming.add_fruit_type( fruit, 'docfarming:'..fruit,              'docfarming:', '', '' );
-
-		-- farming from default; also covers soy from RealTest
-		elseif( minetest.registered_items[ 'farming:'     ..fruit ]
-		    and minetest.registered_nodes[ 'farming:'     ..fruit..'_1' ]) then
-			replacements_farming.add_fruit_type( fruit, 'farming:'..fruit,                 'farming:', '_', '' );
-
-		-- RealTest
-		elseif( fruit=='flax'
-		    and minetest.registered_items[ 'farming:string' ]
-		    and minetest.registered_nodes[ 'farming:'     ..fruit..'_1' ]) then
-			replacements_farming.add_fruit_type( fruit, 'farming:string',                  'farming:', '_', '' );
-
-		elseif( fruit=='spelt'
-		    and minetest.registered_items[ 'farming:wheat' ]
-		    and minetest.registered_nodes[ 'farming:'     ..fruit..'_1' ]) then
-			replacements_farming.add_fruit_type( fruit, 'farming:wheat',                   'farming:', '_', '' );
-
-		elseif( fruit=='soy'
-		    and minetest.registered_items[ 'farming:soy' ]
-		    and minetest.registered_nodes[ 'farming:'     ..fruit..'_1' ]) then
-			replacements_farming.add_fruit_type( fruit, 'farming:soy',                     'farming:', '_', '' );
 		end
+	end
+	-- coffee beans from farming_plus/farming_plusplus
+	replacements_farming.add_fruit_type( 'coffee', 'farming_plus:coffee_beans',       'farming_plus:', '_', '' );
+
+	-- Docfarming: https://forum.minetest.net/viewtopic.php?t=3948 
+	fruits = {'carrot','corn','potato','raspberry'};
+	for i,fruit in ipairs( fruits ) do
+		replacements_farming.add_fruit_type( fruit, 'docfarming:'..fruit,         'docfarming:', '', '' );
 	end
 end
 

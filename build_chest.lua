@@ -252,7 +252,7 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 
 			-- find out if there are any farming nodes that need replacement
 			local found_fruit_type = "";
-			for k,w in ipairs( replacements_farming.found ) do -- TODO: ought to be .all
+			for k,w in ipairs( replacements_farming.all ) do
 				if( name == w ) then
 					found_fruit_type = w;
 				else
