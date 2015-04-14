@@ -87,7 +87,7 @@ replacements_group['roof'].construct_roof_type_list = function()
 			} );
 	end
 	-- roof from homedecor
-	roofs = {'wood', 'terracootta', 'asphalt', 'glass'};
+	roofs = {'wood', 'terracotta', 'asphalt', 'glass'};
 	for i,v in ipairs( roofs ) do
 		replacements_group['roof'].add_material( {
 			'homedecor:shingle_side_'..v,
