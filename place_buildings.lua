@@ -370,6 +370,9 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 					ground_type = node_content;
 				end
+				if( not( t )) then
+					t = c_air;
+				end
 	
 				if( t and type(t)=='table' and #t==2 and t[1] and t[2]) then
 					local n = new_nodes[ t[1] ]; -- t[1]: id of the old node
@@ -454,7 +457,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					end
 
 				-- air and gravel (the road is structured like this)
-				elseif (type(t) ~= 'table' and t ~= c_ignore) then
+				elseif ( type(t) ~= 'table' and t ~= c_ignore) then
 	
 					new_content = t;
 					if( t and replacements.ids[ t ] ) then

@@ -127,16 +127,18 @@ handle_schematics.analyze_mts_file = function( path )
 	local data_string = minetest.decompress(compressed_data, "deflate" );
 	file.close(file)
 
-	local c_ignore = minetest.get_content_id( 'ignore' );
-
 	local ids = {};
 	local needs_on_constr = {};
+	local is_air = 0;
 	-- translate nodenames to ids
 	for i,v in ipairs( nodenames ) do
 		ids[ i ] = minetest.get_content_id( v );
 		needs_on_constr[ i ] = false;
 		if( minetest.registered_nodes[ v ] and minetest.registered_nodes[ v ].on_construct ) then
 			needs_on_constr[ i ] = true;
+		end
+		if( v == 'air' ) then
+			is_air = i;
 		end
 	end
 
@@ -157,7 +159,9 @@ handle_schematics.analyze_mts_file = function( path )
 		local p2 = string.byte( data_string, p2offset + math.floor(i/2));
 		id = id+1;
 
-		scm[y][x][z] = {id, p2}; -- TODO: handle possible meta values contained in another file
+		if( id ~= is_air ) then
+			scm[y][x][z] = {id, p2}; -- TODO: handle possible meta values contained in another file
+		end
 	end
 	end
 	end
@@ -215,7 +219,7 @@ handle_schematics.store_mts_file = function( path, data )
 	for y = 1, data.size.y do
 	for x = 1, data.size.x do
 		local a = data.scm_data_cache[y][x][z];
-		if( type( a ) == 'table') then
+		if( a and type( a ) == 'table') then
 			node_data = node_data..string.char( math.floor( a[1]/256) )..string.char( a[1]%256-1);	
 		else
 			node_data = node_data..string.char( 0 )..string.char( #data.nodenames-1 );
@@ -238,7 +242,7 @@ handle_schematics.store_mts_file = function( path, data )
 	for y = 1, data.size.y do
 	for x = 1, data.size.x do
 		local a = data.scm_data_cache[y][x][z];
-		if( type( a) == 'table' ) then
+		if( a and type( a) == 'table' ) then
 			node_data = node_data..string.char( a[2] );	
 		else
 			node_data = node_data..string.char( 0 );	

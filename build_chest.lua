@@ -2,6 +2,7 @@
 -- interface for manual placement of houses 
 -----------------------------------------------------------------------------------------------------------------
 
+-- TODO: this is outdated; remove the comments:
 -- 25.12.13 cleaned up namespace
 
 -- from random_buildings, these functions/values are used:
@@ -69,16 +70,18 @@ build_chest.count_nodes = function( data )
 	for x = 1, data.size.x do
 
 		local a = data.scm_data_cache[y][x][z];
-		local id = 0;
-		if( type( a )=='table' ) then
-			id = a[1];
-		else
-			id = a;
-		end
-		if( not( statistic[ id ] )) then
-			statistic[ id ] = { id, 1};
-		else
-			statistic[ id ] = { id, statistic[ id ][ 2 ]+1 };
+		if( a ) then
+			local id = 0;
+			if( type( a )=='table' ) then
+				id = a[1];
+			else
+				id = a;
+			end
+			if( not( statistic[ id ] )) then
+				statistic[ id ] = { id, 1};
+			else
+				statistic[ id ] = { id, statistic[ id ][ 2 ]+1 };
+			end
 		end
 	end
 	end
@@ -88,6 +91,7 @@ build_chest.count_nodes = function( data )
 end
 
 
+-- TODO: actually show the preview image somewhere
 -- creates a 2d preview image (or rather, the data structure for it) of the building
 build_chest.create_preview_image = function( data )
 	local preview = {};
@@ -463,6 +467,7 @@ end
 
 
 
+-- TODO: start with a shovel to get the dirt + scaffolding
 -- building consists of several steps:
 -- 0. cobble, tree
 -- 1. wood, loam, everything else that doesn't fit elsewhere
@@ -827,6 +832,7 @@ build_chest.build_scaffolding = function( pos, player, building_name )
    -- the inhabitants have enough dirt to spare
    replacements[ 'default:dirt'            ] = 'default:dirt';
    replacements[ 'default:dirt_with_grass' ] = 'default:dirt';
+-- TODO: default:dirt_with_snow  plus realtest grounds...
    -- soil has not been worked on yet and thus is just dirt
    replacements[ 'farming:soil'     ] = 'default:dirt';
    replacements[ 'farming:soil_wet' ] = 'default:dirt';
