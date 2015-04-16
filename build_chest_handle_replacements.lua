@@ -143,6 +143,7 @@ build_chest.replacements_get_list_formspec = function( pos, selected_row )
 	if( may_proceed ) then
 		formspec = formspec.."button[9.9,9.0;2.0,0.5;proceed_with_scaffolding;Proceed]";
 	end
+	formspec = formspec.."button[9.9,1.0;2.0,0.5;preview;Preview]";
 	if( extra_buttons.text and extra_buttons.text ~= "" ) then
 		formspec = formspec..extra_buttons.text..
 			"label[9.9,2.8;Replace by type:]";

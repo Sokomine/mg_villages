@@ -4,7 +4,7 @@
 mg_villages.MAP_RANGE = 1000;
 
 
-mg_villages.draw_tile = function( content_id, image, x, z, dx, dz )
+mg_villages.draw_tile = function( content_id, image, x, z, dx, dz, tile_nr )
 	if( not( image )) then
 		local node_name = minetest.get_name_from_content_id( content_id );
 		if( not( node_name )) then
@@ -17,7 +17,10 @@ mg_villages.draw_tile = function( content_id, image, x, z, dx, dz )
 		local tiles = node_def.tiles;
 		local tile = nil;
 		if( tiles ~= nil ) then
-			tile = tiles[1];
+			if( not(tile_nr) or tile_nr > #tiles or tile_nr < 1 ) then
+				tile_nr = 1;
+			end
+			tile = tiles[tile_nr];
 		end
 		if type(tile)=="table" then
 			tile=tile["name"]
@@ -67,7 +70,7 @@ mg_villages.map_of_world = function( pname )
 				local dx = f1 * 80;
 				local dz = f1 * 80;
 
-				formspec = formspec..mg_villages.draw_tile( content_id, nil, x1+0.5, z1-0.5, dx*1.25, dz*1.25 );
+				formspec = formspec..mg_villages.draw_tile( content_id, nil, x1+0.5, z1-0.5, dx*1.25, dz*1.25, 1 );
 
 				-- if more detailed information is available, draw those tiles that differ from the most common tile
 				if( type( surface_types )=='table' and false) then -- TODO: disabled for now
@@ -77,7 +80,7 @@ mg_villages.map_of_world = function( pname )
 						if( v ~= content_id ) then
 							local x2 = x1+( math.floor( (i-1)/5 )*dx); 
 							local z2 = z1+( math.floor( (i-1)%5 )*dz);
-							formspec = formspec..mg_villages.draw_tile( v, nil, x2+0.5, z2-0.5, dx*1.3, dz*1.3);
+							formspec = formspec..mg_villages.draw_tile( v, nil, x2+0.5, z2-0.5, dx*1.3, dz*1.3, 1);
 						end
 					end
 				end
@@ -115,7 +118,7 @@ mg_villages.map_of_world = function( pname )
 			z = f1 * ( (2*r) -(z+r));
 
 			formspec = formspec..
-				"label["..x..",".. z ..";"..tostring( data.nr ).."]"..mg_villages.draw_tile( nil,  mg_villages.village_type_data[ data.village_type ].texture, x, z, dx, dz );
+				"label["..x..",".. z ..";"..tostring( data.nr ).."]"..mg_villages.draw_tile( nil,  mg_villages.village_type_data[ data.village_type ].texture, x, z, dx, dz, 1 );
 
 			shown_villages[ #shown_villages+1 ] = tostring( data.nr )..". "..tostring( v.name or 'unknown' ).."]"; 
 		end

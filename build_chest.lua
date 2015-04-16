@@ -92,24 +92,81 @@ build_chest.create_preview_image = function( data )
 	local preview = {};
 	for y = 1, data.size.y do
 		preview[ y ] = {};
-		for z = 1, data.size.z do
+		for x = 1, data.size.x do
 			local found = nil;
-			local x = 1;
-			while( not( found ) and x<= data.size.x ) do
+			local z = 1;
+			while( not( found ) and z<= data.size.z ) do
 				local node = data.scm_data_cache[y][x][z];
-				if( node
-				   and data.nodenames[ node ]
-				   and data.nodenames[ node ] ~= 'air'
- 				   and data.nodenames[ node ] ~= 'ignore'
- 				   and data.nodenames[ node ] ~= 'mg:ignore' ) then
+				if( node and node[1]
+				   and data.nodenames[ node[1] ]
+				   and data.nodenames[ node[1] ] ~= 'air'
+ 				   and data.nodenames[ node[1] ] ~= 'ignore'
+ 				   and data.nodenames[ node[1] ] ~= 'mg:ignore' 
+ 				   and data.nodenames[ node[1] ] ~= 'default:torch'
+ 				   and minetest.registered_nodes[ data.nodenames[ node[1] ]] ) then
 					-- a preview node is only set if there's no air there
-					preview[y][z] = node;
+					preview[y][x] = node[1];
+					found = 1;
 				end
-				x = x+1;
+				z = z+1;
+			end
+			if( not( found )) then
+				preview[y][x] = -1;
 			end
 		end
 	end
 	return preview;
+end
+
+--		for z = 1, data.size.z do
+--			local x = 1;
+--			while( not( found ) and x<= data.size.x ) do
+--					preview[y][z] = node[1];
+--				x = x+1;
+
+build_chest.preview_image_formspec = function( building_name, replacements )
+	if(  not( building_name )
+	  or not( build_chest.building[ building_name ] )
+	  or not( build_chest.building[ building_name ].preview )) then
+		return "";
+	end
+
+	local formspec = "";
+
+	local data = build_chest.building[ building_name ];	
+
+	-- the mg_villages.draw_tile function is based on content_id
+	local content_ids = {};
+	for i,v in ipairs( data.nodenames ) do
+		local found = false;
+		for j,w in ipairs( replacements ) do
+			if( w and w[1] and w[1]==v) then
+				found        = true;
+				content_ids[ i ] = minetest.get_content_id( w[2] );
+			end
+		end
+		if( not( found )) then
+			content_ids[ i ] = minetest.get_content_id( v );
+		end
+	end
+
+	local scale_y = 6.0/data.size.y;
+	local scale_z = 10.0/data.size.z;
+	local scale   = scale_y;
+	if( scale_y > scale_z ) then
+		scale = scale_z;
+	end
+
+	local preview = data.preview;
+	for y,y_values in ipairs( preview ) do
+		for l,v in ipairs( y_values ) do
+			-- air, ignore and mg:ignore are not stored
+			if( v and v>-1) then
+				formspec = formspec..mg_villages.draw_tile( content_ids[ v ], nil, (l*scale), 9-(y*scale), scale*1.3, scale*1.2, 3);
+			end
+		end
+	end
+	return formspec;
 end
 	
 
@@ -338,6 +395,11 @@ build_chest.update_formspec = function( pos, page, player, fields )
 			-- invisible field that encodes the value given here
 			"field[-20,-20;0.1,0.1;set_roof;;"..minetest.formspec_escape( fields.set_roof ).."]"..
 			build_chest.replacements_get_group_list_formspec( pos, 'roof',    'roof_selection' );
+	end
+
+	if( fields.preview and building_name ) then
+		return formspec..build_chest.preview_image_formspec( building_name,
+				minetest.deserialize( meta:get_string( 'replacements' )) );
 	end
 
 	-- show list of all node names used
