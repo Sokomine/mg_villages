@@ -84,6 +84,7 @@ build_chest.replacements_get_list_formspec = function( pos, selected_row )
 	local types_found_list_farming = {};
 	local types_found_list_roof    = {};
 
+	local not_the_first_entry = false;
 	for i,v in ipairs( build_chest.building[ building_name ].statistic ) do
 		local name = build_chest.building[ building_name ].nodenames[ v[1]];	
 		-- nodes that are to be ignored do not need to be replaced
@@ -98,7 +99,7 @@ build_chest.replacements_get_list_formspec = function( pos, selected_row )
 			end
 
 			-- avoid empty lines at the end
-			if( i>1 ) then
+			if( not_the_first_entry ) then
 				formspec = formspec..',';
 			end
 
@@ -133,6 +134,8 @@ build_chest.replacements_get_list_formspec = function( pos, selected_row )
 			extra_buttons = build_chest.replacements_get_extra_buttons( 'roof',    name, types_found_list_farming, 'set_roof',    extra_buttons );
 
 			j=j+1;
+
+			not_the_first_entry = true;
 		end
 	end
 	formspec = formspec.."]";
