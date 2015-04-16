@@ -65,6 +65,11 @@ end
 -- create a statistic about how frequent each node name occoured
 build_chest.count_nodes = function( data )
 	local statistic = {};
+	-- make sure all node names are counted (air may sometimes be included without occouring)
+	for id=1, #data.nodenames do
+		statistic[ id ] = { id, 0};
+	end
+
 	for z = 1, data.size.z do
 	for y = 1, data.size.y do
 	for x = 1, data.size.x do
@@ -77,11 +82,7 @@ build_chest.count_nodes = function( data )
 			else
 				id = a;
 			end
-			if( not( statistic[ id ] )) then
-				statistic[ id ] = { id, 1};
-			else
-				statistic[ id ] = { id, statistic[ id ][ 2 ]+1 };
-			end
+			statistic[ id ] = { id, statistic[ id ][ 2 ]+1 };
 		end
 	end
 	end
@@ -121,6 +122,9 @@ end
 build_chest.read_building = function( building_name )
 	-- read data
 	local res = handle_schematics.analyze_mts_file( building_name );
+	if( not( res )) then
+		return;
+	end
 	build_chest.building[ building_name ].size           = res.size;	
 	build_chest.building[ building_name ].nodenames      = res.nodenames;	
 	build_chest.building[ building_name ].rotated        = res.rotated;	
@@ -133,6 +137,8 @@ build_chest.read_building = function( building_name )
 
 	-- create a 2d overview image (or rather, the data structure for it)
 	build_chest.building[ building_name ].preview        = build_chest.create_preview_image( res );
+
+	return true;
 end
 
 
@@ -205,7 +211,9 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 	local replace_row_with     = "";
 	-- make sure the statistic has been created
 	if( not( build_chest.building[ building_name ].statistic )) then
-		build_chest.read_building( building_name );
+		if( not( build_chest.read_building( building_name ))) then
+			return "label[2,2;Error: Unable to read building file.]";
+		end
 	end
 
 	-- used for setting wood type or plant(farming) type etc.
@@ -218,7 +226,7 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 	for i,v in ipairs( build_chest.building[ building_name ].statistic ) do
 		local name = build_chest.building[ building_name ].nodenames[ v[1]];	
 		-- nodes that are to be ignored do not need to be replaced
-		if( name ~= 'air' and name ~= 'ignore' and name ~= 'mg:ignore' ) then
+		if( name ~= 'air' and name ~= 'ignore' and name ~= 'mg:ignore' and v[2] and v[2]>0) then
 			local anz  = v[2];
 			-- find out if this node name gets replaced
 			local repl = name;
@@ -226,6 +234,11 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 				if( r and r[1]==name ) then
 					repl = r[2];
 				end
+			end
+
+			-- avoid empty lines at the end
+			if( i>1 ) then
+				formspec = formspec..',';
 			end
 
 			formspec = formspec..'#fff,'..tostring( anz )..',';
@@ -245,10 +258,6 @@ build_chest.get_replacement_list_formspec = function( pos, selected_row )
 			else
 				formspec = formspec.."#ff0,?"; -- yellow
 				may_proceed = false; -- we need a replacement for this material
-			end
-
-			if( i<#build_chest.building[ building_name ].statistic ) then
-				formspec = formspec..",";
 			end
 
 			if( j == replace_row ) then
@@ -431,7 +440,9 @@ build_chest.get_start_pos = function( pos )
 	end
 
 	if( not( build_chest.building[ building_name ].size )) then
-		build_chest.read_building( building_name );
+		if( not( build_chest.read_building( building_name ))) then
+			return;
+		end
 	end
 	local selected_building = build_chest.building[ building_name ];
 
@@ -902,9 +913,20 @@ build_chest.update_formspec = function( pos, page, player )
                             "label[3.3,1.6;Click on a menu entry to select it:]";
 
 
+	local building_name = meta:get_string('building_name' );
+	if( building_name and building_name ~= '' and build_chest.building[ building_name ] and build_chest.building[ building_name ].size) then
+		local size = build_chest.building[ building_name ].size;
+		formspec = formspec..
+				-- show which building has been selected
+				"label[0.3,9.5;Selected building:]"..
+				"label[2.3,9.5;"..minetest.formspec_escape(building_name).."]"..
+				-- size of the building
+				"label[0.3,9.8;Size ( w x l x h ):]"..
+				"label[2.3,9.8;"..tostring( size.x )..' x '..tostring( size.z )..' x '..tostring( size.y ).."]";
+	end
+
+
 	if( page == 'main') then
-      
-		local building_name = meta:get_string('building_name' );
 		local start_pos     = meta:get_string('start_pos');
 
 		local backup_file   = meta:get_string('backup');
@@ -966,7 +988,7 @@ build_chest.update_formspec = function( pos, page, player )
 			-- a building has been selected
 			meta:set_string( 'building_name', options[1] );
 			local start_pos = build_chest.get_start_pos( pos );
-			if( start_pos and start_pos.x ) then
+			if( start_pos and start_pos.x and build_chest.building[ options[1]].size) then
 -- TODO: also show size and such
 				-- do replacements for realtest where necessary (this needs to be done only once)
 				local replacements = {};
@@ -975,10 +997,8 @@ build_chest.update_formspec = function( pos, page, player )
 
 				formspec = formspec..build_chest.get_replacement_list_formspec( pos );
 				meta:set_string('formspec', formspec );
-				-- TODO minetest.place_schematic( start_pos, options[1]..'.mts', meta:get_string('rotate'), meta:get_string('replacements'), true );
 				return;
 			end
-			meta:set_string( 'selected_building', "" );
 		end
 		table.sort( options );
 
