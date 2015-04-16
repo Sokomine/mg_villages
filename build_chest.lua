@@ -322,18 +322,13 @@ build_chest.get_group_list_formspec = function( pos, group, button_name )
 end
 
  
-build_chest.apply_replacement_for_group = function( pos, meta, group, selected, button_name )
+build_chest.apply_replacement_for_group = function( pos, meta, group, selected, old_material )
 	local nr = tonumber( selected );
 	if( not(nr) or nr <= 0 or nr > #replacements_group[ group ].found ) then
 		return;
 	end	
 
 	local new_material = replacements_group[ group ].found[ nr ];
-	local old_material = meta:get_string( button_name );
-
-	-- go back in the menu (even if the same material has been selected)
-	meta:set_string( button_name, nil );
-
 	if( old_material and old_material == new_material ) then
 		return;
 	end
@@ -463,28 +458,38 @@ end
 
 
 
-build_chest.update_formspec = function( pos, page, player )
+build_chest.update_formspec = function( pos, page, player, fields )
 
-   local meta = minetest.env:get_meta( pos );
-   local current_path = minetest.deserialize( meta:get_string( 'current_path' ) or 'return {}' );
-   local page_nr = meta:get_int( 'page_nr' );
-   local material_type = meta:get_string( 'material_type');
-   local village_name = meta:get_string( 'village' );
-   local village_pos  = minetest.deserialize( meta:get_string( 'village_pos' ));
-   local owner_name   = meta:get_string( 'owner' );
+	-- information about the village the build chest may belong to and about the owner
+	local meta = minetest.env:get_meta( pos );
+	local village_name = meta:get_string( 'village' );
+	local village_pos  = minetest.deserialize( meta:get_string( 'village_pos' ));
+	local owner_name   = meta:get_string( 'owner' );
+	local building_name = meta:get_string('building_name' );
 
-   -- distance from village center
-   local distance = math.floor( math.sqrt( (village_pos.x - pos.x ) * (village_pos.x - pos.x ) 
-                                         + (village_pos.y - pos.y ) * (village_pos.x - pos.y )
-                                         + (village_pos.z - pos.z ) * (village_pos.x - pos.z ) ));
+	-- distance from village center
+	local distance = math.floor( math.sqrt( (village_pos.x - pos.x ) * (village_pos.x - pos.x ) 
+					      + (village_pos.y - pos.y ) * (village_pos.x - pos.y )
+					      + (village_pos.z - pos.z ) * (village_pos.x - pos.z ) ));
 
-   local button_back = '';
-   if( #current_path > 0 ) then
-      button_back = "button[9.9,0.4;2,0.5;back;Back]";
-   end
-   local depth = #current_path;
-   local formspec = "size[13,10]"..
-                            "label[3.3,0.0;Building box]"..button_back.. -- - "..table.concat( current_path, ' -> ').."]"..
+
+	if( page == 'please_remove' ) then
+		if( build_chest.stages_formspec_page_please_remove ) then
+			return build_chest.stages_formspec_page_please_remove( building_name, owner_name, village_name, village_pos, distance );
+		end
+	elseif( page == 'finished' ) then
+		if( build_chest.stages_formspec_page_finished ) then
+			return build_chest.stages_formspec_page_finished(      building_name, owner_name, village_name, village_pos, distance );
+		end
+	elseif( page ~= 'main' ) then
+		-- if in doubt, return the old formspec
+		return meta:get_string('formspec');
+	end
+
+
+	-- create the header
+	local formspec = "size[13,10]"..
+                            "label[3.3,0.0;Building box]"..
                             "label[0.3,0.4;Located at:]"      .."label[3.3,0.4;"..(minetest.pos_to_string( pos ) or '?')..", which is "..tostring( distance ).." m away]"
                                                               .."label[7.3,0.4;from the village center]".. 
                             "label[0.3,0.8;Part of village:]" .."label[3.3,0.8;"..(village_name or "?").."]"
@@ -493,7 +498,6 @@ build_chest.update_formspec = function( pos, page, player )
                             "label[3.3,1.6;Click on a menu entry to select it:]";
 
 
-	local building_name = meta:get_string('building_name' );
 	if( building_name and building_name ~= '' and build_chest.building[ building_name ] and build_chest.building[ building_name ].size) then
 		local size = build_chest.building[ building_name ].size;
 		formspec = formspec..
@@ -505,153 +509,141 @@ build_chest.update_formspec = function( pos, page, player )
 				"label[2.3,9.8;"..tostring( size.x )..' x '..tostring( size.z )..' x '..tostring( size.y ).."]";
 	end
 
+	local current_path = minetest.deserialize( meta:get_string( 'current_path' ) or 'return {}' );
+	if( #current_path > 0 ) then
+		formspec = formspec.."button[9.9,0.4;2,0.5;back;Back]";
+	end
 
-	if( page == 'main') then
-		local start_pos     = meta:get_string('start_pos');
 
-		local backup_file   = meta:get_string('backup');
-		if( backup_file and backup_file ~= "" ) then
-			formspec = formspec.."button[3,3;3,0.5;restore_backup;Restore original landscape]";
-			meta:set_string('formspec', formspec );
-			return;
+	-- the building has been placed; offer to restore a backup
+	local backup_file   = meta:get_string('backup');
+	if( backup_file and backup_file ~= "" ) then
+		return formspec.."button[3,3;3,0.5;restore_backup;Restore original landscape]";
+	end
+
+	-- offer diffrent replacement groups
+	if( fields.set_wood and fields.set_wood ~= "" ) then
+		return formspec..
+			"label[1,2.2;Select replacement for "..tostring( fields.set_wood )..".]"..
+			"label[1,2.5;Trees, saplings and other blocks will be replaced accordingly as well.]"..
+			-- invisible field that encodes the value given here
+			"field[-20,-20;0.1,0.1;set_wood;;"..minetest.formspec_escape( fields.set_wood ).."]"..
+			build_chest.get_group_list_formspec( pos, 'wood',    'wood_selection' );
+	end
+
+	if( fields.set_farming and fields.set_farming ~= "" ) then
+		return formspec..
+			"label[1,2.5;Select the fruit the farm is going to grow:]"..
+			-- invisible field that encodes the value given here
+			"field[-20,-20;0.1,0.1;set_farming;;"..minetest.formspec_escape( fields.set_farming ).."]"..
+			build_chest.get_group_list_formspec( pos, 'farming', 'farming_selection' );
+	end
+
+	if( fields.set_roof and fields.set_roof ~= "" ) then
+		return formspec..
+			"label[1,2.5;Select a roof type for the house:]"..
+			-- invisible field that encodes the value given here
+			"field[-20,-20;0.1,0.1;set_roof;;"..minetest.formspec_escape( fields.set_roof ).."]"..
+			build_chest.get_group_list_formspec( pos, 'roof',    'roof_selection' );
+	end
+
+	-- show list of all node names used
+	local start_pos     = meta:get_string('start_pos');
+	if( building_name and building_name ~= '' and start_pos and start_pos ~= '' and meta:get_string('replacements')) then
+		return formspec..build_chest.get_replacement_list_formspec( pos );
+	end
+
+	-- find out where we currently are in the menu tree
+	local menu = build_chest.menu;
+	for i,v in ipairs( current_path ) do
+		if( menu and menu[ v ] ) then
+			menu = menu[ v ];
 		end
+	end
 
-		local set_wood      = meta:get_string('set_wood' );
-		if( set_wood and set_wood ~= "" ) then
-			formspec = formspec..
-				"label[1,2.2;Select replacement for "..tostring( set_wood )..".]"..
-				"label[1,2.5;Trees, saplings and other blocks will be replaced accordingly as well.]"..
-				build_chest.get_group_list_formspec( pos, 'wood',    'wood_selection' );
-			meta:set_string('formspec', formspec );
-			return;
-		end
+	-- all submenu points at this menu position are options that need to be shown
+	local options = {};
+	for k,v in pairs( menu ) do
+		table.insert( options, k );
+	end
 
-		local set_farming     = meta:get_string('set_farming' );
-		if( set_farming and set_farming ~= "" ) then
-			formspec = formspec..
-				"label[1,2.5;Select the fruit the farm is going to grow:]"..
-				build_chest.get_group_list_formspec( pos, 'farming', 'farming_selection' );
-			meta:set_string('formspec', formspec );
-			return;
-		end
-
-		local set_roof        = meta:get_string('set_roof' );
-		if( set_roof and set_roof ~= "" ) then
-			formspec = formspec..
-				"label[1,2.5;Select a roof type for the house:]"..
-				build_chest.get_group_list_formspec( pos, 'roof',    'roof_selection' );
-			meta:set_string('formspec', formspec );
-			return;
-		end
-
-		if( building_name and building_name ~= '' and start_pos and start_pos ~= '' and meta:get_string('replacements')) then
-			formspec = formspec..build_chest.get_replacement_list_formspec( pos );
-			meta:set_string('formspec', formspec );
-			return;
-		end
-
-		-- find out where we currently are in the menu tree
-		local menu = build_chest.menu;
-		for i,v in ipairs( current_path ) do
-			if( menu and menu[ v ] ) then
-				menu = menu[ v ];
-			end
-		end
-
-		-- all submenu points at this menu position are options that need to be shown
-		local options = {};
-		for k,v in pairs( menu ) do
-			table.insert( options, k );
-		end
-
-		if( #options == 1 and options[1] and build_chest.building[ options[1]] ) then
-			-- a building has been selected
-			meta:set_string( 'building_name', options[1] );
-			local start_pos = build_chest.get_start_pos( pos );
-			if( start_pos and start_pos.x and build_chest.building[ options[1]].size) then
+	-- we have found an end-node - a particular building
+	if( #options == 1 and options[1] and build_chest.building[ options[1]] ) then
+		-- a building has been selected
+		meta:set_string( 'building_name', options[1] );
+		local start_pos = build_chest.get_start_pos( pos );
+		if( start_pos and start_pos.x and build_chest.building[ options[1]].size) then
 -- TODO: also show size and such
-				-- do replacements for realtest where necessary (this needs to be done only once)
-				local replacements = {};
-				replacements_realtest.replace( replacements );
-				meta:set_string( 'replacements', minetest.serialize( replacements ));
+			-- do replacements for realtest where necessary (this needs to be done only once)
+			local replacements = {};
+			replacements_realtest.replace( replacements );
+			meta:set_string( 'replacements', minetest.serialize( replacements ));
 
-				formspec = formspec..build_chest.get_replacement_list_formspec( pos );
-				meta:set_string('formspec', formspec );
-				return;
+			return formspec..build_chest.get_replacement_list_formspec( pos );
+		end
+	end
+	table.sort( options );
+
+	local page_nr = meta:get_int( 'page_nr' );
+	-- if the options do not fit on a single page, split them up
+	if( #options > build_chest.MAX_OPTIONS ) then 
+		if( not( page_nr )) then
+			page_nr = 0;
+		end
+		local new_options = {};
+		local new_index   = build_chest.MAX_OPTIONS*page_nr;
+		for i=1,build_chest.MAX_OPTIONS do
+			if( options[ new_index+i ] ) then
+				new_options[ i ] = options[ new_index+i ];
 			end
 		end
-		table.sort( options );
 
-		-- if the options do not fit on a single page, split them up
-		if( #options > build_chest.MAX_OPTIONS ) then 
-			if( not( page_nr )) then
-				page_nr = 0;
-			end
-			local new_options = {};
-			local new_index   = build_chest.MAX_OPTIONS*page_nr;
-			for i=1,build_chest.MAX_OPTIONS do
-				if( options[ new_index+i ] ) then
-					new_options[ i ] = options[ new_index+i ];
-				end
-			end
-
-			-- we need to add prev/next buttons to the formspec
-			formspec = formspec.."label[7.5,1.5;"..minetest.formspec_escape(
-				"Showing "..tostring( new_index+1 )..
-				       '-'..tostring( math.min( new_index+build_chest.MAX_OPTIONS, #options))..
-				       '/'..tostring( #options )).."]";
-			if( page_nr > 0 ) then
-				formspec = formspec.."button[9.5,1.5;1,0.5;prev;prev]";
-			end
-			if( build_chest.MAX_OPTIONS*(page_nr+1) < #options ) then
-				formspec = formspec.."button[11,1.5;1,0.5;next;next]";
-			end
-			options = new_options;
+		-- we need to add prev/next buttons to the formspec
+		formspec = formspec.."label[7.5,1.5;"..minetest.formspec_escape(
+			"Showing "..tostring( new_index+1 )..
+			       '-'..tostring( math.min( new_index+build_chest.MAX_OPTIONS, #options))..
+			       '/'..tostring( #options )).."]";
+		if( page_nr > 0 ) then
+			formspec = formspec.."button[9.5,1.5;1,0.5;prev;prev]";
 		end
+		if( build_chest.MAX_OPTIONS*(page_nr+1) < #options ) then
+			formspec = formspec.."button[11,1.5;1,0.5;next;next]";
+		end
+		options = new_options;
+	end
 
       
                 -- found an end node of the menu graph
 --                elseif( build_chest.stages_formspec_page_first_stage ) then
---			formspec = build_chest.stages_formspec_page_first_stage( v.menu_path[( depth )], player, pos, meta, );
---                        meta:set_string( "formspec", formspec );
---                        return;
+--			return build_chest.stages_formspec_page_first_stage( v.menu_path[( #current_path )], player, pos, meta, );
 --                end
 
-      local i = 0;
-      local x = 0;
-      local y = 0;
-      if( #options < 9 ) then
-         x = x + 4;
-      end
-      -- order alphabeticly
-      table.sort( options, function(a,b) return a < b end );
+	-- show the menu with the next options
+	local i = 0;
+	local x = 0;
+	local y = 0;
+	if( #options < 9 ) then
+		x = x + 4;
+	end
+	-- order alphabeticly
+	table.sort( options, function(a,b) return a < b end );
 
-      for index,k in ipairs( options ) do
+	for index,k in ipairs( options ) do
 
-         i = i+1;
+		i = i+1;
 
-         -- new column
-         if( y==8 ) then
-            x = x+4;
-            y = 0;
-         end
-
-         formspec = formspec .."button["..(x)..","..(y+2.5)..";4,0.5;selection;"..k.."]"
-         y = y+1;
-         --x = x+4;
-      end
-
-   elseif( page == 'please_remove' ) then
-		if( build_chest.stages_formspec_page_please_remove ) then
-			formspec = build_chest.stages_formspec_page_please_remove( building_name, owner_name, village_name, village_pos, distance );
+		-- new column
+		if( y==8 ) then
+			x = x+4;
+			y = 0;
 		end
-   elseif( page == 'finished' ) then
-		if( build_chest.stages_formspec_page_finished ) then
-			formspec = build_chest.stages_formspec_page_finished(      building_name, owner_name, village_name, village_pos, distance );
-		end
-   end
 
-   meta:set_string( "formspec", formspec );
+		formspec = formspec .."button["..(x)..","..(y+2.5)..";4,0.5;selection;"..k.."]"
+		y = y+1;
+		--x = x+4;
+	end
+
+	return formspec;
 end
 
 
@@ -669,12 +661,8 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		table.remove( current_path ); -- revert latest selection
 		meta:set_string( 'current_path', minetest.serialize( current_path ));
 		meta:set_string( 'building_name', '');
-		meta:set_string( 'set_wood',      '');
-		meta:set_string( 'set_farming',   '');
-		meta:set_string( 'set_roof',      '');
 		meta:set_int(    'replace_row', 0 );
 		meta:set_int(    'page_nr',     0 );
-		build_chest.update_formspec( pos, 'main', player );
 
 	-- menu entry selected
 	elseif( fields.selection ) then
@@ -682,7 +670,6 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		local current_path = minetest.deserialize( meta:get_string( 'current_path' ) or 'return {}' );
 		table.insert( current_path, fields.selection );
 		meta:set_string( 'current_path', minetest.serialize( current_path ));
-		build_chest.update_formspec( pos, 'main', player );
 
 	-- if there are more menu items than can be shown on one page: show previous page
 	elseif( fields.prev ) then
@@ -692,7 +679,6 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		end
 		page_nr = math.max( page_nr - 1 );
 		meta:set_int( 'page_nr', page_nr );
-		build_chest.update_formspec( pos, 'main', player );
      
 	-- if there are more menu items than can be shown on one page: show next page
 	elseif( fields.next ) then
@@ -701,7 +687,6 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			page_nr = 0;
 		end
 		meta:set_int( 'page_nr', page_nr+1 );
-		build_chest.update_formspec( pos, 'main', player );
 
 -- specific to the build chest
 	-- the player has choosen a material from the list; ask for a replacement
@@ -714,8 +699,6 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 	
 			meta:set_int('replace_row', event.row );
 		end
-		--      build_chest.update_formspec( pos, 'ask_for_replacement', player );
-		build_chest.update_formspec( pos, 'main', player );
 
 	-- the player has asked for a particular replacement
 	elseif( fields.store_replacement
@@ -723,33 +706,19 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 	    and fields.replace_row_material and fields.replace_row_material ~= "") then
    
 		build_chest.apply_replacement( pos, meta, fields.replace_row_material, fields.replace_row_with );
-		build_chest.update_formspec( pos, 'main', player );
-
-
-	elseif( fields.set_wood ) then
-		meta:set_string('set_wood', fields.set_wood );
-		build_chest.update_formspec( pos, 'main', player );
-
-	elseif( fields.set_farming ) then
-		meta:set_string('set_farming', fields.set_farming );
-		build_chest.update_formspec( pos, 'main', player );
-
-	elseif( fields.set_roof ) then
-		meta:set_string('set_roof',    fields.set_roof );
-		build_chest.update_formspec( pos, 'main', player );
 
 
 	elseif( fields.wood_selection ) then
-		build_chest.apply_replacement_for_group( pos, meta, 'wood',    fields.wood_selection,    'set_wood' );
-		build_chest.update_formspec( pos, 'main', player );
+		build_chest.apply_replacement_for_group( pos, meta, 'wood',    fields.wood_selection,    fields.set_wood );
+		fields.set_wood    = nil;
 
 	elseif( fields.farming_selection ) then
-		build_chest.apply_replacement_for_group( pos, meta, 'farming', fields.farming_selection, 'set_farming' );
-		build_chest.update_formspec( pos, 'main', player );
+		build_chest.apply_replacement_for_group( pos, meta, 'farming', fields.farming_selection, fields.set_farming );
+		fields.set_farming = nil;
 
 	elseif( fields.roof_selection ) then
-		build_chest.apply_replacement_for_group( pos, meta, 'roof',    fields.roof_selection,    'set_roof' );
-		build_chest.update_formspec( pos, 'main', player );
+		build_chest.apply_replacement_for_group( pos, meta, 'roof',    fields.roof_selection,    fields.set_roof );
+		fields.set_roof    = nil;
 
 
 	elseif( fields.proceed_with_scaffolding ) then
@@ -772,7 +741,6 @@ print('USING ROTATION: '..tostring( meta:get_string('rotate')));
 		minetest.place_schematic( start_pos, building_name..'.mts', meta:get_string('rotate'), minetest.deserialize( meta:get_string('replacements')), true );
 -- TODO: all those calls to on_construct need to be done now!
 -- TODO: handle metadata
-		build_chest.update_formspec( pos, 'main', player );
 
 	-- restore the original landscape
 	elseif( fields.restore_backup ) then
@@ -783,13 +751,14 @@ print('USING ROTATION: '..tostring( meta:get_string('rotate')));
 			minetest.place_schematic( start_pos, backup_file, "0", {}, true );
 			meta:set_string('backup', nil );
 		end
-		build_chest.update_formspec( pos, 'main', player );
 	
 	end
 	-- the final build stage may offer further replacements
 	if( build_chest.stages_on_receive_fields ) then
 		build_chest.stages_on_receive_fields(pos, formname, fields, player, meta);
 	end
+
+	meta:set_string( 'formspec', build_chest.update_formspec( pos, 'main', player, fields ));
 end
 
 
@@ -820,7 +789,7 @@ minetest.register_node("mg_villages:build", { --TODO
            meta:set_string( 'village_pos',  minetest.serialize( {x=1,y=2,z=3} )); -- TODO
            meta:set_string( 'owner',        placer:get_player_name());
 
-           build_chest.update_formspec( pos, 'main', placer );
+           meta:set_string('formspec', build_chest.update_formspec( pos, 'main', placer, {} ));
         end,
         on_receive_fields = function( pos, formname, fields, player )
            return build_chest.on_receive_fields(pos, formname, fields, player);
@@ -871,7 +840,7 @@ minetest.register_node("mg_villages:build", { --TODO
                if( stage==nil or stage < 6 ) then
                   build_chest.update_needed_list( pos, stage+1 ); -- request the material for the very first building step
                else
-                  build_chest.update_formspec( pos, 'finished', player );
+                  meta:set_string( 'formspec', build_chest.update_formspec( pos, 'finished', player, {} ));
                end
             end
         end,
