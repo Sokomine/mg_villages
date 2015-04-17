@@ -11,7 +11,7 @@ build_chest_add_to_menu = function( path, add_path  )
 	
 	for schem_file_name in string.gmatch(text, "([^\r\n]*)[\r\n]*") do
 		if( schem_file_name and schem_file_name ~= "" ) then
-			local help = string.split( schem_file_name, "/" );
+			local help = string.split( schem_file_name, '/', true, -1, false);
 
 			local i = #help;
 			local found = 1;
@@ -47,6 +47,7 @@ build_chest_add_to_menu = function( path, add_path  )
 
 			build_chest.add_entry(    menu_path );
 			build_chest.add_building( schem_file_name, {scm=help[#help], typ='nn'});
+
 		end
 	end
 end
