@@ -94,9 +94,9 @@ build_chest.create_preview_image = function( data, side )
 	elseif( side==2 ) then
 		params = {1, data.size.z, 1, 1, data.size.x,  1, 1, 1};
 	elseif( side==3 ) then
-		params = {1, data.size.x, 1, data.size.z, 1, -1, 0, 1};
+		params = {1, data.size.x, 1, data.size.z, 0, -1, 0, 1};
 	elseif( side==4 ) then
-		params = {1, data.size.z, 1, data.size.x, 1, -1, 1, 0};
+		params = {1, data.size.z, 1, data.size.x, 0, -1, 1, 0};
 	end
 
 	local preview = {};
@@ -136,6 +136,35 @@ build_chest.create_preview_image = function( data, side )
 	return preview;
 end
 
+build_chest.create_preview_image_from_top = function( data )
+	local preview = {};
+	for z = 1, data.size.z do
+		preview[ z ] = {};
+		for x = 1, data.size.x do
+			local found = nil;
+			local y = data.size.y;
+			while( not( found ) and y > 1) do
+				local node = data.scm_data_cache[y][x][z];
+				if( node and node[1]
+				   and data.nodenames[ node[1] ]
+				   and data.nodenames[ node[1] ] ~= 'air'
+ 				   and data.nodenames[ node[1] ] ~= 'ignore'
+ 				   and data.nodenames[ node[1] ] ~= 'mg:ignore' 
+ 				   and data.nodenames[ node[1] ] ~= 'default:torch' ) then
+					-- a preview node is only set if there's no air there
+					preview[z][x] = node[1];
+					found = 1;
+				end
+				y = y-1;
+			end
+			if( not( found )) then
+				preview[z][x] = -1;
+			end
+		end
+	end
+	return preview;
+end
+
 
 build_chest.preview_image_formspec = function( building_name, replacements, side )
 	if(  not( building_name )
@@ -169,11 +198,26 @@ build_chest.preview_image_formspec = function( building_name, replacements, side
 		end
 	end
 
-	local scale_y = 6.0/data.size.y;
-	local scale_z = 10.0/data.size.z;
-	local scale   = scale_y;
-	if( scale_y > scale_z ) then
-		scale = scale_z;
+	local scale = 0.5;
+
+	local tile_nr = 3; -- view from the side
+	if( side ~= 5 ) then
+		local scale_y = 6.0/data.size.y;
+		local scale_z = 10.0/data.size.z;
+		if( scale_y > scale_z) then
+			scale = scale_z;
+		else
+			scale = scale_y;
+		end
+	else
+		local scale_x = 10.0/data.size.x;  -- only relevant for view from top
+		local scale_z = 6.0/data.size.z;
+		if( scale_x > scale_z) then
+			scale = scale_z;
+		else
+			scale = scale_x;
+		end
+		tile_nr = 1; -- view from top
 	end
 
 	if( not( side )) then
@@ -184,14 +228,14 @@ build_chest.preview_image_formspec = function( building_name, replacements, side
 		for l,v in ipairs( y_values ) do
 			-- air, ignore and mg:ignore are not stored
 			if(     v and content_ids[ v ]==-1 ) then
-				formspec = formspec..mg_villages.draw_tile( nil, "unknown_node.png", (l*scale), 9-(y*scale), scale*1.3, scale*1.2, 3);
+				formspec = formspec..mg_villages.draw_tile( nil, "unknown_node.png", (l*scale), 9-(y*scale), scale*1.3, scale*1.2, tile_nr);
 			elseif( v and v>0 and content_ids[v]) then
-				formspec = formspec..mg_villages.draw_tile( content_ids[ v ], nil, (l*scale), 9-(y*scale), scale*1.3, scale*1.2, 3);
+				formspec = formspec..mg_villages.draw_tile( content_ids[ v ], nil,   (l*scale), 9-(y*scale), scale*1.3, scale*1.2, tile_nr);
 			end
 		end
 	end
-	local side_name = {"front","right","back","left"};
-	for i=1,4 do
+	local side_name = {"front","right","back","left","top"};
+	for i=1,5 do
 		if( i ~= side ) then
 			formspec = formspec.."button["..tostring(3.3+1.2*(i-1))..
 				",2.2;1,0.5;preview_"..tostring(i)..";"..side_name[i].."]";
@@ -239,6 +283,8 @@ build_chest.read_building = function( building_name )
 		end
 		build_chest.building[ building_name ].preview = data.preview;
 	end
+	-- ...and add a preview image from top
+	build_chest.building[ building_name ].preview[5] = build_chest.create_preview_image_from_top( res );
 	return true;
 end
 
@@ -467,6 +513,11 @@ build_chest.update_formspec = function( pos, page, player, fields )
 		return formspec..build_chest.preview_image_formspec( building_name,
 				minetest.deserialize( meta:get_string( 'replacements' )), 4);
 	end
+	if( fields.preview_5 and building_name ) then
+		return formspec..build_chest.preview_image_formspec( building_name,
+				minetest.deserialize( meta:get_string( 'replacements' )), 5);
+	end
+
 
 	-- show list of all node names used
 	local start_pos     = meta:get_string('start_pos');
