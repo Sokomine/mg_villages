@@ -78,7 +78,9 @@ build_chest.count_nodes = function( data )
 			else
 				id = a;
 			end
-			statistic[ id ] = { id, statistic[ id ][ 2 ]+1 };
+			if( statistic[ id ] and statistic[ id ][ 2 ] ) then
+				statistic[ id ] = { id, statistic[ id ][ 2 ]+1 };
+			end
 		end
 	end
 	end
@@ -93,7 +95,10 @@ build_chest.read_building = function( building_name )
 	-- read data
 	local res = handle_schematics.analyze_mts_file( building_name );
 	if( not( res )) then
-		return;
+		res = mg_villages.analyze_we_file( building_name, nil );
+		if( not( res )) then
+			return;
+		end
 	end
 	build_chest.building[ building_name ].size           = res.size;	
 	build_chest.building[ building_name ].nodenames      = res.nodenames;	

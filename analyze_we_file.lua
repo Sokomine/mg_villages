@@ -62,6 +62,7 @@ mg_villages.analyze_we_file = function(scm, we_origin)
 		scm[ent.y][ent.x][ent.z] = { nodenames_id[ ent.name ], ent.param2 }; --TODO ent.meta
 
 	end
+
 	local c_air = minetest.get_content_id("air")
 	for x = 1, maxx do
 		for y = 1, maxy do
@@ -72,12 +73,13 @@ mg_villages.analyze_we_file = function(scm, we_origin)
 				if scm[y][x] == nil then
 					scm[y][x] = {}
 				end
-				if scm[y][x][z] == nil then
-					scm[y][x][z] = c_air
-				end
+--				if scm[y][x][z] == nil then
+--					scm[y][x][z] = c_air
+--				end
 			end
 		end
 	end
+
 
 	local size = {};
 	size.y = #scm;
