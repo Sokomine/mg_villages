@@ -47,6 +47,7 @@ end
 
 dofile( minetest.get_modpath( minetest.get_current_modname()).."/build_chest_handle_replacements.lua");
 dofile( minetest.get_modpath( minetest.get_current_modname()).."/build_chest_preview_image.lua");
+dofile( minetest.get_modpath( minetest.get_current_modname()).."/build_chest_add_schems.lua");
 
 
 
@@ -186,15 +187,15 @@ build_chest.get_start_pos = function( pos )
 
 	local building_name = meta:get_string( 'building_name' );
 	if( not( building_name )) then
-		return;
+		return "No building_name provided.";
 	end
 	if( not( build_chest.building[ building_name ] )) then
-		return;
+		return "No data found for this building.";
 	end
 
 	if( not( build_chest.building[ building_name ].size )) then
 		if( not( build_chest.read_building( building_name ))) then
-			return;
+			return "Unable to read data file of this building.";
 		end
 	end
 	local selected_building = build_chest.building[ building_name ];
@@ -272,8 +273,8 @@ build_chest.update_formspec = function( pos, page, player, fields )
 				"label[0.3,9.5;Selected building:]"..
 				"label[2.3,9.5;"..minetest.formspec_escape(building_name).."]"..
 				-- size of the building
-				"label[0.3,9.8;Size ( w x l x h ):]"..
-				"label[2.3,9.8;"..tostring( size.x )..' x '..tostring( size.z )..' x '..tostring( size.y ).."]";
+				"label[0.3,9.8;Size ( wide x length x height ):]"..
+				"label[4.3,9.8;"..tostring( size.x )..' x '..tostring( size.z )..' x '..tostring( size.y ).."]";
 	end
 
 	local current_path = minetest.deserialize( meta:get_string( 'current_path' ) or 'return {}' );
@@ -340,12 +341,17 @@ build_chest.update_formspec = function( pos, page, player, fields )
 		table.insert( options, k );
 	end
 
+	-- handle if there are multiple files under the same menu point
+	if( #options == 0 and build_chest.building[ current_path[#current_path]] ) then
+		options = {current_path[#current_path]};
+	end
+
 	-- we have found an end-node - a particular building
 	if( #options == 1 and options[1] and build_chest.building[ options[1]] ) then
 		-- a building has been selected
 		meta:set_string( 'building_name', options[1] );
 		local start_pos = build_chest.get_start_pos( pos );
-		if( start_pos and start_pos.x and build_chest.building[ options[1]].size) then
+		if( type(start_pos)=='table' and start_pos and start_pos.x and build_chest.building[ options[1]].size) then
 -- TODO: also show size and such
 			-- do replacements for realtest where necessary (this needs to be done only once)
 			local replacements = {};
@@ -353,6 +359,11 @@ build_chest.update_formspec = function( pos, page, player, fields )
 			meta:set_string( 'replacements', minetest.serialize( replacements ));
 
 			return formspec..build_chest.replacements_get_list_formspec( pos );
+		elseif( type(start_pos)=='string' ) then
+			return formspec.."label[3,3;Error reading building data:]"..
+					 "label[3.5,3.5;"..start_pos.."]";
+		else
+			return formspec.."label[3,3;Error reading building data.]";
 		end
 	end
 	table.sort( options );
