@@ -86,29 +86,43 @@ build_chest.count_nodes = function( data )
 end
 
 
--- TODO: actually show the preview image somewhere
 -- creates a 2d preview image (or rather, the data structure for it) of the building
-build_chest.create_preview_image = function( data )
+build_chest.create_preview_image = function( data, side )
+	local params   = {1, data.size.x, 1, 1, data.size.z,  1, 0};
+	if(     side==1 ) then
+		params = {1, data.size.x, 1, 1, data.size.z,  1, 0};
+	elseif( side==2 ) then
+		params = {1, data.size.z, 1, 1, data.size.x,  1, 1};
+	elseif( side==3 ) then
+		params = {1, data.size.x, 1, data.size.z, 1, -1, 0};
+	elseif( side==4 ) then
+		params = {1, data.size.z, 1, data.size.x, 1, -1, 1};
+	end
+
 	local preview = {};
 	for y = 1, data.size.y do
 		preview[ y ] = {};
-		for x = 1, data.size.x do
+		for x = params[1], params[2], params[3] do
 			local found = nil;
-			local z = 1;
-			while( not( found ) and z<= data.size.z ) do
-				local node = data.scm_data_cache[y][x][z];
+			local z = params[4];
+			while( not( found ) and z~= params[5]) do
+				local node = -1;
+				if( params[7]==0 ) then
+					node = data.scm_data_cache[y][x][z];
+				else
+					node = data.scm_data_cache[y][z][x];
+				end
 				if( node and node[1]
 				   and data.nodenames[ node[1] ]
 				   and data.nodenames[ node[1] ] ~= 'air'
  				   and data.nodenames[ node[1] ] ~= 'ignore'
  				   and data.nodenames[ node[1] ] ~= 'mg:ignore' 
- 				   and data.nodenames[ node[1] ] ~= 'default:torch'
- 				   and minetest.registered_nodes[ data.nodenames[ node[1] ]] ) then
+ 				   and data.nodenames[ node[1] ] ~= 'default:torch' ) then
 					-- a preview node is only set if there's no air there
 					preview[y][x] = node[1];
 					found = 1;
 				end
-				z = z+1;
+				z = z+params[6];
 			end
 			if( not( found )) then
 				preview[y][x] = -1;
@@ -118,13 +132,8 @@ build_chest.create_preview_image = function( data )
 	return preview;
 end
 
---		for z = 1, data.size.z do
---			local x = 1;
---			while( not( found ) and x<= data.size.x ) do
---					preview[y][z] = node[1];
---				x = x+1;
 
-build_chest.preview_image_formspec = function( building_name, replacements )
+build_chest.preview_image_formspec = function( building_name, replacements, side )
 	if(  not( building_name )
 	  or not( build_chest.building[ building_name ] )
 	  or not( build_chest.building[ building_name ].preview )) then
@@ -157,7 +166,10 @@ build_chest.preview_image_formspec = function( building_name, replacements )
 		scale = scale_z;
 	end
 
-	local preview = data.preview;
+	if( not( side )) then
+		side = 1;
+	end
+	local preview = data.preview[ side ];
 	for y,y_values in ipairs( preview ) do
 		for l,v in ipairs( y_values ) do
 			-- air, ignore and mg:ignore are not stored
@@ -166,9 +178,19 @@ build_chest.preview_image_formspec = function( building_name, replacements )
 			end
 		end
 	end
+	local side_name = {"front","left","back","right"};
+	for i=1,4 do
+		if( i ~= side ) then
+			formspec = formspec.."button["..tostring(3.3+1.2*(i-1))..
+				",2.2;1,0.5;preview_"..tostring(i)..";"..side_name[i].."]";
+		else
+			formspec = formspec.."label["..tostring(3.3+1.2*(i-1))..",2.2;"..side_name[i].."]";
+		end
+	end
 	return formspec;
 end
 	
+
 
 build_chest.read_building = function( building_name )
 	-- read data
@@ -187,8 +209,25 @@ build_chest.read_building = function( building_name )
 	build_chest.building[ building_name ].statistic      = build_chest.count_nodes( res );
 
 	-- create a 2d overview image (or rather, the data structure for it)
-	build_chest.building[ building_name ].preview        = build_chest.create_preview_image( res );
-
+	build_chest.building[ building_name ].preview        = {
+			build_chest.create_preview_image( res, 1 ),
+			build_chest.create_preview_image( res, 2 ),
+			build_chest.create_preview_image( res, 3 ),
+			build_chest.create_preview_image( res, 4 )};
+--[[
+	-- the building might be stored in rotated form
+	local data = build_chest.building[ building_name ];
+	if( data.orients and #data.orients and data.orients[1] ) then
+		if(     data.orients[1]==1 ) then
+			data.preview = {data.preview[2],data.preview[3],data.preview[4],data.preview[1]};
+		elseif( data.orients[1]==2 ) then
+			data.preview = {data.preview[3],data.preview[4],data.preview[1],data.preview[2]};
+		elseif( data.orients[1]==3 ) then
+			data.preview = {data.preview[4],data.preview[1],data.preview[2],data.preview[3]};
+		end
+		build_chest.building[ building_name ].preview = data.preview;
+	end
+--]]
 	return true;
 end
 
@@ -399,7 +438,23 @@ build_chest.update_formspec = function( pos, page, player, fields )
 
 	if( fields.preview and building_name ) then
 		return formspec..build_chest.preview_image_formspec( building_name,
-				minetest.deserialize( meta:get_string( 'replacements' )) );
+				minetest.deserialize( meta:get_string( 'replacements' )), 1);
+	end
+	if( fields.preview_1 and building_name ) then
+		return formspec..build_chest.preview_image_formspec( building_name,
+				minetest.deserialize( meta:get_string( 'replacements' )), 1);
+	end
+	if( fields.preview_2 and building_name ) then
+		return formspec..build_chest.preview_image_formspec( building_name,
+				minetest.deserialize( meta:get_string( 'replacements' )), 2);
+	end
+	if( fields.preview_3 and building_name ) then
+		return formspec..build_chest.preview_image_formspec( building_name,
+				minetest.deserialize( meta:get_string( 'replacements' )), 3);
+	end
+	if( fields.preview_4 and building_name ) then
+		return formspec..build_chest.preview_image_formspec( building_name,
+				minetest.deserialize( meta:get_string( 'replacements' )), 4);
 	end
 
 	-- show list of all node names used
