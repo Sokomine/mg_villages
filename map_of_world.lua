@@ -26,6 +26,9 @@ mg_villages.draw_tile = function( content_id, image, x, z, dx, dz, tile_nr )
 			tile=tile["name"]
 		end
 		image = tile;
+		if( not( image )) then
+			image = "unknown_object.png";
+		end
 	end
 	return "image["..tostring(x)..",".. tostring(z) ..";"..dx..','..dz..";" .. image .."]";
 end

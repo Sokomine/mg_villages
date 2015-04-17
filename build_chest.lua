@@ -151,11 +151,17 @@ build_chest.preview_image_formspec = function( building_name, replacements, side
 		for j,w in ipairs( replacements ) do
 			if( w and w[1] and w[1]==v) then
 				found        = true;
-				content_ids[ i ] = minetest.get_content_id( w[2] );
+				if( minetest.registered_nodes[ w[2]] ) then
+					content_ids[ i ] = minetest.get_content_id( w[2] );
+				end
 			end
 		end
 		if( not( found )) then
-			content_ids[ i ] = minetest.get_content_id( v );
+			if( minetest.registered_nodes[ v ]) then
+				content_ids[ i ] = minetest.get_content_id( v );
+			elseif( v ~= 'air' ) then
+				content_ids[ i ] = -1;
+			end
 		end
 	end
 
@@ -173,7 +179,9 @@ build_chest.preview_image_formspec = function( building_name, replacements, side
 	for y,y_values in ipairs( preview ) do
 		for l,v in ipairs( y_values ) do
 			-- air, ignore and mg:ignore are not stored
-			if( v and v>-1) then
+			if(     v and content_ids[ v ]==-1 ) then
+				formspec = formspec..mg_villages.draw_tile( nil, "unknown_node.png", (l*scale), 9-(y*scale), scale*1.3, scale*1.2, 3);
+			elseif( v and v>0 and content_ids[v]) then
 				formspec = formspec..mg_villages.draw_tile( content_ids[ v ], nil, (l*scale), 9-(y*scale), scale*1.3, scale*1.2, 3);
 			end
 		end
