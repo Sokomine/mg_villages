@@ -88,15 +88,15 @@ end
 
 -- creates a 2d preview image (or rather, the data structure for it) of the building
 build_chest.create_preview_image = function( data, side )
-	local params   = {1, data.size.x, 1, 1, data.size.z,  1, 0};
+	local params   = {1, data.size.x, 1, 1, data.size.z,  1, 0, 0};
 	if(     side==1 ) then
-		params = {1, data.size.x, 1, 1, data.size.z,  1, 0};
+		params = {1, data.size.x, 1, 1, data.size.z,  1, 0, 0};
 	elseif( side==2 ) then
-		params = {1, data.size.z, 1, 1, data.size.x,  1, 1};
+		params = {1, data.size.z, 1, 1, data.size.x,  1, 1, 1};
 	elseif( side==3 ) then
-		params = {1, data.size.x, 1, data.size.z, 1, -1, 0};
+		params = {1, data.size.x, 1, data.size.z, 1, -1, 0, 1};
 	elseif( side==4 ) then
-		params = {1, data.size.z, 1, data.size.x, 1, -1, 1};
+		params = {1, data.size.z, 1, data.size.x, 1, -1, 1, 0};
 	end
 
 	local preview = {};
@@ -105,6 +105,10 @@ build_chest.create_preview_image = function( data, side )
 		for x = params[1], params[2], params[3] do
 			local found = nil;
 			local z = params[4];
+			local target_x = x;
+			if( params[8]==1 ) then
+				target_x = math.max( params[1],params[2] )- x;
+			end
 			while( not( found ) and z~= params[5]) do
 				local node = -1;
 				if( params[7]==0 ) then
@@ -119,13 +123,13 @@ build_chest.create_preview_image = function( data, side )
  				   and data.nodenames[ node[1] ] ~= 'mg:ignore' 
  				   and data.nodenames[ node[1] ] ~= 'default:torch' ) then
 					-- a preview node is only set if there's no air there
-					preview[y][x] = node[1];
+					preview[y][target_x] = node[1];
 					found = 1;
 				end
 				z = z+params[6];
 			end
 			if( not( found )) then
-				preview[y][x] = -1;
+				preview[y][target_x] = -1;
 			end
 		end
 	end
@@ -186,7 +190,7 @@ build_chest.preview_image_formspec = function( building_name, replacements, side
 			end
 		end
 	end
-	local side_name = {"front","left","back","right"};
+	local side_name = {"front","right","back","left"};
 	for i=1,4 do
 		if( i ~= side ) then
 			formspec = formspec.."button["..tostring(3.3+1.2*(i-1))..
@@ -218,11 +222,11 @@ build_chest.read_building = function( building_name )
 
 	-- create a 2d overview image (or rather, the data structure for it)
 	build_chest.building[ building_name ].preview        = {
+			build_chest.create_preview_image( res, 2 ), 
 			build_chest.create_preview_image( res, 1 ),
-			build_chest.create_preview_image( res, 2 ),
-			build_chest.create_preview_image( res, 3 ),
-			build_chest.create_preview_image( res, 4 )};
---[[
+			build_chest.create_preview_image( res, 4 ),
+			build_chest.create_preview_image( res, 3 )};
+
 	-- the building might be stored in rotated form
 	local data = build_chest.building[ building_name ];
 	if( data.orients and #data.orients and data.orients[1] ) then
@@ -235,7 +239,6 @@ build_chest.read_building = function( building_name )
 		end
 		build_chest.building[ building_name ].preview = data.preview;
 	end
---]]
 	return true;
 end
 
