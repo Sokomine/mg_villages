@@ -112,7 +112,7 @@ build_chest.read_building = function( building_name )
 
 	build_chest.building[ building_name ].preview        = build_chest.preview_image_create_views( res,
 									build_chest.building[ building_name ].orients );
-	return true;
+	return res;
 end
 
 
@@ -530,9 +530,53 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		end
 		-- place the building
 -- TODO: use scaffolding here (exchange some replacements)
-		minetest.place_schematic( start_pos, building_name..'.mts', meta:get_string('rotate'), minetest.deserialize( meta:get_string('replacements')), true );
+		--minetest.place_schematic( start_pos, building_name..'.mts', meta:get_string('rotate'), minetest.deserialize( meta:get_string('replacements')), true );
 -- TODO: all those calls to on_construct need to be done now!
 -- TODO: handle metadata
+
+		if( building_name and build_chest.building[ building_name ] ) then
+			-- this reads scm_data_cache as well
+			local binfo = build_chest.read_building( building_name );
+			if( binfo ) then
+
+				-- nodenames and scm_data_cache can be used directly;
+				-- the size dimensions need to be renamed
+				binfo.sizex = binfo.size.x;
+				binfo.sizez = binfo.size.z;
+				binfo.ysize = binfo.size.y;
+				-- this value has already been taken care of when determining start_pos
+				binfo.yoff  = 0;
+				-- file name of the scm; only used for error messages
+				binfo.scm   = building_name;
+				-- this is relevant for mirroring operations
+				binfo.axis  = build_chest.building[ building_name ].axis;
+
+				-- start_pos contains already *.x,*.y,*.z of the desired start position;
+				-- translate rotation from 0,90,180,270 to 0,1,2,3
+				local rotate = meta:get_string('rotate');
+				if( not( rotate ) or rotate=="0" ) then
+					start_pos.brotate = 0;
+				elseif( rotate=="90" ) then
+					start_pos.brotate = 1;
+				elseif( rotate=="180" ) then
+					start_pos.brotate = 2;
+				elseif( rotate=="270" ) then
+					start_pos.brotate = 3;
+				end
+				-- determine the size of the bulding from the place we assigned to it...
+				start_pos.bsizex  = math.abs(end_pos.x - start_pos.x)+1;
+				start_pos.bsizez  = math.abs(end_pos.z - start_pos.z)+1;
+
+				-- otpional; if set, the building will be mirrored
+				-- start_pos.mirror = 1;
+				-- do not generate a plot marker as this is not part of a village;
+				-- otherwise, building_nr and village_id would have to be provided
+				start_pos.no_plotmarker = 1;
+
+				local replacement_list = minetest.deserialize( meta:get_string( 'replacements' ));
+				mg_villages.place_building_using_voxelmanip( start_pos, binfo, replacement_list);
+			end
+		end
 
 	-- restore the original landscape
 	elseif( fields.restore_backup ) then
