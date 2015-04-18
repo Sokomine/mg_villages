@@ -669,6 +669,64 @@ end
 
 
 
+-- places a building read from file "building_name" on the map between start_pos and end_pos using luavoxelmanip
+-- returns error message on failure and nil on success
+mg_villages.place_building_from_file = function( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker )
+	if( not( building_name )) then
+		return "No file name given. Cannot find the schematic.";
+	end
+
+	local binfo = handle_schematics.analyze_mts_file( building_name );
+	if( not( binfo )) then
+		binfo = mg_villages.analyze_we_file( building_name, nil );
+		if( not( binfo )) then
+			return "Failed to import schematic. Only .mts and .we are supported!";
+		end
+	end
+
+	-- nodenames and scm_data_cache can be used directly;
+	-- the size dimensions need to be renamed
+	binfo.sizex = binfo.size.x;
+	binfo.sizez = binfo.size.z;
+	binfo.ysize = binfo.size.y;
+	-- binfo.rotated and binfo.burried are unused
+
+	-- this value has already been taken care of when determining start_pos
+	binfo.yoff  = 0;
+	-- file name of the scm; only used for error messages
+	binfo.scm   = building_name;
+	-- this is relevant for mirroring operations
+	binfo.axis  = axis;
+
+	-- start_pos contains already *.x,*.y,*.z of the desired start position;
+	-- translate rotation from 0,90,180,270 to 0,1,2,3
+	if( not( rotate ) or rotate=="0" ) then
+		start_pos.brotate = 0;
+	elseif( rotate=="90" ) then
+		start_pos.brotate = 1;
+	elseif( rotate=="180" ) then
+		start_pos.brotate = 2;
+	elseif( rotate=="270" ) then
+		start_pos.brotate = 3;
+	end
+	-- determine the size of the bulding from the place we assigned to it...
+	start_pos.bsizex  = math.abs(end_pos.x - start_pos.x)+1;
+	start_pos.bsizez  = math.abs(end_pos.z - start_pos.z)+1;
+
+	-- otpional; if set, the building will be mirrored
+	start_pos.mirror = mirror;
+	-- do not generate a plot marker as this is not part of a village;
+	-- otherwise, building_nr and village_id would have to be provided
+	start_pos.no_plotmarker = no_plotmarker;
+
+	mg_villages.place_building_using_voxelmanip( start_pos, binfo, replacement_list);
+
+	-- TODO: all those calls to on_construct need to be done now!
+	-- TODO: handle metadata
+end
+
+
+
 -- add the dirt roads
 mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, c_road_node)
 	local c_air = minetest.get_content_id( 'air' );
