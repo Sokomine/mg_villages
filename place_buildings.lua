@@ -218,10 +218,12 @@ local function generate_building_translate_nodenames( nodenames, replacements, c
 end
 
 
+local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id, binfo_extra)
 
-local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id)
-
-	local binfo = mg_villages.BUILDINGS[pos.btype]
+	local binfo = binfo_extra;
+	if( not( binfo )) then
+		binfo = mg_villages.BUILDINGS[pos.btype]
+	end
 	local scm
 
 	-- the building got removed from mg_villages.BUILDINGS in the meantime
@@ -230,11 +232,11 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	end
 
 	-- schematics of .mts type are not handled here; they need to be placed using place_schematics
-	if( binfo.is_mts == 1 ) then
+	if( binfo.is_mts and binfo.is_mts == 1 ) then
 		return;
 	end
 
-	if( pos.btype ~= "road" ) then
+	if( not( pos.no_plotmarker ) and pos.btype ~= "road" ) then
 		generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id );
 	end
 
@@ -245,7 +247,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	end
 
 
-	if( pos.btype ~= "road" and
+	if( pos.btype and pos.btype ~= "road" and
 	  ((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
 	    or ( binfo.sizez ~= pos.bsizex and binfo.sizez ~= pos.bsizez )
 	    or not( binfo.scm_data_cache ))) then
@@ -554,7 +556,7 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
 		if( not(pos.btype) or pos.btype ~= 'road' or anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
 			-- replacements are in table format for mapgen-based building spawning
-			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i, village_id )
+			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i, village_id, nil )
 		end
 	end
 
@@ -562,6 +564,109 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 	return { extranodes = extranodes, bpos = bpos, replacements = replacements.list, dirt_roads = village.to_add_data.dirt_roads,
 			plantlist = village.to_add_data.plantlist, extra_calls = extra_calls };
 end
+
+
+
+-- place a schematic manually
+--
+-- pos needs to contain information about how to place the building:
+-- 	pos.x, pos.y, pos.z	where the building is to be placed
+-- 	pos.btype		determines which building will be placed; if not set, binfo_extra needs to be provided
+-- 	pos.brotate		contains a value of 0-3, which determines the rotation of the building
+--	pos.bsizex		size of the building in x direction
+--	pos.bsizez		size of the building in z direction
+--	pos.mirror		if set, the building will be mirrored
+-- 	pos.no_plotmarker	optional; needs to be set in order to avoid the generation of a plotmarker
+-- 	building_nr		optional; used for plotmarker
+-- 	village_id		optional; used for plotmarker
+-- 	pos.fruit		optional; determines the fruit a farm is going to grow (if binfo.farming_plus is set)
+
+-- binfo contains general information about a building:
+-- 	binfo.sizex		size of the building in x direction
+-- 	binfo.sizez
+-- 	binfo.ysize
+-- 	binfo.yoff		how deep is the building burried?
+-- 	binfo.nodenames		list of the node names beeing used by the building
+-- 	binfo.scm		name of the file containing the schematic; only needed for an error message
+-- 	binfo.scm_data_cache	contains actual information about the nodes beeing used (the data)
+-- 	binfo.is_mts		optional; if set to 1, the function will abort
+-- 	binfo.farming_plus	optional; if set, pos.fruit needs to be set as well
+-- 	binfo.axis		optional; relevant for some mirroring operations
+-- 
+-- replacement_list		contains replacements in the same list format as place_schematic uses
+--
+mg_villages.place_building_using_voxelmanip = function( pos, binfo, replacement_list)
+
+	if( not( replacement_list ) or type( replacement_list ) ~= 'table' ) then
+		return;
+	end
+
+	-- if not defined, the building needs to start at pos.x,pos.y,pos.z - without offset
+	if( not( binfo.yoff )) then
+		binfo.yoff = 0;
+	end
+
+-- TODO: calculate the end position from the given data
+	-- get a suitable voxelmanip object
+	-- (taken from minetest_game/mods/default/trees.lua)
+	local vm = minetest.get_voxel_manip()
+	local minp, maxp = vm:read_from_map(
+		{x = pos.x, y = pos.y, z = pos.z},
+		{x = pos.x+pos.bsizex, y = pos.y+binfo.ysize, z = pos.z+pos.bsizez} -- TODO
+        )
+	local a = VoxelArea:new({MinEdge = minp, MaxEdge = maxp})
+	local data        = vm:get_data()
+	local param2_data = vm:get_param2_data();
+
+
+	-- translate the replacement_list into replacements.ids and replacements.table format
+	-- the first two parameters are nil because we do not want a new replacement list to be generated
+	local replacements = mg_villages.get_replacement_table( nil, nil, replacement_list );
+
+	-- only very few nodes are actually used from the cid table (content ids)
+	local cid = {};
+	cid.c_air              = minetest.get_content_id( 'air' );
+	cid.c_dirt             = mg_villages.get_content_id_replaced( 'default:dirt',           replacements );
+	cid.c_dirt_with_grass  = mg_villages.get_content_id_replaced( 'default:dirt_with_grass',replacements );
+	cid.c_sapling          = mg_villages.get_content_id_replaced( 'default:sapling',        replacements );
+	cid.c_jsapling         = mg_villages.get_content_id_replaced( 'default:junglesapling',  replacements );
+	cid.c_psapling         = mg_villages.get_content_id_replaced( 'default:pine_sapling',   replacements );
+	cid.c_savannasapling   = mg_villages.get_content_id_replaced( 'mg:savannasapling',      replacements );
+	cid.c_pinesapling      = mg_villages.get_content_id_replaced( 'mg:pinesapling',         replacements );
+	cid.c_plotmarker       = mg_villages.get_content_id_replaced( 'mg_villages:plotmarker', replacements );
+
+	cid.c_chest            = mg_villages.get_content_id_replaced( 'default:chest',          replacements );
+	cid.c_chest_locked     = mg_villages.get_content_id_replaced( 'default:chest_locked',   replacements );
+	cid.c_chest_private    = mg_villages.get_content_id_replaced( 'cottages:chest_private', replacements );
+	cid.c_chest_work       = mg_villages.get_content_id_replaced( 'cottages:chest_work',    replacements );
+	cid.c_chest_storage    = mg_villages.get_content_id_replaced( 'cottages:chest_storage', replacements );
+	cid.c_chest_shelf      = mg_villages.get_content_id_replaced( 'cottages:shelf',         replacements );
+	cid.c_chest_ash        = mg_villages.get_content_id_replaced( 'trees:chest_ash',        replacements );
+	cid.c_chest_aspen      = mg_villages.get_content_id_replaced( 'trees:chest_aspen',      replacements );
+	cid.c_chest_birch      = mg_villages.get_content_id_replaced( 'trees:chest_birch',      replacements );
+	cid.c_chest_maple      = mg_villages.get_content_id_replaced( 'trees:chest_maple',      replacements );
+	cid.c_chest_chestnut   = mg_villages.get_content_id_replaced( 'trees:chest_chestnut',   replacements );
+	cid.c_chest_pine       = mg_villages.get_content_id_replaced( 'trees:chest_pine',       replacements );
+	cid.c_chest_spruce     = mg_villages.get_content_id_replaced( 'trees:chest_spruce',     replacements );
+	cid.c_sign             = mg_villages.get_content_id_replaced( 'default:sign_wall',      replacements );
+
+	local extranodes = {}
+	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
+
+	generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, pos.building_nr, pos.village_id, binfo)
+
+	-- store the changed map data
+	vm:set_data(data);
+	vm:set_param2_data(param2_data);
+	vm:write_to_map();
+	vm:update_liquids();
+	vm:update_map();
+
+-- TODO: do the calls for the extranodes as well
+	-- replacements are in list format for minetest.place_schematic(..) type spawning
+	return { extranodes = extranodes, replacements = replacements.list, extra_calls = extra_calls };
+end
+
 
 
 -- add the dirt roads
