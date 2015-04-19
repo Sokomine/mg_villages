@@ -719,10 +719,23 @@ mg_villages.place_building_from_file = function( start_pos, end_pos, building_na
 	-- otherwise, building_nr and village_id would have to be provided
 	start_pos.no_plotmarker = no_plotmarker;
 
-	mg_villages.place_building_using_voxelmanip( start_pos, binfo, replacement_list);
+	-- all those calls to on_construct need to be done now
+	local res = mg_villages.place_building_using_voxelmanip( start_pos, binfo, replacement_list);
+	if( not(res) or not( res.extra_calls )) then
+		return;
+	end
 
-	-- TODO: all those calls to on_construct need to be done now!
-	-- TODO: handle metadata
+	-- call on_construct where needed;
+	-- trees, chests and signs receive no special treatment here
+	for k, v in pairs( res.extra_calls.on_constr ) do
+		local node_name = minetest.get_name_from_content_id( k );
+		if( minetest.registered_nodes[ node_name ].on_construct ) then
+			for _, pos in ipairs(v) do
+				minetest.registered_nodes[ node_name ].on_construct( pos );
+			end
+		end
+	end
+	-- TODO: handle metadata (if any is provided)
 end
 
 
