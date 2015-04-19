@@ -14,6 +14,10 @@ build_chest.preview_image_create_one_view = function( data, side )
 		params = {1, data.size.z, 1, data.size.x, 0, -1, 1, 0};
 	end
 
+	-- do not create preview images for buildings that are too big
+	if( params[2] * params[4] > 2500 ) then
+		return nil;
+	end
 	local preview = {};
 	for y = 1, data.size.y do
 		preview[ y ] = {};
@@ -53,6 +57,11 @@ end
 
 -- internal function
 build_chest.preview_image_create_view_from_top = function( data )
+	-- no view from top if the image is too big
+	if( data.size.z * data.size.y > 2500 ) then
+		return nil;
+	end
+
 	local preview = {};
 	for z = 1, data.size.z do
 		preview[ z ] = {};
@@ -157,6 +166,10 @@ build_chest.preview_image_formspec = function( building_name, replacements, side
 		side = 1;
 	end
 	local preview = data.preview[ side ];
+	if( not( preview )) then
+		formspec = formspec.."label[3,3;Sorry, this schematic is too big for a preview image.]";
+		return formspec;
+	end
 	for y,y_values in ipairs( preview ) do
 		for l,v in ipairs( y_values ) do
 			-- air, ignore and mg:ignore are not stored
