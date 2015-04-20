@@ -303,7 +303,7 @@ build_chest.update_formspec = function( pos, page, player, fields )
 
 			return formspec..
 				"label[2,3.0;This chest marks the end position of your building. Please put another]"..
-				"label[2,3.4;build chest in front of your building and save it with that chest.]"..
+				"label[2,3.3;build chest in front of your building and save it with that chest.]"..
 				"button[5,8.0;3,0.5;back;Back]";
 		end
 		
@@ -313,9 +313,30 @@ build_chest.update_formspec = function( pos, page, player, fields )
 			   and end_pos_mark.start_pos.y == pos.y
 			   and end_pos_mark.start_pos.z == pos.z ) then
 -- TODO! formspec; start_pos: build_chest.end_pos_list[ player:get_player_name() ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
+-- TODO: show start- and end position and dimensions of building
+				local height = math.abs( end_pos_mark.start_pos.y - end_pos_mark.y )+1;
 				return formspec..
-					"label[3,3;OK. There ought to be a formspec here requestiong filename and such.]"..
-					"button[5,8.0;3,0.5;abort_set_start_pos;Abort]";
+					"label[2,2.4;How high is your building? This does *not* include the height offset below. The]"..
+					"label[2,2.7;default value is calculated from the height difference between start and end position.]"..
+					"label[2,3.15;Total height of your building:]"..
+						"field[6,3.5;1,0.5;save_as_height;;"..tostring(height).."]"..
+
+					-- note: in mg_villages, yoff has to be 0 in order to include the ground floor as well;
+					-- "1" means the building without floor; here, "1" means a floating building
+					"label[2,3.8;The hight offset sets how deep your building will be burried in the ground. Examples:]"..
+						"label[2.5,4.1;A value of -4 will include a cellar which extends 4 nodes below this build chest.]"..
+						"label[2.5,4.4;A value of -1 will include the floor below the chest, but no cellar.]"..
+						"label[2.5,4.7;A positive value will make your building float in the air.]"..
+					"label[2,5.15;Add height offset:]"..
+						"field[6,5.5;1,0.5;save_as_yoff;;0]"..
+
+					"label[2,6.7;Please enter a descriptive filename. Allowed charcters: "..
+						minetest.formspec_escape("a-z, A-Z, 0-9, -, _, .").."]"..
+					"label[2,7.15;Save schematic as:]"..
+						"field[6,7.5;4,0.5;save_as_filename;;]"..
+
+					"button[2,8.0;3,0.5;abort_set_start_pos;Abort]"..
+					"button[6,8.0;3,0.5;save_as;Save building now]";
 			 else
 				return formspec..
 					"label[3,3;You have selected another build chest as start position.]"..
@@ -335,12 +356,12 @@ build_chest.update_formspec = function( pos, page, player, fields )
 		return formspec..
 			"label[2.5,2.2;First, let us assume that you are facing the front of this build chest.]"..
 
-			"label[2,3.0;Are you looking at the BACKSIDE of your building, and does said backside stretch]"..
+			"label[2,3.1;Are you looking at the BACKSIDE of your building, and does said backside stretch]"..
 			"label[2,3.4;to the right and in front of you? Then click on the button below:]"..
 			"button[4,4;5,0.5;set_end_pos;Set this position as new end position]"..
 
-			"label[2,5.0;Have you set the end position with another build chest using the method above]"..
-			"label[2,5.4;in the meantime? And are you now looking at the FRONT of your building, which]"..
+			"label[2,5.2;Have you set the end position with another build chest using the method above]"..
+			"label[2,5.5;in the meantime? And are you now looking at the FRONT of your building, which]"..
 			"label[2,5.8;streches in front of you and to the right? Then click on Proceed:]"..
 			"button[5,6.4;3,0.5;set_start_pos;Proceed with saving]"..
 
