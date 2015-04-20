@@ -312,9 +312,41 @@ build_chest.update_formspec = function( pos, page, player, fields )
 			if(    end_pos_mark.start_pos.x == pos.x
 			   and end_pos_mark.start_pos.y == pos.y
 			   and end_pos_mark.start_pos.z == pos.z ) then
--- TODO! formspec; start_pos: build_chest.end_pos_list[ player:get_player_name() ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
-				local height = math.abs( end_pos_mark.start_pos.y - end_pos_mark.y )+1;
+				local p2 = {x=end_pos_mark.x, y=end_pos_mark.y, z=end_pos_mark.z};
+				local p1 = {x=end_pos_mark.start_pos.x, y=end_pos_mark.start_pos.y, z=end_pos_mark.start_pos.z};
+				local height = math.abs( p1.y - p2.y )+1;
+				local width  = 0;
+				local length = 0;
+				if( end_pos_mark.parm2==0 or end_pos_mark.param2 ==2 ) then
+					-- the chests take up some space
+					width  = width-2;
+					-- adjust p1 and p2 so that only the area we really care about is marked
+					if( p1.z > p2.z ) then
+						p1.z = p1.z-1;
+						p2.z = p2.z+1;
+					else
+						p1.z = p1.z+1;
+						p2.z = p2.z-1;
+					end
+					width  = math.abs( p1.x - p2.x )+1;
+					length = math.abs( p1.z - p2.z )+1;
+				else
+					if( p1.x > p2.x ) then
+						p1.x = p1.x-1;
+						p2.x = p2.x+1;
+					else
+						p1.x = p1.x+1;
+						p2.x = p2.x-1;
+					end
+					length = math.abs( p1.x - p2.x )+1;
+					width  = math.abs( p1.z - p2.z )+1;
+				end
 				return formspec..
+					-- p1 and p2 are passed on as inputs in order to avoid any unwanted future interferences
+					-- with any other build chests
+					"field[40,40;0.1,0.1;save_as_p1;;"..minetest.pos_to_string(p1).."]"..
+					"field[40,40;0.1,0.1;save_as_p2;;"..minetest.pos_to_string(p2).."]"..
+
 					"label[2,2.4;How high is your building? This does *not* include the height offset below. The]"..
 					"label[2,2.7;default value is calculated from the height difference between start and end position.]"..
 					"label[2,3.15;Total height of your building:]"..
@@ -329,17 +361,15 @@ build_chest.update_formspec = function( pos, page, player, fields )
 					"label[2,5.15;Add height offset:]"..
 						"field[6,5.5;1,0.5;save_as_yoff;;0]"..
 
--- TODO: these positions need to be adjusted!
 					"label[2,5.8;Without the changes entered in the input form above, your building will extend from]"..
 						"label[2.5,6.1;"..minetest.formspec_escape(
-							minetest.pos_to_string( end_pos_mark.start_pos ).." to "..
-							minetest.pos_to_string( end_pos_mark ).." and span a volume of "..
--- TODO: swap x and z here if rotated by 90 or 270 degree
-							tostring( math.abs( end_pos_mark.start_pos.x - end_pos_mark.x )+1 )..' (width) x '..
-							tostring( math.abs( end_pos_mark.start_pos.z - end_pos_mark.z )+1 )..' (depth) x '..
-							tostring( math.abs( end_pos_mark.start_pos.y - end_pos_mark.y )+1 )..' (height)').."]"..
+							minetest.pos_to_string( p1 ).." to "..
+							minetest.pos_to_string( p2 ).." and span a volume of "..
+							-- x and z are swpapped here if rotated by 90 or 270 degree
+							tostring(width )..' (width) x '..
+							tostring(length)..' (depth) x '..
+							tostring(height)..' (height)').."]"..
 						
-
 					"label[2,6.7;Please enter a descriptive filename. Allowed charcters: "..
 						minetest.formspec_escape("a-z, A-Z, 0-9, -, _, .").."]"..
 					"label[2,7.15;Save schematic as:]"..
@@ -712,15 +742,39 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 
 
 	elseif( fields.save_as ) then
-		local start_pos     = minetest.deserialize( meta:get_string('start_pos'));
-		local end_pos       = minetest.deserialize( meta:get_string('end_pos'));
--- TODO: do checks if start_pos, end_pos, fields.save_as, fields.burried are reasonable
--- TODO: allow to enter a diffrent height
-		if( fields.save_as and fields.save_as ~= "" and fields.burried
-		    and start_pos and start_pos.x and end_pos and end_pos.x) then
+		if( fields.save_as_p1 and fields.save_as_p2 and fields.save_as_filename ) then
+			-- restore p1 and p2, the positions of the area that is to be saved
+			local p1 = minetest.string_to_pos( fields.save_as_p1 );
+			local p2 = minetest.string_to_pos( fields.save_as_p2 );
 
-			local filename = fields.save_as;
-			local burried = tostring( tonumber( fields.burried ));
+			-- take height changes into account
+			if( fields.save_as_height ) then
+				local new_height = tonumber( fields.save_as_height );
+				-- the new height is measured from the start position as well
+				if( new_height and new_height ~= (math.abs(p1.y-p2.y)+1)) then
+					p2.y = p1.y+new_height;
+				end
+			end
+				
+			local burried = 0;
+			if( fields.yoff ) then
+				burried = tonumber( fields.yoff );
+				if( not( burried )) then
+					burried = 0;
+				end
+				-- the yoffset is applied to the start position
+				p1.y = p1.y - burried;
+				-- TODO: real negative values are not supported by analyze_mts_file
+				burried = -1*burried;
+			end
+
+			-- create an automatic filename if none is provided
+			local filename = fields.save_as_filename;
+			-- TODO: check the input if it contains only allowed chars (a-z, A-Z, 0-9, -, _, .)
+			if( not( filename )) then
+				filename = pname..'_'..tostring( p1 )..'_'..tostring(p2);
+			end
+
 			-- param2 needs to be translated init initial rotation as well
 			local node = minetest.get_node( pos );
 			if(     node.param2 == 0 ) then
@@ -735,12 +789,12 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			-- TODO: what if there is no schems folder in that directory?
 			filename = minetest.get_worldpath()..'/schems/'..filename..'.mts';
 			-- really save it with probability_list and slice_prob_list both as nil
-			minetest.create_schematic( start_pos, end_pos, nil, filename, nil);
+			minetest.create_schematic( p1, p2, nil, filename, nil);
 -- TODO: show that in the formspec
 			minetest.chat_send_player( pname,
 				'Created schematic \''..tostring( filename )..'\'. Saved area from '..
-				minetest.pos_to_string( start_pos )..' to '..
-				minetest.pos_to_string( end_pos ));
+				minetest.pos_to_string( p1 )..' to '..
+				minetest.pos_to_string( p2 ));
 		end
 	end
 	-- the final build stage may offer further replacements
