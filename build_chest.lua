@@ -295,6 +295,21 @@ build_chest.update_formspec = function( pos, page, player, fields )
 
 	-- offer a menu to set the positions for saving a building
 	if( #current_path > 0 and current_path[1]=='save a building' ) then
+		local saved_as_filename = meta:get_string('saved_as_filename');
+		if( saved_as_filename and saved_as_filename ~= "" ) then
+			local p1str = meta:get_string('p1');
+			local p2str = meta:get_string('p2');
+			
+			return formspec..
+				"label[2.0,3;This area has been saved to the file]"..
+				"label[2.5,3.3;"..minetest.formspec_escape( saved_as_filename ).."]"..
+				"label[2.0,3.6;The area extends from]"..
+				"label[2.5,3.9;"..minetest.formspec_escape( p1str ).."]"..
+				"label[2.0,4.2;to the point]"..
+				"label[2.5,4.5;"..minetest.formspec_escape( p2str ).."]"..
+				"button[5,8.0;3,0.5;back;Back]";
+		end
+
 		local end_pos_mark = build_chest.end_pos_list[ player:get_player_name() ];
 		if(    end_pos_mark
 		   and end_pos_mark.x==pos.x 
@@ -317,9 +332,7 @@ build_chest.update_formspec = function( pos, page, player, fields )
 				local height = math.abs( p1.y - p2.y )+1;
 				local width  = 0;
 				local length = 0;
-				if( end_pos_mark.parm2==0 or end_pos_mark.param2 ==2 ) then
-					-- the chests take up some space
-					width  = width-2;
+				if( end_pos_mark.param2==0 or end_pos_mark.param2==2 ) then
 					-- adjust p1 and p2 so that only the area we really care about is marked
 					if( p1.z > p2.z ) then
 						p1.z = p1.z-1;
@@ -586,6 +599,7 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		meta:set_string( 'building_name', '');
 		meta:set_int(    'replace_row', 0 );
 		meta:set_int(    'page_nr',     0 );
+		meta:set_string( 'saved_as_filename', nil);
 
 	-- menu entry selected
 	elseif( fields.selection ) then
@@ -757,15 +771,17 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			end
 				
 			local burried = 0;
-			if( fields.yoff ) then
-				burried = tonumber( fields.yoff );
+			if( fields.save_as_yoff ) then
+				burried = tonumber( fields.save_as_yoff );
 				if( not( burried )) then
 					burried = 0;
 				end
 				-- the yoffset is applied to the start position
-				p1.y = p1.y - burried;
+				p1.y = p1.y + burried;
 				-- TODO: real negative values are not supported by analyze_mts_file
-				burried = -1*burried;
+				if( burried ~= 0 ) then
+					burried = -1*burried;
+				end
 			end
 
 			-- create an automatic filename if none is provided
@@ -787,10 +803,27 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 				filename = filename..'_'..burried..'_270';
 			end
 			-- TODO: what if there is no schems folder in that directory?
-			filename = minetest.get_worldpath()..'/schems/'..filename..'.mts';
+			-- TODO: forbid overwriting existing files?
+			local worldpath = minetest.get_worldpath();
+			local filename_complete = worldpath..'/schems/'..filename..'.mts';
 			-- really save it with probability_list and slice_prob_list both as nil
-			minetest.create_schematic( p1, p2, nil, filename, nil);
--- TODO: show that in the formspec
+			minetest.create_schematic( p1, p2, nil, filename_complete, nil);
+
+			-- store that we have saved this area
+			meta:set_string('saved_as_filename', filename);
+			meta:set_string('p1', minetest.pos_to_string( p1 ));
+			meta:set_string('p2', minetest.pos_to_string( p2 ));
+			-- forget the end position
+			build_chest.end_pos_list[ pname ] = nil;
+
+			-- add this chest to the menu
+			local worldnameparts = string.split( worldpath, '/worlds/' );
+			if( not( worldnameparts ) or #worldnameparts < 1 ) then
+				worldnameparts = {'unkown world'};
+			end
+			build_chest.add_entry(    {'main','worlds', worldnameparts[ #worldnameparts], 'schems', filename, worldpath..'/schems/'..filename});
+			build_chest.add_building( worldpath..'/schems/'..filename, {scm=filename, typ='nn'});
+
 			minetest.chat_send_player( pname,
 				'Created schematic \''..tostring( filename )..'\'. Saved area from '..
 				minetest.pos_to_string( p1 )..' to '..
