@@ -44,6 +44,11 @@ build_chest.add_entry = function( path )
 	end
 end
 
+-- add a menu entry that will always be available
+build_chest.add_entry( {'save a building'} );
+
+-- needed for saving buildings
+build_chest.end_pos_list = {};
 
 dofile( minetest.get_modpath( minetest.get_current_modname()).."/build_chest_handle_replacements.lua");
 dofile( minetest.get_modpath( minetest.get_current_modname()).."/build_chest_preview_image.lua");
@@ -187,8 +192,8 @@ end
 
 build_chest.get_start_pos = function( pos )
 	-- rotate the building so that it faces the player
-	local node = minetest.env:get_node( pos );
-	local meta = minetest.env:get_meta( pos );
+	local node = minetest.get_node( pos );
+	local meta = minetest.get_meta( pos );
 
 	local building_name = meta:get_string( 'building_name' );
 	if( not( building_name )) then
@@ -234,7 +239,7 @@ end
 build_chest.update_formspec = function( pos, page, player, fields )
 
 	-- information about the village the build chest may belong to and about the owner
-	local meta = minetest.env:get_meta( pos );
+	local meta = minetest.get_meta( pos );
 	local village_name = meta:get_string( 'village' );
 	local village_pos  = minetest.deserialize( meta:get_string( 'village_pos' ));
 	local owner_name   = meta:get_string( 'owner' );
@@ -285,6 +290,62 @@ build_chest.update_formspec = function( pos, page, player, fields )
 	local current_path = minetest.deserialize( meta:get_string( 'current_path' ) or 'return {}' );
 	if( #current_path > 0 ) then
 		formspec = formspec.."button[9.9,0.4;2,0.5;back;Back]";
+	end
+
+
+	-- offer a menu to set the positions for saving a building
+	if( #current_path > 0 and current_path[1]=='save a building' ) then
+		local end_pos_mark = build_chest.end_pos_list[ player:get_player_name() ];
+		if(    end_pos_mark
+		   and end_pos_mark.x==pos.x 
+		   and end_pos_mark.y==pos.y 
+		   and end_pos_mark.z==pos.z ) then
+
+			return formspec..
+				"label[2,3.0;This chest marks the end position of your building. Please put another]"..
+				"label[2,3.4;build chest in front of your building and save it with that chest.]"..
+				"button[5,8.0;3,0.5;back;Back]";
+		end
+		
+		if( end_pos_mark and end_pos_mark.start_pos ) then
+
+			if(    end_pos_mark.start_pos.x == pos.x
+			   and end_pos_mark.start_pos.y == pos.y
+			   and end_pos_mark.start_pos.z == pos.z ) then
+-- TODO! formspec; start_pos: build_chest.end_pos_list[ player:get_player_name() ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
+				return formspec..
+					"label[3,3;OK. There ought to be a formspec here requestiong filename and such.]"..
+					"button[5,8.0;3,0.5;abort_set_start_pos;Abort]";
+			 else
+				return formspec..
+					"label[3,3;You have selected another build chest as start position.]"..
+					"button[5,8.0;3,0.5;back;Back]"..
+					"button[5,5.0;3,0.5;abort_set_start_pos;Reset start position]";
+			end
+		end
+
+		if( fields.error_msg ) then
+			return formspec..
+				"label[4,4.5;Error while trying to set the start position:]"..
+				"textarea[4,5;6,2;error_msg;;"..
+				minetest.formspec_escape( fields.error_msg ).."]"..
+				"button[5,8.0;3,0.5;back;Back]";
+		end
+
+		return formspec..
+			"label[2.5,2.2;First, let us assume that you are facing the front of this build chest.]"..
+
+			"label[2,3.0;Are you looking at the BACKSIDE of your building, and does said backside stretch]"..
+			"label[2,3.4;to the right and in front of you? Then click on the button below:]"..
+			"button[4,4;5,0.5;set_end_pos;Set this position as new end position]"..
+
+			"label[2,5.0;Have you set the end position with another build chest using the method above]"..
+			"label[2,5.4;in the meantime? And are you now looking at the FRONT of your building, which]"..
+			"label[2,5.8;streches in front of you and to the right? Then click on Proceed:]"..
+			"button[5,6.4;3,0.5;set_start_pos;Proceed with saving]"..
+
+			"label[4,7.4;If this confuses you, you can also abort the process.]"..
+			"button[5,8.0;3,0.5;back;Abort]";
 	end
 
 
@@ -440,7 +501,7 @@ end
 -- TODO: check if it is the owner of the chest/village
 build_chest.on_receive_fields = function(pos, formname, fields, player)
 
-	local meta = minetest.env:get_meta(pos);
+	local meta = minetest.get_meta(pos);
 -- general menu handling
 	-- back button selected
 	if( fields.back ) then
@@ -552,6 +613,92 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			meta:set_string('backup', nil );
 		end
 	
+
+	-- store a new end position
+	elseif( fields.set_end_pos ) then
+		local node = minetest.get_node( pos );
+		if( node and node.param2 ) then
+			build_chest.end_pos_list[ player:get_player_name() ] = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
+		end
+
+
+	elseif( fields.set_start_pos ) then
+		local error_msg = "";
+		local end_pos = build_chest.end_pos_list[ player:get_player_name() ];
+		if( not( end_pos )) then
+			error_msg = "Please mark the end position of your building first!";
+		else
+			local node = minetest.get_node( pos );
+			if( not( node ) or not( node.param2 )) then
+				error_msg = "A strange error happened.";
+			elseif( (node.param2 == 0 and end_pos.param2 ~= 2)
+			     or (node.param2 == 1 and end_pos.param2 ~= 3)
+			     or (node.param2 == 2 and end_pos.param2 ~= 0)
+			     or (node.param2 == 3 and end_pos.param2 ~= 1)) then
+				error_msg = "One build chest needs to point to the front of your building, and "..
+					"the other one to the backside. This does not seem to be the case.";
+
+			elseif( (node.param2 == 2 and ( pos.x < end_pos.x or pos.z < end_pos.z )) -- x and z need to get larger
+			     or (node.param2 == 3 and ( pos.x < end_pos.x or pos.z > end_pos.z )) -- x gets larger, z gets smaller
+			     or (node.param2 == 0 and ( pos.x > end_pos.x or pos.z > end_pos.z )) -- x and z need to get smaller
+			     or (node.param2 == 1 and ( pos.x > end_pos.x or pos.z < end_pos.z )) -- x gets smaller, z gets larger
+				) then
+				error_msg = "The end position does not fit to the orientation of this build chest.";
+
+			-- the chest takes up one node as well
+			elseif( math.abs(pos.x-end_pos.x)<1) then
+				error_msg = "Start- and end position share the same x value.";
+
+			elseif( math.abs(pos.z-end_pos.z)<1) then
+				error_msg = "Start- and end position share the same z value.";
+
+			-- all ok; we may proceed
+			else
+				error_msg = "";
+				build_chest.end_pos_list[ player:get_player_name() ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
+			end
+			fields.error_msg = error_msg;
+		end 
+
+	-- in case the player selected the wrong chest for the save dialog
+	elseif( fields.abort_set_start_pos ) then
+		local end_pos = build_chest.end_pos_list[ player:get_player_name() ];
+		if( end_pos ) then
+			build_chest.end_pos_list[ player:get_player_name() ].start_pos = nil;
+		end
+
+
+	elseif( fields.save_as ) then
+		local start_pos     = minetest.deserialize( meta:get_string('start_pos'));
+		local end_pos       = minetest.deserialize( meta:get_string('end_pos'));
+-- TODO: do checks if start_pos, end_pos, fields.save_as, fields.burried are reasonable
+-- TODO: allow to enter a diffrent height
+		if( fields.save_as and fields.save_as ~= "" and fields.burried
+		    and start_pos and start_pos.x and end_pos and end_pos.x) then
+
+			local filename = fields.save_as;
+			local burried = tostring( tonumber( fields.burried ));
+			-- param2 needs to be translated init initial rotation as well
+			local node = minetest.get_node( pos );
+			if(     node.param2 == 0 ) then
+				filename = filename..'_'..burried..'_90';
+			elseif( node.param2 == 3 ) then
+				filename = filename..'_'..burried..'_180';
+			elseif( node.param2 == 1 ) then
+				filename = filename..'_'..burried..'_0';
+			elseif( node.param2 == 2 ) then
+				filename = filename..'_'..burried..'_270';
+			end
+			-- TODO: what if there is no schems folder in that directory?
+			filename = minetest.get_worldpath()..'/schems/'..filename..'.mts';
+			-- really save it with probability_list and slice_prob_list both as nil
+			minetest.create_schematic( start_pos, end_pos, nil, filename, nil);
+-- TODO: show that in the formspec
+			minetest.chat_send_player( player:get_player_name(),
+				'Created schematic \''..tostring( filename )..'\'. Saved area from '..
+				minetest.pos_to_string( start_pos )..' to '..
+				minetest.pos_to_string( end_pos ));
+		end
 	end
 	-- the final build stage may offer further replacements
 	if( build_chest.stages_on_receive_fields ) then
@@ -583,7 +730,7 @@ minetest.register_node("mg_villages:build", { --TODO
 
  -- TODO: check if placement is allowed
       
-           local meta = minetest.env:get_meta( pos );
+           local meta = minetest.get_meta( pos );
            meta:set_string( 'current_path', minetest.serialize( {} ));
            meta:set_string( 'village',      'BEISPIELSTADT' ); --TODO
            meta:set_string( 'village_pos',  minetest.serialize( {x=1,y=2,z=3} )); -- TODO
@@ -610,7 +757,7 @@ minetest.register_node("mg_villages:build", { --TODO
         end,
 
         can_dig = function(pos,player)
-            local meta          = minetest.env:get_meta( pos );
+            local meta          = minetest.get_meta( pos );
             local inv           = meta:get_inventory();
             local owner_name    = meta:get_string( 'owner' );
             local building_name = meta:get_string( 'building_name' );
@@ -632,7 +779,7 @@ minetest.register_node("mg_villages:build", { --TODO
 
         -- have all materials been supplied and the remaining parts removed?
         on_metadata_inventory_take = function(pos, listname, index, stack, player)
-            local meta          = minetest.env:get_meta( pos );
+            local meta          = minetest.get_meta( pos );
             local inv           = meta:get_inventory();
             local stage         = meta:get_int( 'building_stage' );
             
