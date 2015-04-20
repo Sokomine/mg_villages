@@ -313,7 +313,6 @@ build_chest.update_formspec = function( pos, page, player, fields )
 			   and end_pos_mark.start_pos.y == pos.y
 			   and end_pos_mark.start_pos.z == pos.z ) then
 -- TODO! formspec; start_pos: build_chest.end_pos_list[ player:get_player_name() ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
--- TODO: show start- and end position and dimensions of building
 				local height = math.abs( end_pos_mark.start_pos.y - end_pos_mark.y )+1;
 				return formspec..
 					"label[2,2.4;How high is your building? This does *not* include the height offset below. The]"..
@@ -329,6 +328,17 @@ build_chest.update_formspec = function( pos, page, player, fields )
 						"label[2.5,4.7;A positive value will make your building float in the air.]"..
 					"label[2,5.15;Add height offset:]"..
 						"field[6,5.5;1,0.5;save_as_yoff;;0]"..
+
+-- TODO: these positions need to be adjusted!
+					"label[2,5.8;Without the changes entered in the input form above, your building will extend from]"..
+						"label[2.5,6.1;"..minetest.formspec_escape(
+							minetest.pos_to_string( end_pos_mark.start_pos ).." to "..
+							minetest.pos_to_string( end_pos_mark ).." and span a volume of "..
+-- TODO: swap x and z here if rotated by 90 or 270 degree
+							tostring( math.abs( end_pos_mark.start_pos.x - end_pos_mark.x )+1 )..' (width) x '..
+							tostring( math.abs( end_pos_mark.start_pos.z - end_pos_mark.z )+1 )..' (depth) x '..
+							tostring( math.abs( end_pos_mark.start_pos.y - end_pos_mark.y )+1 )..' (height)').."]"..
+						
 
 					"label[2,6.7;Please enter a descriptive filename. Allowed charcters: "..
 						minetest.formspec_escape("a-z, A-Z, 0-9, -, _, .").."]"..
