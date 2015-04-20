@@ -498,10 +498,22 @@ end
 
 
 
--- TODO: check if it is the owner of the chest/village
 build_chest.on_receive_fields = function(pos, formname, fields, player)
 
 	local meta = minetest.get_meta(pos);
+
+	local owner = meta:get_string('owner');
+	local pname = player:get_player_name();
+
+	-- make sure not everyone can mess up the build chest
+	if( owner and owner ~= '' and owner ~= pname 
+	    and minetest.is_protected( pos, pname )) then
+		minetest.chat_send_player( pname,
+			"Sorry. This build chest belongs to "..tostring( owner ).." and only "..
+			"accepts input from its owner or other players who can build here.");
+		return;
+	end
+
 -- general menu handling
 	-- back button selected
 	if( fields.back ) then
@@ -588,7 +600,7 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			minetest.create_schematic( start_pos, end_pos, nil, filename, nil);
 			meta:set_string('backup', filename );
 
-			minetest.chat_send_player( player:get_player_name(), 'CREATING backup schematic for this place in '..tostring( filename )..'.');
+			minetest.chat_send_player( pname, 'CREATING backup schematic for this place in '..tostring( filename )..'.');
 		end
 		
 -- TODO: use scaffolding here (exchange some replacements)
@@ -618,13 +630,13 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 	elseif( fields.set_end_pos ) then
 		local node = minetest.get_node( pos );
 		if( node and node.param2 ) then
-			build_chest.end_pos_list[ player:get_player_name() ] = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
+			build_chest.end_pos_list[ pname ] = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
 		end
 
 
 	elseif( fields.set_start_pos ) then
 		local error_msg = "";
-		local end_pos = build_chest.end_pos_list[ player:get_player_name() ];
+		local end_pos = build_chest.end_pos_list[ pname ];
 		if( not( end_pos )) then
 			error_msg = "Please mark the end position of your building first!";
 		else
@@ -655,16 +667,16 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			-- all ok; we may proceed
 			else
 				error_msg = "";
-				build_chest.end_pos_list[ player:get_player_name() ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
+				build_chest.end_pos_list[ pname ].start_pos = {x=pos.x, y=pos.y, z=pos.z, param2=node.param2 };
 			end
 			fields.error_msg = error_msg;
 		end 
 
 	-- in case the player selected the wrong chest for the save dialog
 	elseif( fields.abort_set_start_pos ) then
-		local end_pos = build_chest.end_pos_list[ player:get_player_name() ];
+		local end_pos = build_chest.end_pos_list[ pname ];
 		if( end_pos ) then
-			build_chest.end_pos_list[ player:get_player_name() ].start_pos = nil;
+			build_chest.end_pos_list[ pname ].start_pos = nil;
 		end
 
 
@@ -694,7 +706,7 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 			-- really save it with probability_list and slice_prob_list both as nil
 			minetest.create_schematic( start_pos, end_pos, nil, filename, nil);
 -- TODO: show that in the formspec
-			minetest.chat_send_player( player:get_player_name(),
+			minetest.chat_send_player( pname,
 				'Created schematic \''..tostring( filename )..'\'. Saved area from '..
 				minetest.pos_to_string( start_pos )..' to '..
 				minetest.pos_to_string( end_pos ));
