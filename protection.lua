@@ -88,9 +88,9 @@ end );
 
 mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
-	if( not( mg_villages.ENABLE_PROTECTION )) then
-		return;
-	end
+--	if( not( mg_villages.ENABLE_PROTECTION )) then
+--		return;
+--	end
 
 	local meta = minetest.get_meta( pos );
 	if( not( meta )) then
@@ -125,6 +125,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	local price_stack= ItemStack( price );
 	
 	local plot_descr = 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm);
+	--minetest.chat_send_player( player:get_player_name(),'DATA FOR '..tostring(plot_nr)..': '..minetest.serialize( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ] ));
 	local formspec = "size[8,3]"..
 			 "label[1.0,0.5;Plot No.: "..tostring( plot_nr ).."]"..
 			 "label[2.5,0.5;Building:]"..

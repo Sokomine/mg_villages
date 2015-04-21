@@ -330,16 +330,24 @@ mg_villages.add_building = function( building_data )
 		building_data.sizez = res.size.z;
 		building_data.ysize = res.size.y;
 			
-		-- some buildings may be rotated
-		if(   res.rotated == 90
-		  or  res.rotated == 270 ) then
-
-			building_data.sizex = res.size.z;
-			building_data.sizez = res.size.x;
+		-- some buildings may be rotated	
+		if( not( building_data.orients ) and res.rotated ) then
+			building_data.orients = {};
+			if(     res.rotated == 0 ) then
+				building_data.orients[1] = 0;
+			elseif( res.rotated == 90 ) then
+				building_data.axis = 1; -- important when mirroring
+				building_data.orients[1] = 1;
+			elseif( res.rotated == 180 ) then
+				building_data.orients[1] = 2;
+			elseif( res.rotated == 270 ) then
+				building_data.orients[1] = 3; 
+				building_data.axis = 1; -- important when mirroring
+			end
 		end
 
 		if( not( building_data.yoff ) or building_data.yoff == 0 ) then
-			building_data.yoff = res.burried;
+			building_data.yoff = 1-res.burried;
 		end
 
 		-- we do need at least the list of nodenames which will need on_constr later on
