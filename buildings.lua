@@ -346,7 +346,7 @@ mg_villages.add_building = function( building_data )
 			end
 		end
 
-		if( not( building_data.yoff ) or building_data.yoff == 0 ) then
+		if( not( building_data.yoff ) and res.burried ) then
 			building_data.yoff = 1-res.burried;
 		end
 

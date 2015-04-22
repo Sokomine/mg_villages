@@ -78,6 +78,12 @@ local function choose_building(l, pr, village_type)
 	while true do
 		local p = pr:next(1, 3000)
 		
+		if(  not( mg_villages.village_type_data[ village_type ] )
+		  or not( mg_villages.village_type_data[ village_type ][ 'building_list'] )) then
+			mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, 'Unsupported village type: '..tostring( village_type )..' for house at '..tostring(bx)..':'..tostring(bz)..'.');
+			-- ...and crash in the next few lines (because there is no real solution for this problem)
+		end
+
 		for _, b in ipairs( mg_villages.village_type_data[ village_type ][ 'building_list'] ) do
 			if (   mg_villages.BUILDINGS[ b ] and mg_villages.BUILDINGS[ b ].max_weight
 			   and mg_villages.BUILDINGS[ b ].max_weight[ village_type ] and  mg_villages.BUILDINGS[ b ].max_weight[ village_type ] >= p) then
