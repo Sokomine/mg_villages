@@ -305,16 +305,9 @@ mg_villages.add_building = function( building_data )
 
 	-- determine the size of the building
 	local res = nil;
-	-- read the size of the building
-	res  = handle_schematics.analyze_mts_file( file_name ); 
-	-- alternatively, read the mts file
-	if( not( res )) then
-		res = mg_villages.analyze_we_file( file_name, building_data.we_origin );
-		-- convert to .mts for later usage
-		if( res ) then
-			handle_schematics.store_mts_file(  building_data.mts_path .. building_data.scm, res );
-		end
-	end
+	-- read the size of the building;
+	-- convert to .mts for later usage if necessary
+	res  = handle_schematics.analyze_file( file_name, building_data.we_origin, building_data.mts_path .. building_data.scm ); 
 
 	if( not( res )) then
 		mg_villages.print(mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to import failure.');

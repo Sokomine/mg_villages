@@ -28,13 +28,13 @@ mg_villages.mg_generated_map = save_restore.restore_data( 'mg_generated_map.data
 
 dofile(mg_villages.modpath.."/config.lua")
 
-dofile(mg_villages.modpath.."/worldedit_file.lua") -- deserialize worldedit savefiles
-dofile(mg_villages.modpath.."/analyze_we_file.lua")
 dofile(mg_villages.modpath.."/rotate.lua")
 
 -- read size from schematics files directly
 -- analyze_mts_file.lua uses handle_schematics.* namespace
+dofile(mg_villages.modpath.."/worldedit_file.lua") -- deserialize worldedit savefiles
 dofile(mg_villages.modpath.."/analyze_mts_file.lua") 
+dofile(mg_villages.modpath.."/analyze_we_file.lua")
 
 -- adds a special gravel node which will neither fall nor be griefed by mapgen
 dofile(mg_villages.modpath.."/nodes.lua")

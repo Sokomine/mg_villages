@@ -98,12 +98,9 @@ end
 
 build_chest.read_building = function( building_name )
 	-- read data
-	local res = handle_schematics.analyze_mts_file( building_name );
+	local res = handle_schematics.analyze_file( building_name, nil, nil );
 	if( not( res )) then
-		res = mg_villages.analyze_we_file( building_name, nil );
-		if( not( res )) then
-			return;
-		end
+		return;
 	end
 	build_chest.building[ building_name ].size           = res.size;	
 	build_chest.building[ building_name ].nodenames      = res.nodenames;	
@@ -684,13 +681,14 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 -- TODO: use scaffolding here (exchange some replacements)
 		local replacement_list = minetest.deserialize( meta:get_string( 'replacements' ));
 		local rotate = meta:get_string('rotate');
+		local mirror = meta:get_string('mirror');
 		local axis   = build_chest.building[ building_name ].axis;
 		local no_plotmarker = 1;
 		-- actually place the building
 		--minetest.place_schematic( start_pos, building_name..'.mts', rotate, replacement_list, true );
-		local error_msg = mg_villages.place_building_from_file( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker );
-		if( error_msg ) then
-			formspec = formspec.."label[3,3;Error: "..minetest.formspec_escape( error_msg ).."]";
+		fields.error_msg = mg_villages.place_building_from_file( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker );
+		if( fields.error_msg ) then
+			fields.error_msg = 'Error: '..tostring( fields.error_msg );
 		end
 
 	-- restore the original landscape

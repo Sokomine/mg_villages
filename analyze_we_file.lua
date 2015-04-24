@@ -1,4 +1,4 @@
-mg_villages.analyze_we_file = function(scm, we_origin)
+handle_schematics.analyze_we_file = function(scm, we_origin)
 	local c_ignore = minetest.get_content_id("ignore")
 
 	-- this table will contain the nodes read
@@ -63,28 +63,21 @@ mg_villages.analyze_we_file = function(scm, we_origin)
 
 	end
 
-	local c_air = minetest.get_content_id("air")
-	for x = 1, maxx do
-		for y = 1, maxy do
-			for z = 1, maxz do
-				if scm[y] == nil then
-					scm[y] = {}
-				end
-				if scm[y][x] == nil then
-					scm[y][x] = {}
-				end
---				if scm[y][x][z] == nil then
---					scm[y][x][z] = c_air
---				end
+	for y = 1, maxy do
+		if scm[y] == nil then
+			scm[y] = {}
+		end
+		for x = 1, maxx do
+			if scm[y][x] == nil then
+				scm[y][x] = {}
 			end
 		end
 	end
 
-
 	local size = {};
-	size.y = #scm;
-	size.x = #scm[1];
-	size.z = #scm[1][1];
+	size.y = math.max(maxy,0);
+	size.x = math.max(maxx,0);
+	size.z = math.max(maxz,0);
 
 	return { size = { x=size.x, y=size.y, z=size.z}, nodenames = nodenames, on_constr = {}, after_place_node = {}, rotated=0, burried=0, scm_data_cache = scm };
 end

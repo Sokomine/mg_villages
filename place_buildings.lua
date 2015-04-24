@@ -665,12 +665,9 @@ mg_villages.place_building_from_file = function( start_pos, end_pos, building_na
 		return "No file name given. Cannot find the schematic.";
 	end
 
-	local binfo = handle_schematics.analyze_mts_file( building_name );
+	local binfo = handle_schematics.analyze_file( building_name, nil, nil );
 	if( not( binfo )) then
-		binfo = mg_villages.analyze_we_file( building_name, nil );
-		if( not( binfo )) then
-			return "Failed to import schematic. Only .mts and .we are supported!";
-		end
+		return "Failed to import schematic. Only .mts and .we are supported!";
 	end
 
 	-- nodenames and scm_data_cache can be used directly;

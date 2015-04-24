@@ -256,3 +256,18 @@ handle_schematics.store_mts_file = function( path, data )
 	file.close(file);
 	print('SAVING '..path..'.mts (converted from .we).'); 
 end
+
+
+-- read .mts and .we files
+handle_schematics.analyze_file = function( file_name, origin_offset, store_as_mts )
+	res  = handle_schematics.analyze_mts_file( file_name ); 
+	-- alternatively, read the mts file
+	if( not( res )) then
+		res = handle_schematics.analyze_we_file( file_name, origin_offset );
+		-- convert to .mts for later usage
+                if( res and store_as_mts ) then
+			handle_schematics.store_mts_file( store_as_mts, res );
+		end
+	end
+	return res;
+end
