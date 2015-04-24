@@ -451,36 +451,5 @@ for i,v in ipairs( buildings ) do
 end
 buildings = nil;
 
-
--- TODO: add a better way of adding road and wall
-
---local gravel = minetest.get_content_id("default:gravel")
--- this special "gravel" will not be removed by mapgen and will not fall down like gravel usually does
-local gravel = minetest.get_content_id('mg_villages:road'); --"default:gravel")
-local c_air  = minetest.get_content_id("air");
-local rgravel = {}
-for i = 1, 2000 do
-	rgravel[i] = gravel
-end
-local rgravel2 = {}
-for i = 1, 2000 do
-	rgravel2[i] = rgravel
-end
-local rair = {}
-for i = 1, 2000 do
-	rair[i] = c_air
-end
-local rair2 = {}
-for i = 1, 2000 do
-	rair2[i] = rair
-end
-local road_scm = {rgravel2, rair2}
-mg_villages.BUILDINGS["road"] = {yoff = 0, ysize = 2, scm = road_scm}
-
-local rwall = {{minetest.get_content_id("default:stonebrick")}}
-local wall = {}
-for i = 1, 6 do
-	wall[i] = rwall
-end
-mg_villages.BUILDINGS["wall"] = {yoff = 1, ysize = 6, scm = wall}
-
+-- roads are built in a diffrent way
+mg_villages.BUILDINGS["road"] = {yoff = 0, ysize = 2, scm = {}}

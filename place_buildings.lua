@@ -236,7 +236,15 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		return;
 	end
 
-	if( not( pos.no_plotmarker ) and pos.btype ~= "road" ) then
+
+	-- roads are very simple structures that are not stored as schematics
+	if( pos.btype == 'road' ) then
+		mg_villages.place_road( minp, maxp, data, param2_data, a, mg_villages.road_node, pos, cid.c_air );
+		return;
+	end
+
+
+	if( not( pos.no_plotmarker )) then
 		generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id );
 	end
 
@@ -247,7 +255,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	end
 
 
-	if( pos.btype and pos.btype ~= "road" and
+	if( pos.btype and
 	  ((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
 	    or ( binfo.sizez ~= pos.bsizex and binfo.sizez ~= pos.bsizez )
 	    or not( binfo.scm_data_cache ))) then
@@ -372,11 +380,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 					ground_type = node_content;
 				end
-				if( not( t )) then
-					t = c_air;
-				end
-	
-				if( t and type(t)=='table' and #t==2 and t[1] and t[2]) then
+
+				if( t ) then
 					local n = new_nodes[ t[1] ]; -- t[1]: id of the old node
 					if( not( n.ignore )) then
 						new_content = n.new_content;
@@ -457,22 +462,6 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					else
 						param2_data[a:index(ax, ay, az)] = t[2];
 					end
-
-				-- air and gravel (the road is structured like this)
-				elseif ( type(t) ~= 'table' and t ~= c_ignore) then
-	
-					new_content = t;
-					if( t and replacements.ids[ t ] ) then
-						new_content = replacements.ids[ t ];
-					end
-					if( t and t==c_dirt or t==c_dirt_with_grass ) then
-						new_content = ground_type;
-					end
-					if( data[a:index(ax,ay,az)]==c_snow ) then
-						has_snow = true;
-					end
-					data[a:index(ax, ay, az)] = new_content;
-					-- param2 is not set here
 				end
 			end
 		end
@@ -748,27 +737,30 @@ end
 mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, c_road_node)
 	local c_air = minetest.get_content_id( 'air' );
 	for _, pos in ipairs(village.to_add_data.dirt_roads) do
-		local param2 = 0;
-		if( pos.bsizex > 2 ) then
-			param2 = 1;
-		end
-		for x = 0, pos.bsizex-1 do
-			for z = 0, pos.bsizez-1 do
-				local ax = pos.x+x;
-				local az = pos.z+z;
-			
-                      			if (ax >= minp.x and ax <= maxp.x) and (pos.y >= minp.y and pos.y <= maxp.y-2) and (az >= minp.z and az <= maxp.z) then
-					-- roads have a height of 1 block
-					data[ a:index( ax, pos.y, az)] = c_road_node;
-					param2_data[ a:index( ax, pos.y, az)] = param2;
-					-- ...with air above
-					data[ a:index( ax, pos.y+1, az)] = c_air;
-					data[ a:index( ax, pos.y+2, az)] = c_air;
-				end
-			end
+		mg_villages.place_road( minp, maxp, data, param2_data, a, c_road_node, pos, c_air );
+	end
+end
+
+mg_villages.place_road = function(minp, maxp, data, param2_data, a, c_road_node, pos, c_air )
+	local param2 = 0;
+	if( pos.bsizex > 2 ) then
+		param2 = 1;
+	end
+	if( not(pos.y >= minp.y and pos.y <= maxp.y-2)) then
+		return;
+	end
+	for x = math.max( pos.x, minp.x ), math.min( pos.x+pos.bsizex-1, maxp.x ) do
+		for z = math.max( pos.z, minp.z ), math.min( pos.z+pos.bsizez-1, maxp.z ) do
+			-- roads have a height of 1 block
+			data[        a:index( x, pos.y, z)] = c_road_node;
+			param2_data[ a:index( x, pos.y, z)] = param2;
+			-- ...with air above
+			data[ a:index( x, pos.y+1, z)] = c_air;
+			data[ a:index( x, pos.y+2, z)] = c_air;
 		end
 	end
 end
+
 
 if( minetest.get_modpath('moresnow' )) then
 	mg_villages.moresnow_installed = true;
