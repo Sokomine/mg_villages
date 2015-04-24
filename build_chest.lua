@@ -124,10 +124,12 @@ end
 
 
 -- this function makes sure that the building will always extend to the right and in front of the build chest
-handle_schematics.translate_param2_to_rotation = function( param2, mirror, start_pos, orig_max, rotated, burried, orients )
+handle_schematics.translate_param2_to_rotation = function( param2, mirror, start_pos, orig_max, rotated, burried, orients, yoff )
 
 	-- mg_villages stores available rotations of buildings in orients={0,1,2,3] format
 	if( orients and #orients and orients[1]~=0) then
+		-- reset rotated - else we'd apply it twice
+		rotated = 0;
 		if(     orients[1]==1 ) then
 			rotated = rotated + 90;
 		elseif( orients[1]==2 ) then
@@ -135,7 +137,7 @@ handle_schematics.translate_param2_to_rotation = function( param2, mirror, start
 		elseif( orients[1]==3 ) then
 			rotated = rotated + 270;
 		end
-		if( rotated > 360 ) then
+		if( rotated >= 360 ) then
 			rotated = rotated % 360;
 		end
 	end
@@ -148,7 +150,7 @@ handle_schematics.translate_param2_to_rotation = function( param2, mirror, start
 	end
 
 	-- the building may have a cellar or something alike
-	if( burried > 0 ) then
+	if( burried and burried ~= 0 and yoff == nil ) then
 		start_pos.y = start_pos.y - burried;
 	end
 
@@ -220,7 +222,8 @@ build_chest.get_start_pos = function( pos )
 	
 	-- make sure the building always extends forward and to the right of the player
 	local param2_rotated = handle_schematics.translate_param2_to_rotation( node.param2, mirror, start_pos,
-				selected_building.size, selected_building.rotated, selected_building.burried, selected_building.orients );
+				selected_building.size, selected_building.rotated, selected_building.burried, selected_building.orients,
+				selected_building.yoff );
 
 	-- save the data for later removal/improvement of the building in the chest
 	meta:set_string( 'start_pos',    minetest.serialize( param2_rotated.start_pos ));
