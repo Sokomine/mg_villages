@@ -392,6 +392,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					local n = new_nodes[ t[1] ]; -- t[1]: id of the old node
 					if( not( n.ignore )) then
 						new_content = n.new_content;
+					else
+						new_content = node_content;
 					end
 
 					-- replace all dirt and dirt with grass at that x,z coordinate with the stored ground grass node;
