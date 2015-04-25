@@ -892,7 +892,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 		-- the village_id will be stored in the plot markers
 		local village_id = tostring( village.vx )..':'..tostring( village.vz );
-		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid, village_id);
+		village.to_add_data = handle_schematics.place_buildings( village, tmin, tmax, data, param2_data, a, cid, village_id);
 
 		handle_schematics.place_dirt_roads(                village, tmin, tmax, data, param2_data, a, c_feldweg);
 
