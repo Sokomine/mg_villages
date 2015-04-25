@@ -1,8 +1,18 @@
-
+-- TODO: this function also occours in replacements.lua
+handle_schematics.get_content_id_replaced = function( node_name, replacements )
+	if( not( node_name ) or not( replacements ) or not(replacements.table )) then
+		return minetest.get_content_id( 'ignore' );
+	end
+	if( replacements.table[ node_name ]) then
+		return minetest.get_content_id( replacements.table[ node_name ] );
+	else
+		return minetest.get_content_id( node_name );
+	end
+end
 
 -- either uses get_node_or_nil(..) or the data from voxelmanip
 -- the function might as well be local (only used by *.mg_drop_moresnow)
-mg_villages.get_node_somehow = function( x, y, z, a, data, param2_data )
+handle_schematics.get_node_somehow = function( x, y, z, a, data, param2_data )
 	if( a and data and param2_data ) then
 		return { content = data[a:index(x, y, z)], param2 = param2_data[a:index(x, y, z)] };
 	end
@@ -16,19 +26,19 @@ end
 
 
 -- "drop" moresnow snow on diffrent shapes; works for voxelmanip and node-based setting
-mg_villages.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, param2_data)
+handle_schematics.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, param2_data)
 
 	-- this only works if moresnow is installed
-	if( not( mg_villages.moresnow_installed )) then
+	if( not( handle_schematics.moresnow_installed )) then
 		return;
 	end
 
 	local y = y_top;
-	local node_above = mg_villages.get_node_somehow( x, y+1, z, a, data, param2_data );	
+	local node_above = handle_schematics.get_node_somehow( x, y+1, z, a, data, param2_data );	
 	local node_below = nil;
 	while( y >= y_bottom ) do
 
-		node_below = mg_villages.get_node_somehow( x, y, z, a, data, param2_data );
+		node_below = handle_schematics.get_node_somehow( x, y, z, a, data, param2_data );
 		if(     node_above.content == moresnow.c_air
 		    and node_below.content
 		    and node_below.content ~= moresnow.c_ignore
@@ -53,7 +63,7 @@ mg_villages.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, param2_
 			-- c_snow_top and c_snow_fence can only exist when the node 2 below is a solid one
 			if(    suggested.new_id == moresnow.c_snow_top
 			    or suggested.new_id == moresnow.c_snow_fence) then	
-				local node_below2 = mg_villages.get_node_somehow( x, y-1, z, a, data, param2_data);
+				local node_below2 = handle_schematics.get_node_somehow( x, y-1, z, a, data, param2_data);
 				if(     node_below2.content ~= moresnow.c_ignore
 				    and node_below2.content ~= moresnow.c_air ) then
 					local suggested2 = moresnow.suggest_snow_type( node_below2.content, node_below2.param2 );
@@ -77,7 +87,7 @@ end
 
 -- helper function for generate_building
 -- places a marker that allows players to buy plots with houses on them (in order to modify the buildings)
-local function generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id)
+local function generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id, filename)
 	-- position the plot marker so that players can later buy this plot + building in order to modify it
 	-- pos.o contains the original orientation (determined by the road and the side the building is
 	local p = {x=pos.x, y=pos.y+1, z=pos.z};
@@ -103,7 +113,7 @@ local function generate_building_plotmarker( pos, minp, maxp, data, param2_data,
 		local meta = minetest.get_meta( p );
 		meta:set_string('village_id', village_id );
 		meta:set_int(   'plot_nr',    building_nr_in_bpos );
-		meta:set_string('infotext',   'Plot No. '..tostring( building_nr_in_bpos ).. ' with '..tostring( mg_villages.BUILDINGS[pos.btype].scm ));
+		meta:set_string('infotext',   'Plot No. '..tostring( building_nr_in_bpos ).. ' with '..tostring( filename ));
 	end
 end
 
@@ -127,8 +137,8 @@ local function generate_building_translate_nodenames( nodenames, replacements, c
 
 		-- some nodes may be called differently when mirrored; needed for doors
 		local new_node_name = node_name;
-		if( new_node_name and ( mirror_x or mirror_z ) and mg_villages.mirrored_node[ new_node_name ] ) then
-			new_node_name = mg_villages.mirrored_node[ node_name ];
+		if( new_node_name and ( mirror_x or mirror_z ) and handle_schematics.mirrored_node[ new_node_name ] ) then
+			new_node_name = handle_schematics.mirrored_node[ node_name ];
 			new_nodes[ i ].is_mirrored = 1; -- currently unused
 		end
 
@@ -189,7 +199,7 @@ local function generate_building_translate_nodenames( nodenames, replacements, c
 			end
 
 
-			-- mg_villages.get_param2_rotated( 'facedir', param2 ) needs to be called for nodes
+			-- handle_schematics.get_param2_rotated( 'facedir', param2 ) needs to be called for nodes
 			-- which use either facedir or wallmounted;
 			-- realtest rotates some nodes diffrently and does not come with default:ladder
 			if(    node_name == 'default:ladder' and not( minetest.registered_nodes[ node_name ])) then
@@ -242,13 +252,13 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 	-- roads are very simple structures that are not stored as schematics
 	if( pos.btype == 'road' ) then
-		mg_villages.place_road( minp, maxp, data, param2_data, a, mg_villages.road_node, pos, cid.c_air );
+		handle_schematics.place_road( minp, maxp, data, param2_data, a, mg_villages.road_node, pos, cid.c_air );
 		return;
 	end
 
 
 	if( not( pos.no_plotmarker )) then
-		generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id );
+		generate_building_plotmarker( pos, minp, maxp, data, param2_data, a, cid, building_nr_in_bpos, village_id, binfo.scm );
 	end
 
 	-- skip building if it is not located at least partly in the area that is currently beeing generated
@@ -436,20 +446,20 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	
 						local np2 = 0;
 						if(     mirror_x ) then
-							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 2 ];
+							np2 = handle_schematics.rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 2 ];
 						elseif( mirror_z ) then
-							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 3 ];
+							np2 = handle_schematics.rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 3 ];
 						else
-							np2 = rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 1 ];
+							np2 = handle_schematics.rotation_table[ n.paramtype2 ][ param2+1 ][ pos.brotate+1 ][ 1 ];
 						end
 
 --[[
-						local param2list = mg_villages.get_param2_rotated( n.paramtype2, param2);
+						local param2list = handle_schematics.get_param2_rotated( n.paramtype2, param2);
 						local np2 = param2list[ pos.brotate + 1];
 						-- mirror
 						if(     mirror_x ) then
 							if(     #param2list==5) then
-								np2 = mg_villages.mirror_facedir[ ((pos.brotate+1)%2)+1 ][ np2+1 ];
+								np2 = handle_schematics.mirror_facedir[ ((pos.brotate+1)%2)+1 ][ np2+1 ];
 							elseif( #param2list<5 
 							       and  ((pos.brotate%2==1 and (np2==4 or np2==5)) 
 						 	          or (pos.brotate%2==0 and (np2==2 or np2==3)))) then 
@@ -458,7 +468,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 						elseif( mirror_z ) then
 							if(     #param2list==5) then
-								np2 = mg_villages.mirror_facedir[ (pos.brotate     %2)+1 ][ np2+1 ];
+								np2 = handle_schematics.mirror_facedir[ (pos.brotate     %2)+1 ][ np2+1 ];
 							elseif( #param2list<5 
 							       and  ((pos.brotate%2==0 and (np2==4 or np2==5)) 
 						 	          or (pos.brotate%2==1 and (np2==2 or np2==3)))) then 
@@ -486,7 +496,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 			y_bottom = minp.y;
 		end
 		if( has_snow and ax >= minp.x and ax <= maxp.x and az >= minp.z and az <= maxp.z ) then
-			local res = mg_villages.mg_drop_moresnow( ax, az, y_top, y_bottom-1, a, data, param2_data);
+			local res = handle_schematics.mg_drop_moresnow( ax, az, y_top, y_bottom-1, a, data, param2_data);
 			if( res and data[ a:index(ax, res.height, az)]==cid.c_air) then
 				data[       a:index(ax, res.height, az)] = res.suggested.new_id;
 				param2_data[a:index(ax, res.height, az)] = res.suggested.param2;
@@ -519,20 +529,20 @@ mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a
 
 	local replacements = mg_villages.get_replacement_table( village.village_type, nil, village.to_add_data.replacements );
 
-	cid.c_chest            = mg_villages.get_content_id_replaced( 'default:chest',          replacements );
-	cid.c_chest_locked     = mg_villages.get_content_id_replaced( 'default:chest_locked',   replacements );
-	cid.c_chest_private    = mg_villages.get_content_id_replaced( 'cottages:chest_private', replacements );
-	cid.c_chest_work       = mg_villages.get_content_id_replaced( 'cottages:chest_work',    replacements );
-	cid.c_chest_storage    = mg_villages.get_content_id_replaced( 'cottages:chest_storage', replacements );
-	cid.c_chest_shelf      = mg_villages.get_content_id_replaced( 'cottages:shelf',         replacements );
-	cid.c_chest_ash        = mg_villages.get_content_id_replaced( 'trees:chest_ash',        replacements );
-	cid.c_chest_aspen      = mg_villages.get_content_id_replaced( 'trees:chest_aspen',      replacements );
-	cid.c_chest_birch      = mg_villages.get_content_id_replaced( 'trees:chest_birch',      replacements );
-	cid.c_chest_maple      = mg_villages.get_content_id_replaced( 'trees:chest_maple',      replacements );
-	cid.c_chest_chestnut   = mg_villages.get_content_id_replaced( 'trees:chest_chestnut',   replacements );
-	cid.c_chest_pine       = mg_villages.get_content_id_replaced( 'trees:chest_pine',       replacements );
-	cid.c_chest_spruce     = mg_villages.get_content_id_replaced( 'trees:chest_spruce',     replacements );
-	cid.c_sign             = mg_villages.get_content_id_replaced( 'default:sign_wall',      replacements );
+	cid.c_chest            = handle_schematics.get_content_id_replaced( 'default:chest',          replacements );
+	cid.c_chest_locked     = handle_schematics.get_content_id_replaced( 'default:chest_locked',   replacements );
+	cid.c_chest_private    = handle_schematics.get_content_id_replaced( 'cottages:chest_private', replacements );
+	cid.c_chest_work       = handle_schematics.get_content_id_replaced( 'cottages:chest_work',    replacements );
+	cid.c_chest_storage    = handle_schematics.get_content_id_replaced( 'cottages:chest_storage', replacements );
+	cid.c_chest_shelf      = handle_schematics.get_content_id_replaced( 'cottages:shelf',         replacements );
+	cid.c_chest_ash        = handle_schematics.get_content_id_replaced( 'trees:chest_ash',        replacements );
+	cid.c_chest_aspen      = handle_schematics.get_content_id_replaced( 'trees:chest_aspen',      replacements );
+	cid.c_chest_birch      = handle_schematics.get_content_id_replaced( 'trees:chest_birch',      replacements );
+	cid.c_chest_maple      = handle_schematics.get_content_id_replaced( 'trees:chest_maple',      replacements );
+	cid.c_chest_chestnut   = handle_schematics.get_content_id_replaced( 'trees:chest_chestnut',   replacements );
+	cid.c_chest_pine       = handle_schematics.get_content_id_replaced( 'trees:chest_pine',       replacements );
+	cid.c_chest_spruce     = handle_schematics.get_content_id_replaced( 'trees:chest_spruce',     replacements );
+	cid.c_sign             = handle_schematics.get_content_id_replaced( 'default:sign_wall',      replacements );
 --print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..tostring( minetest.get_name_from_content_id( cid.c_chest ))); -- TODO
 
 	local extranodes = {}
@@ -593,7 +603,7 @@ end
 -- 
 -- replacement_list		contains replacements in the same list format as place_schematic uses
 --
-mg_villages.place_building_using_voxelmanip = function( pos, binfo, replacement_list)
+handle_schematics.place_building_using_voxelmanip = function( pos, binfo, replacement_list)
 
 	if( not( replacement_list ) or type( replacement_list ) ~= 'table' ) then
 		return;
@@ -624,29 +634,29 @@ mg_villages.place_building_using_voxelmanip = function( pos, binfo, replacement_
 	-- only very few nodes are actually used from the cid table (content ids)
 	local cid = {};
 	cid.c_air              = minetest.get_content_id( 'air' );
-	cid.c_dirt             = mg_villages.get_content_id_replaced( 'default:dirt',           replacements );
-	cid.c_dirt_with_grass  = mg_villages.get_content_id_replaced( 'default:dirt_with_grass',replacements );
-	cid.c_sapling          = mg_villages.get_content_id_replaced( 'default:sapling',        replacements );
-	cid.c_jsapling         = mg_villages.get_content_id_replaced( 'default:junglesapling',  replacements );
-	cid.c_psapling         = mg_villages.get_content_id_replaced( 'default:pine_sapling',   replacements );
-	cid.c_savannasapling   = mg_villages.get_content_id_replaced( 'mg:savannasapling',      replacements );
-	cid.c_pinesapling      = mg_villages.get_content_id_replaced( 'mg:pinesapling',         replacements );
-	cid.c_plotmarker       = mg_villages.get_content_id_replaced( 'mg_villages:plotmarker', replacements );
+	cid.c_dirt             = handle_schematics.get_content_id_replaced( 'default:dirt',           replacements );
+	cid.c_dirt_with_grass  = handle_schematics.get_content_id_replaced( 'default:dirt_with_grass',replacements );
+	cid.c_sapling          = handle_schematics.get_content_id_replaced( 'default:sapling',        replacements );
+	cid.c_jsapling         = handle_schematics.get_content_id_replaced( 'default:junglesapling',  replacements );
+	cid.c_psapling         = handle_schematics.get_content_id_replaced( 'default:pine_sapling',   replacements );
+	cid.c_savannasapling   = handle_schematics.get_content_id_replaced( 'mg:savannasapling',      replacements );
+	cid.c_pinesapling      = handle_schematics.get_content_id_replaced( 'mg:pinesapling',         replacements );
+	cid.c_plotmarker       = handle_schematics.get_content_id_replaced( 'mg_villages:plotmarker', replacements );
 
-	cid.c_chest            = mg_villages.get_content_id_replaced( 'default:chest',          replacements );
-	cid.c_chest_locked     = mg_villages.get_content_id_replaced( 'default:chest_locked',   replacements );
-	cid.c_chest_private    = mg_villages.get_content_id_replaced( 'cottages:chest_private', replacements );
-	cid.c_chest_work       = mg_villages.get_content_id_replaced( 'cottages:chest_work',    replacements );
-	cid.c_chest_storage    = mg_villages.get_content_id_replaced( 'cottages:chest_storage', replacements );
-	cid.c_chest_shelf      = mg_villages.get_content_id_replaced( 'cottages:shelf',         replacements );
-	cid.c_chest_ash        = mg_villages.get_content_id_replaced( 'trees:chest_ash',        replacements );
-	cid.c_chest_aspen      = mg_villages.get_content_id_replaced( 'trees:chest_aspen',      replacements );
-	cid.c_chest_birch      = mg_villages.get_content_id_replaced( 'trees:chest_birch',      replacements );
-	cid.c_chest_maple      = mg_villages.get_content_id_replaced( 'trees:chest_maple',      replacements );
-	cid.c_chest_chestnut   = mg_villages.get_content_id_replaced( 'trees:chest_chestnut',   replacements );
-	cid.c_chest_pine       = mg_villages.get_content_id_replaced( 'trees:chest_pine',       replacements );
-	cid.c_chest_spruce     = mg_villages.get_content_id_replaced( 'trees:chest_spruce',     replacements );
-	cid.c_sign             = mg_villages.get_content_id_replaced( 'default:sign_wall',      replacements );
+	cid.c_chest            = handle_schematics.get_content_id_replaced( 'default:chest',          replacements );
+	cid.c_chest_locked     = handle_schematics.get_content_id_replaced( 'default:chest_locked',   replacements );
+	cid.c_chest_private    = handle_schematics.get_content_id_replaced( 'cottages:chest_private', replacements );
+	cid.c_chest_work       = handle_schematics.get_content_id_replaced( 'cottages:chest_work',    replacements );
+	cid.c_chest_storage    = handle_schematics.get_content_id_replaced( 'cottages:chest_storage', replacements );
+	cid.c_chest_shelf      = handle_schematics.get_content_id_replaced( 'cottages:shelf',         replacements );
+	cid.c_chest_ash        = handle_schematics.get_content_id_replaced( 'trees:chest_ash',        replacements );
+	cid.c_chest_aspen      = handle_schematics.get_content_id_replaced( 'trees:chest_aspen',      replacements );
+	cid.c_chest_birch      = handle_schematics.get_content_id_replaced( 'trees:chest_birch',      replacements );
+	cid.c_chest_maple      = handle_schematics.get_content_id_replaced( 'trees:chest_maple',      replacements );
+	cid.c_chest_chestnut   = handle_schematics.get_content_id_replaced( 'trees:chest_chestnut',   replacements );
+	cid.c_chest_pine       = handle_schematics.get_content_id_replaced( 'trees:chest_pine',       replacements );
+	cid.c_chest_spruce     = handle_schematics.get_content_id_replaced( 'trees:chest_spruce',     replacements );
+	cid.c_sign             = handle_schematics.get_content_id_replaced( 'default:sign_wall',      replacements );
 
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
@@ -669,7 +679,7 @@ end
 
 -- places a building read from file "building_name" on the map between start_pos and end_pos using luavoxelmanip
 -- returns error message on failure and nil on success
-mg_villages.place_building_from_file = function( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker )
+handle_schematics.place_building_from_file = function( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker )
 	if( not( building_name )) then
 		return "No file name given. Cannot find the schematic.";
 	end
@@ -719,7 +729,7 @@ mg_villages.place_building_from_file = function( start_pos, end_pos, building_na
 	start_pos.no_plotmarker = no_plotmarker;
 
 	-- all those calls to on_construct need to be done now
-	local res = mg_villages.place_building_using_voxelmanip( start_pos, binfo, replacement_list);
+	local res = handle_schematics.place_building_using_voxelmanip( start_pos, binfo, replacement_list);
 	if( not(res) or not( res.extra_calls )) then
 		return;
 	end
@@ -740,14 +750,14 @@ end
 
 
 -- add the dirt roads
-mg_villages.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, c_road_node)
+handle_schematics.place_dirt_roads = function(village, minp, maxp, data, param2_data, a, c_road_node)
 	local c_air = minetest.get_content_id( 'air' );
 	for _, pos in ipairs(village.to_add_data.dirt_roads) do
-		mg_villages.place_road( minp, maxp, data, param2_data, a, c_road_node, pos, c_air );
+		handle_schematics.place_road( minp, maxp, data, param2_data, a, c_road_node, pos, c_air );
 	end
 end
 
-mg_villages.place_road = function(minp, maxp, data, param2_data, a, c_road_node, pos, c_air )
+handle_schematics.place_road = function(minp, maxp, data, param2_data, a, c_road_node, pos, c_air )
 	local param2 = 0;
 	if( pos.bsizex > 2 ) then
 		param2 = 1;
@@ -769,5 +779,5 @@ end
 
 
 if( minetest.get_modpath('moresnow' )) then
-	mg_villages.moresnow_installed = true;
+	handle_schematics.moresnow_installed = true;
 end

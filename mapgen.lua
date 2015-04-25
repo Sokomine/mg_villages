@@ -894,7 +894,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		local village_id = tostring( village.vx )..':'..tostring( village.vz );
 		village.to_add_data = mg_villages.place_buildings( village, tmin, tmax, data, param2_data, a, cid, village_id);
 
-		mg_villages.place_dirt_roads(                      village, tmin, tmax, data, param2_data, a, c_feldweg);
+		handle_schematics.place_dirt_roads(                village, tmin, tmax, data, param2_data, a, c_feldweg);
 
 		-- grow trees which are part of buildings into saplings
 		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do

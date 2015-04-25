@@ -686,7 +686,7 @@ build_chest.on_receive_fields = function(pos, formname, fields, player)
 		local no_plotmarker = 1;
 		-- actually place the building
 		--minetest.place_schematic( start_pos, building_name..'.mts', rotate, replacement_list, true );
-		fields.error_msg = mg_villages.place_building_from_file( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker );
+		fields.error_msg = handle_schematics.place_building_from_file( start_pos, end_pos, building_name, replacement_list, rotate, axis, mirror, no_plotmarker );
 		if( fields.error_msg ) then
 			fields.error_msg = 'Error: '..tostring( fields.error_msg );
 		end
