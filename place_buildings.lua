@@ -371,8 +371,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 				local new_content = c_air;
 				local t = scm[y+1][xoff][zoff];
 
+				local node_content = data[a:index(ax, ay, az)];
 				if( binfo.yoff+y == 0 ) then
-					local node_content = data[a:index(ax, ay, az)];
 					-- no snow on the gravel roads
 					if( node_content == c_dirt_with_snow or data[a:index(ax, ay+1, az)]==c_snow) then
 						has_snow    = true;
@@ -381,7 +381,11 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					ground_type = node_content;
 				end
 
-				if( t ) then
+				if( not( t )) then
+					if( node_content ~= cid.c_plotmarker ) then
+						data[ a:index(ax, ay, az)] = cid.c_air;
+					end
+				else
 					local n = new_nodes[ t[1] ]; -- t[1]: id of the old node
 					if( not( n.ignore )) then
 						new_content = n.new_content;
@@ -401,7 +405,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 					end
 
 					-- do not overwrite plotmarkers
-					if( new_content ~= cid.c_air or data[ a:index(ax,ay,az)] ~= cid.c_plotmarker ) then
+					if( new_content ~= cid.c_air or node_content ~= cid.c_plotmarker ) then
 						data[       a:index(ax, ay, az)] = new_content;
 					end
 
