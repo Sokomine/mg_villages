@@ -44,6 +44,12 @@ handle_schematics.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, p
 		    and node_below.content ~= moresnow.c_ignore
 		    and node_below.content ~= moresnow.c_air ) then
 
+			-- turn water into ice, but don't drop snow on it
+			if( node_below.content == minetest.get_content_id("default:water_source")
+			 or node_below.content == minetest.get_content_id("default:river_water_source")) then
+				return { height = y, suggested = {new_id = minetest.get_content_id('default:ice'), param2 = 0 }};
+			end
+
 			-- if the node below drops snow when digged (i.e. is either snow or a moresnow node), we're finished
 			local get_drop = minetest.get_name_from_content_id( node_below.content );
 			if( get_drop ) then
@@ -497,7 +503,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		end
 		if( has_snow and ax >= minp.x and ax <= maxp.x and az >= minp.z and az <= maxp.z ) then
 			local res = handle_schematics.mg_drop_moresnow( ax, az, y_top, y_bottom-1, a, data, param2_data);
-			if( res and data[ a:index(ax, res.height, az)]==cid.c_air) then
+			if( res and (data[ a:index(ax, res.height, az)]==cid.c_air
+			          or data[ a:index(ax, res.height, az)]==cid.c_water )) then
 				data[       a:index(ax, res.height, az)] = res.suggested.new_id;
 				param2_data[a:index(ax, res.height, az)] = res.suggested.param2;
 				has_snow = false;
@@ -511,7 +518,7 @@ end
 
 -- actually place the buildings (at least those which came as .we files; .mts files are handled later on)
 -- this code is also responsible for tree placement
-mg_villages.place_buildings = function(village, minp, maxp, data, param2_data, a, cid, village_id)
+handle_schematics.place_buildings = function(village, minp, maxp, data, param2_data, a, cid, village_id)
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
 	local seed = mg_villages.get_bseed({x=vx, z=vz})
