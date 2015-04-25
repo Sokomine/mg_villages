@@ -674,6 +674,26 @@ mg_villages.generate_village = function(village, vnoise)
 	--print('VILLAGE GENREATION: GENERATING NEW VILLAGE Nr. '..tostring( village.nr ));
 end
 
+
+-- not all buildings contain beds so that mobs could live inside; some are just workplaces;
+-- roads get only placed if there are enough inhabitants
+mg_villages.count_inhabitated_buildings = function(village)
+	local bpos             = village.to_add_data.bpos;
+	-- count the buildings
+	local anz_buildings = 0;
+	for i, pos in ipairs(bpos) do
+		if( pos.btype and not(pos.btype == 'road' )) then 
+			local binfo = mg_villages.BUILDINGS[pos.btype];
+			-- count buildings which can house inhabitants as well as those requiring workers
+			if( binfo and binfo.inh and binfo.inh ~= 0 ) then
+				anz_buildings = anz_buildings + 1;
+			end
+		end
+	end
+	return anz_buildings;
+end
+
+
 -- creates individual buildings outside of villages;
 -- the data structure is like that of a village, except that bpos (=buildings to be placed) is already set;
 -- Note: one building per mapchunk is more than enough (else it would look too crowded);

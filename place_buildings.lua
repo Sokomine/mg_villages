@@ -59,7 +59,6 @@ handle_schematics.mg_drop_moresnow = function( x, z, y_top, y_bottom, a, data, p
 				end
 			end
 			if( not(node_below.content)
-			    or  node_below.content == mg_villages.road_node
 			    or  node_below.content == moresnow.c_snow ) then
 				return;
 			end
@@ -225,7 +224,14 @@ local function generate_building_translate_nodenames( nodenames, replacements, c
 		
 		-- we tried our best, but the replacement node is not defined	
 		elseif( new_node_name ~= 'mg:ignore' ) then
-			mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'ERROR: Did not find a suitable replacement for '..tostring( node_name )..' (suggested but inexistant: '..tostring( new_node_name )..'). Building: '..tostring( binfo_scm )..'.');
+			local msg = 'ERROR: Did not find a suitable replacement for '..tostring( node_name )..' (suggested but inexistant: '..
+					tostring( new_node_name )..'). Building: '..tostring( binfo_scm )..'.';
+			if( mg_villages and mg_villages.print ) then
+				mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, msg );
+			else
+				print( msg );
+			end
+			msg = nil;
 			new_nodes[ i ].ignore = 1; -- keep the old content
 		else -- handle mg:ignore
 			new_nodes[ i ].ignore = 1;
@@ -237,10 +243,10 @@ local function generate_building_translate_nodenames( nodenames, replacements, c
 end
 
 
-local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id, binfo_extra)
+local function generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id, binfo_extra, road_node)
 
 	local binfo = binfo_extra;
-	if( not( binfo )) then
+	if( not( binfo ) and mg_villages) then
 		binfo = mg_villages.BUILDINGS[pos.btype]
 	end
 	local scm
@@ -258,7 +264,7 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 
 	-- roads are very simple structures that are not stored as schematics
 	if( pos.btype == 'road' ) then
-		handle_schematics.place_road( minp, maxp, data, param2_data, a, mg_villages.road_node, pos, cid.c_air );
+		handle_schematics.place_road( minp, maxp, data, param2_data, a, road_node, pos, cid.c_air );
 		return;
 	end
 
@@ -278,7 +284,12 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	  ((     binfo.sizex ~= pos.bsizex and binfo.sizex ~= pos.bsizez )
 	    or ( binfo.sizez ~= pos.bsizex and binfo.sizez ~= pos.bsizez )
 	    or not( binfo.scm_data_cache ))) then
-		mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'ERROR: This village was created using diffrent buildings than those known know. Cannot place unknown building.');
+		if( mg_villages and mg_villages.print ) then
+			mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING,
+				'ERROR: This village was created using diffrent buildings than those known know. Cannot place unknown building.');
+		else
+			print( 'ERROR: Size information about this building differs. Cannot place building.');
+		end
 		return;
 	end
 
@@ -517,22 +528,16 @@ end
 
 
 -- actually place the buildings (at least those which came as .we files; .mts files are handled later on)
--- this code is also responsible for tree placement
+-- this code was also responsible for tree placement
 handle_schematics.place_buildings = function(village, minp, maxp, data, param2_data, a, cid, village_id)
+	-- this function is only relevant for mg_villages
+	if( not( mg_villages )) then
+		return;
+	end
 	local vx, vz, vs, vh = village.vx, village.vz, village.vs, village.vh
 	local village_type = village.village_type;
-	local seed = mg_villages.get_bseed({x=vx, z=vz})
 
 	local bpos             = village.to_add_data.bpos;
-
-	village.to_grow = {}; -- TODO this is a temporal solution to avoid flying tree trunks
-	--generate_walls(bpos, data, a, minp, maxp, vh, vx, vz, vs, vnoise)
-	local pr = PseudoRandom(seed)
-	for _, g in ipairs(village.to_grow) do
-		if pos_far_buildings(g.x, g.z, bpos) then
-			mg.registered_trees[g.id].grow(data, a, g.x, g.y, g.z, minp, maxp, pr)
-		end
-	end
 
 	local replacements = mg_villages.get_replacement_table( village.village_type, nil, village.to_add_data.replacements );
 
@@ -555,23 +560,11 @@ handle_schematics.place_buildings = function(village, minp, maxp, data, param2_d
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
 
-	-- count the buildings
-	local anz_buildings = 0;
-	for i, pos in ipairs(bpos) do
-		if( pos.btype and not(pos.btype == 'road' )) then 
-			local binfo = mg_villages.BUILDINGS[pos.btype];
-			-- count buildings which can house inhabitants as well as those requiring workers
-			if( binfo and binfo.inh and binfo.inh ~= 0 ) then
-				anz_buildings = anz_buildings + 1;
-			end
-		end
-	end
-	village.anz_buildings = anz_buildings;
 	for i, pos in ipairs(bpos) do
 		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
-		if( not(pos.btype) or pos.btype ~= 'road' or anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
+		if( not(pos.btype) or pos.btype ~= 'road' or village.anz_buildings > mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT )then 
 			-- replacements are in table format for mapgen-based building spawning
-			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i, village_id, nil )
+			generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, i, village_id, nil, mg_villages.road_node )
 		end
 	end
 
@@ -665,10 +658,13 @@ handle_schematics.place_building_using_voxelmanip = function( pos, binfo, replac
 	cid.c_chest_spruce     = handle_schematics.get_content_id_replaced( 'trees:chest_spruce',     replacements );
 	cid.c_sign             = handle_schematics.get_content_id_replaced( 'default:sign_wall',      replacements );
 
+	-- for roads
+	cid.c_sign             = handle_schematics.get_content_id_replaced( 'default:gravel',         replacements );
+
 	local extranodes = {}
 	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
 
-	generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, pos.building_nr, pos.village_id, binfo)
+	generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, pos.building_nr, pos.village_id, binfo, cid.c_gravel);
 
 	-- store the changed map data
 	vm:set_data(data);
