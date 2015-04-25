@@ -72,7 +72,7 @@ minetest.register_node("mg_villages:plotmarker", {
 	node_box = {
 		type = "fixed",
 		fixed = {
-			{-0.5+2/16, -0.5, -0.5+2/16,  0.5-2/16, -0.5+2/16, 0.5-2/16},
+			{-0.5+2/16, -0.5, -0.5+2/16,  0.5-2/16, -0.5+3/16, 0.5-2/16},
 		},
 	},
 	groups = {cracky=3,stone=2},
