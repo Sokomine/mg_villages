@@ -41,6 +41,9 @@ dofile(mg_villages.modpath.."/nodes.lua")
 -- the default game no longer provides helpful tree growing code
 dofile(mg_villages.modpath.."/trees.lua")
 
+-- the replacement groups do add some non-ground nodes
+mg_villages.node_is_ground = {};
+
 -- replace some materials for entire villages randomly
 replacements_group = {};
 dofile(mg_villages.modpath.."/replacements_wood.lua")

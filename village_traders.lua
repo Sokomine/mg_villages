@@ -1,6 +1,6 @@
 
 
-mg_villages.choose_traders = function( village_type, building_type, replacements )
+handle_schematics.choose_traders = function( village_type, building_type, replacements )
 
 	if( not( building_type ) or not( village_type )) then
 		return;
@@ -35,14 +35,20 @@ mg_villages.choose_traders = function( village_type, building_type, replacements
 
 	local res = {};
 	if(   building_type == 'shed'
-	   or building_type == 'farm_tiny' ) then
+	   or building_type == 'farm_tiny' 
+	   or building_type == 'house'
+	   or building_type == 'house_large'
+	   or building_type=='hut') then
 		local traders = { 'stonemason', 'stoneminer', 'carpenter', 'toolmaker',
 			'doormaker', 'furnituremaker', 'stairmaker', 'cooper', 'wheelwright',
 			'saddler', 'roofer', 'iceman', 'potterer', 'bricklayer', 'dyemaker',
 			'dyemakerl', 'glassmaker' }
 		-- sheds and farms both contain craftmen
 		res = { traders[ math.random( #traders )] };
-		if(    building_type == 'shed' ) then
+		if(    building_type == 'shed'
+		    or building_type == 'house'
+		    or building_type == 'house_large'
+		    or building_type == 'hut' ) then
 			return res;
 		end
 	end
@@ -91,8 +97,50 @@ mg_villages.choose_traders = function( village_type, building_type, replacements
 		end
 	end
 
-	-- house, hut, house_large, tent, chateau: places for living at; no special jobs associated
+	
+	-- tent, chateau: places for living at; no special jobs associated
 	-- nore,taoki,medieval,lumberjack,logcabin,canadian,grasshut,tent: further village types
 
 	return res;
+end
+
+
+handle_schematics.choose_trader_pos = function(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id, binfo_extra, road_node, traders)
+
+	local trader_pos = {};
+	-- determine spawn positions for the mobs
+	for i,tr in ipairs( traders ) do
+		local tries = 0;
+		local found = false;
+		local pt = {x=pos.x, y=pos.y, z=pos.z};
+		while( tries < 10 and not(found)) do
+			-- get a random position for the trader
+			pt.x = pos.x+math.random(pos.bsizex);
+			pt.z = pos.z+math.random(pos.bsizez);
+			-- check if it is inside the area contained in data
+			if (pt.x >= minp.x and pt.x <= maxp.x) and (pt.y >= minp.y and pt.y <= maxp.y) and (pt.z >= minp.z and pt.z <= maxp.z) then
+
+				while( pt.y < maxp.y 
+				  and (data[ a:index( pt.x, pt.y,   pt.z)]~=cid.c_air
+				    or data[ a:index( pt.x, pt.y+1, pt.z)]~=cid.c_air )) do
+					pt.y = pt.y + 1;
+				end
+
+				-- TODO: check if this position is really suitable? traders standing on the roof are a bit odd
+				found = true;
+			end
+			tries = tries+1;
+
+			-- check if this position has already been assigned to another trader
+			for j,t in ipairs( trader_pos ) do
+				if( t.x==pt.x and t.y==pt.y and t.z==pt.z ) then
+					found = false;
+				end
+			end
+		end
+		if( found ) then
+			table.insert( trader_pos, {x=pt.x, y=pt.y, z=pt.z, typ=tr, bpos_i = building_nr_in_bpos} );
+		end
+	end
+	return trader_pos;
 end

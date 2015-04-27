@@ -88,6 +88,12 @@ replacements_group['farming'].add_material = function( fruit, fruit_item, prefix
 	end
 	replacements_group['farming'].data[ fruit_item ] = data;
 
+	-- farming nodes do not count as ground (except for soil - which is not handled here)
+	if( mg_villages and mg_villages.node_is_ground ) then
+		for _,v in ipairs( data ) do
+			mg_villages.node_is_ground[ v ] = false;
+		end
+	end
 
 	if( is_loaded and mobf_trader and mobf_trader.add_trader ) then
 

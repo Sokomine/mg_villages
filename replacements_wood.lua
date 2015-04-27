@@ -118,6 +118,14 @@ replacements_group['wood'].add_material = function( candidate_list, mod_prefix, 
 		end
 		replacements_group['wood'].data[ wood_name ] = data;
 
+		-- none of the wood nodes counts as ground
+		if( mg_villages and mg_villages.node_is_ground ) then
+			for _,v in ipairs( data ) do
+				mg_villages.node_is_ground[ v ] = false;
+			end
+		end
+
+
 		if( is_loaded and mobf_trader and mobf_trader.add_trader ) then
 			-- TODO: check if all offered payments exist
 			local goods = {
@@ -178,7 +186,7 @@ replacements_group['wood'].construct_wood_type_list = function()
 	replacements_group['wood'].add_material( {'acacia','redwood'},'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','',     'ethereal:','gate');
 	-- frost has another sapling type...
-	replacements_group['wood'].add_material( {'frost'},           'ethereal:',  '','_wood',   '','_trunk', '','_leaves', '','_tree_sapling',
+	replacements_group['wood'].add_material( {'frost'},           'ethereal:',  '','_wood',   '','_tree', '','_leaves', '','_tree_sapling',
 		'stairs:stair_','_wood', 'stairs:slab_','_wood',   'ethereal:fence_','wood', 'ethereal:','woodgate' );
 	-- those tree types do not use typ_leaves, but typleaves instead...
 	replacements_group['wood'].add_material( {'yellow'},          'ethereal:',  '','_wood',   '','_trunk', '','leaves',  '','_tree_sapling',

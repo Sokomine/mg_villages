@@ -57,7 +57,7 @@ mg_villages.villages_in_mapchunk = function( minp, mapchunk_size )
 end
 
 
-mg_villages.node_is_ground = {}; -- store nodes which have previously been identified as ground
+--mg_villages.node_is_ground = {}; -- store nodes which have previously been identified as ground
 
 mg_villages.check_if_ground = function( ci )
 
@@ -65,7 +65,7 @@ mg_villages.check_if_ground = function( ci )
 	if( #mg_villages.node_is_ground < 1 ) then
 		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
 			'default:pinewood','default:pinetree',
-			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo'};
+			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom'};
 		for _,name in ipairs( no_ground_nodes ) do
 			mg_villages.node_is_ground[ minetest.get_content_id( name )] = false;
 		end
@@ -944,6 +944,24 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
 	end
 	-- TODO: extra_calls.signs
+
+	
+	-- spawn traders
+	for _, village in ipairs(villages) do
+		if( mob_basics and mob_basics.spawn_mob ) then
+			local traderlist = village.to_add_data.extra_calls.traders;
+			-- for each trader
+			for _,v in ipairs( traderlist) do
+				-- spawn the trader
+				mob_basics.spawn_mob( {x=v.x, y=v.y, z=v.z}, v.typ, nil, nil, nil, nil );
+			end
+			-- store the traders
+			if( traderlist and #traderlist > 0 ) then
+				village.to_add_data.bpos[ traderlist[1].bpos_i ].traders = traderlist;
+			end
+		end
+	end
+
 
 	-- initialize the pseudo random generator so that the chests will be filled in a reproducable pattern
 	local meta

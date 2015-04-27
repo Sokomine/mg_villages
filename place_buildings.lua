@@ -304,7 +304,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		mg_villages.get_fruit_replacements( replacements, pos.fruit);
 	end
 
-	if( mg_villages.choose_traders ) then
+	local traders = {};
+	if( handle_schematics.choose_traders ) then
 		local village_type  = "";
 		if( village_id and mg_villages.all_villages and mg_villages.all_villages[ village_id ] ) then
 			village_type = mg_villages.all_villages[ village_id ].village_type;
@@ -313,11 +314,8 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		if( binfo.typ ) then
 			building_type = binfo.typ;
 		end
-		local traders = mg_villages.choose_traders( village_type, building_type, replacements )
-		-- TODO: actually create traders of those types
-		if( #traders > 0 ) then
-			print('TRADERS CHOOSEN FOR '..tostring( binfo.scm )..': '..minetest.serialize( traders ));
-			extra_calls.traders = traders;
+		if( not( pos.traders )) then
+			traders = handle_schematics.choose_traders( village_type, building_type, replacements )
 		end
 	end
 
@@ -541,30 +539,12 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 	end
 	end
 
---[[ TODO
-	-- determine spawn positions for the mobs
-	for i,m in ipairs( extra_calls.traders ) do
-		local tries = 0;
-		local found = false;
-		while( tries < 10 and not(found)) do
-			-- get a random position
-			local pt = {	x=pos.x+math.random(pos.bsizex),
-					y=pos.y,
-					z=pos.z+math.random(pos.bsizez) }
-			-- check if it is inside the building area
-			if (pt.x >= minp.x and pt.x <= maxp.x) and (pt.y >= minp.y and pt.y <= maxp.y) and (pt.z >= minp.z and pt.z <= maxp.z) then
-				while( pt.y <= maxp.y+1 
-				  and (data[ a:index( pt.x, pt.y,   pt.z)]~=cid.c_air
-				    or data[ a:index( pt.x, pt.y+1, pt.z)]~=cid.c_air )) do
-					pt.y = pt.y + 1;
-				end
-				-- TODO: check if this position is really suitable?
-				found = true;
-			end
-			tries = tries+1;
-		end
+	-- determine suitable positions for the traders
+	if( handle_schematics.choose_trader_pos and #traders>0) then
+		extra_calls.traders = handle_schematics.choose_trader_pos(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, building_nr_in_bpos, village_id, binfo_extra, road_node, traders);
+		print('TRADERS CHOOSEN FOR '..tostring( binfo.scm )..': '..minetest.serialize( extra_calls.traders ));
 	end
---]]
+
 end
 
 
