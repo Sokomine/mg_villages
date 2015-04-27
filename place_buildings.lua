@@ -304,6 +304,23 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		mg_villages.get_fruit_replacements( replacements, pos.fruit);
 	end
 
+	if( mg_villages.choose_traders ) then
+		local village_type  = "";
+		if( village_id and mg_villages.all_villages and mg_villages.all_villages[ village_id ] ) then
+			village_type = mg_villages.all_villages[ village_id ].village_type;
+		end
+		local building_type = "";
+		if( binfo.typ ) then
+			building_type = binfo.typ;
+		end
+		local traders = mg_villages.choose_traders( village_type, building_type, replacements )
+		-- TODO: actually create traders of those types
+		if( #traders > 0 ) then
+			print('TRADERS CHOOSEN FOR '..tostring( binfo.scm )..': '..minetest.serialize( traders ));
+			extra_calls.traders = traders;
+		end
+	end
+
 	local c_ignore = minetest.get_content_id("ignore")
 	local c_air = minetest.get_content_id("air")
 	local c_snow                 = minetest.get_content_id( "default:snow");
@@ -523,6 +540,31 @@ local function generate_building(pos, minp, maxp, data, param2_data, a, extranod
 		end
 	end
 	end
+
+--[[ TODO
+	-- determine spawn positions for the mobs
+	for i,m in ipairs( extra_calls.traders ) do
+		local tries = 0;
+		local found = false;
+		while( tries < 10 and not(found)) do
+			-- get a random position
+			local pt = {	x=pos.x+math.random(pos.bsizex),
+					y=pos.y,
+					z=pos.z+math.random(pos.bsizez) }
+			-- check if it is inside the building area
+			if (pt.x >= minp.x and pt.x <= maxp.x) and (pt.y >= minp.y and pt.y <= maxp.y) and (pt.z >= minp.z and pt.z <= maxp.z) then
+				while( pt.y <= maxp.y+1 
+				  and (data[ a:index( pt.x, pt.y,   pt.z)]~=cid.c_air
+				    or data[ a:index( pt.x, pt.y+1, pt.z)]~=cid.c_air )) do
+					pt.y = pt.y + 1;
+				end
+				-- TODO: check if this position is really suitable?
+				found = true;
+			end
+			tries = tries+1;
+		end
+	end
+--]]
 end
 
 
@@ -558,7 +600,7 @@ handle_schematics.place_buildings = function(village, minp, maxp, data, param2_d
 --print('REPLACEMENTS: '..minetest.serialize( replacements.table )..' CHEST: '..tostring( minetest.get_name_from_content_id( cid.c_chest ))); -- TODO
 
 	local extranodes = {}
-	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
+	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {}, traders = {} };
 
 	for i, pos in ipairs(bpos) do
 		-- roads are only placed if there are at least mg_villages.MINIMAL_BUILDUNGS_FOR_ROAD_PLACEMENT buildings in the village
@@ -662,7 +704,7 @@ handle_schematics.place_building_using_voxelmanip = function( pos, binfo, replac
 	cid.c_sign             = handle_schematics.get_content_id_replaced( 'default:gravel',         replacements );
 
 	local extranodes = {}
-	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {} };
+	local extra_calls = { on_constr = {}, trees = {}, chests = {}, signs = {}, traders = {} };
 
 	generate_building(pos, minp, maxp, data, param2_data, a, extranodes, replacements, cid, extra_calls, pos.building_nr, pos.village_id, binfo, cid.c_gravel);
 

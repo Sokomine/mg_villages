@@ -8,6 +8,10 @@ replacements_group['wood'].all   = {};
 -- contains information about how a particular node is called if a particular wood is used;
 replacements_group['wood'].data  = {};
 
+-- names of traders for the diffrent wood types
+replacements_group['wood'].traders = {};
+
+
 ------------------------------------------------------------------------------
 -- external function; call it in order to replace old_wood with new_wood;
 -- other nodes (trees, saplings, fences, doors, ...) are replaced accordingly,
@@ -56,12 +60,14 @@ replacements_group['wood'].add_material = function( candidate_list, mod_prefix, 
 		return;
 	end
 	for _,v in ipairs( candidate_list ) do
+		local is_loaded = false;
 		local wood_name = mod_prefix..w_pre..v..w_post;
 		-- create a complete list of all possible wood names
 		table.insert( replacements_group['wood'].all, wood_name );
 		-- create a list of all *installed* wood types
 		if( minetest.registered_nodes[ wood_name ]) then
 			table.insert( replacements_group['wood'].found, wood_name );
+			is_loaded = true;
 		end
 			
 		-- there is no check if the node names created here actually exist
@@ -111,6 +117,32 @@ replacements_group['wood'].add_material = function( candidate_list, mod_prefix, 
 			data[23] = 'hatches:'..v..'_hatch_opened_bottom';
 		end
 		replacements_group['wood'].data[ wood_name ] = data;
+
+		if( is_loaded and mobf_trader and mobf_trader.add_trader ) then
+			-- TODO: check if all offered payments exist
+			local goods = {
+				{ data[3].." 4",    "default:dirt 24",       "default:cobble 24"},
+				{ data[4].." 4",    "default:apple 2",       "default:coal_lump 4"},
+				{ data[4].." 8",    "default:pick_stone 1",  "default:axe_stone 1"},
+				{ data[4].." 12",   "default:cobble 80",     "default:steel_ingot 1"},
+				{ data[4].." 36",   "bucket:bucket_empty 1", "bucket:bucket_water 1"},
+				{ data[4].." 42",   "default:axe_steel 1",   "default:mese_crystal 4"},
+
+				{ data[6].." 1",    "default:mese 10",       "default:steel_ingot 48"},
+				-- leaves are a cheaper way of getting saplings
+				{ data[5].." 10",   "default:cobble 1",      "default:dirt 2"}
+			};
+
+			mobf_trader.add_trader( mobf_trader.npc_trader_prototype,
+				"Trader of "..( v or "unknown" ).." wood",
+				v.."_wood_v",
+				goods,
+				{ "lumberjack" },
+				""
+				);
+
+	                replacements_group['wood'].traders[ wood_name ] = v..'_wood_v';
+		end
 	end
 end
 

@@ -260,7 +260,7 @@ end
 
 -- read .mts and .we files
 handle_schematics.analyze_file = function( file_name, origin_offset, store_as_mts )
-	res  = handle_schematics.analyze_mts_file( file_name ); 
+	local res  = handle_schematics.analyze_mts_file( file_name ); 
 	-- alternatively, read the mts file
 	if( not( res )) then
 		res = handle_schematics.analyze_we_file( file_name, origin_offset );

@@ -68,6 +68,7 @@ dofile(mg_villages.modpath.."/init_weights.lua")
 -- generate village names
 dofile(mg_villages.modpath.."/name_gen.lua");
 
+dofile(mg_villages.modpath.."/village_traders.lua")
 dofile(mg_villages.modpath.."/place_buildings.lua")
 dofile(mg_villages.modpath.."/villages.lua")
 

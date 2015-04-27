@@ -9,6 +9,9 @@ replacements_group['farming'].all   = {};
 -- contains information about how a particular node is called if a particular farming mod is used;
 replacements_group['farming'].data  = {};
 
+-- names of traders for the diffrent fruits
+replacements_group['farming'].traders = {};
+
 
 replacements_group['farming'].replace_material = function( replacements, old_material, new_material )
 
@@ -58,6 +61,14 @@ replacements_group['farming'].add_material = function( fruit, fruit_item, prefix
 	table.insert( replacements_group['farming'].all, fruit_item );
 
 	local data = {};
+	-- handle seeds
+	if(     minetest.registered_items[ prefix..fruit..'_seed' ]) then
+		data[1] = prefix..fruit..'_seed';
+	elseif( minetest.registered_items[ prefix..fruit..'seed' ]) then
+		data[1] = prefix..fruit..'seed';
+	else
+		data[1] = fruit_item;
+	end
 	for i=1,8 do
 		local node_name = prefix..fruit..seperator..tostring(i)..postfix;
 		if( is_loaded and minetest.registered_nodes[ node_name ]) then
@@ -76,6 +87,30 @@ replacements_group['farming'].add_material = function( fruit, fruit_item, prefix
 		table.insert( data, node_name );
 	end
 	replacements_group['farming'].data[ fruit_item ] = data;
+
+
+	if( is_loaded and mobf_trader and mobf_trader.add_trader ) then
+
+		-- TODO: use replacements for the payments where needed
+		local goods = {
+			{ fruit_item.." 1",   "default:coal_lump 3",    "default:wood 8"},
+			{ fruit_item.." 10",  "default:steel_ingot 2",  "default:chest_locked 1"}};
+		if( fruit_item ~= data[1] ) then
+			table.insert( goods, { data[1].." 1", "farming:scarecrow", "farming:scarecrow_light 1"});
+			table.insert( goods, { data[1].." 2", "default:dirt 20", "default:bucket_water", "default:steel_ingot 4", "default:leaves 99" });
+		end
+		table.insert( goods, {"farming:hoe_wood 1","default:wood 10", "default:cobble 10"});
+		
+		mobf_trader.add_trader( mobf_trader.npc_trader_prototype,
+			"farmer growing "..fruit.."s", -- not always the right grammatical form
+			fruit.."_farmer_v",
+			goods,
+			{ "farmer" },
+			""
+			);
+
+		replacements_group['farming'].traders[ fruit_item ] = fruit..'_farmer_v';
+	end
 end
 
 
