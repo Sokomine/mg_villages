@@ -69,6 +69,10 @@ mg_villages.check_if_ground = function( ci )
 		for _,name in ipairs( no_ground_nodes ) do
 			mg_villages.node_is_ground[ minetest.get_content_id( name )] = false;
 		end
+		local ground_nodes = {'ethereal:dry_dirt'};
+		for _,name in ipairs( ground_nodes ) do
+			mg_villages.node_is_ground[ minetest.get_content_id( name )] = true;
+		end
 	end
 
 	if( not( ci )) then
@@ -314,7 +318,7 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 					
 			-- remove mudflow
 			y = village.vh + 1;
-			while( y < village.vh+40 and y < maxp.y ) do
+			while( y <= maxp.y ) do
 				local ci = data[a:index(x, y, z)];
 				if( ci ~= cid.c_ignore and (ci==cid.c_dirt or ci==cid.c_dirt_with_grass or ci==cid.c_sand or ci==cid.c_desert_sand)) then
 					data[a:index(x,y,z)] = cid.c_air;
@@ -325,7 +329,8 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 					              ci==cid.c_msnow_9 or ci==cid.c_msnow_10 or ci==cid.c_msnow_11)) then
 					data[a:index(x, village.vh+1, z)] = cid.c_snow;
 					data[a:index(x, village.vh,   z)] = cid.c_dirt_with_snow;
-
+				elseif( ci == cid.c_ignore ) then
+					--data[a:index(x,y,z)] = cid.c_air;
 				end
 				y = y+1;
 			end
@@ -877,7 +882,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	end
 	t1 = time_elapsed( t1, 'change_height' );
 
-	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
+	--mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
+	mg_villages.flatten_village_area( villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
 	t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
 	mg_villages.repair_outer_shell(   villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
@@ -912,8 +918,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	t1 = time_elapsed( t1, 'vm data set' );
 
 	vm:calc_lighting(
-		{x=minp.x-16, y=minp.y, z=minp.z-16},
-		{x=maxp.x+16, y=maxp.y, z=maxp.z+16}
+		tmin, tmax
+--		{x=minp.x-16, y=minp.y, z=minp.z-16},
+--		{x=maxp.x+16, y=maxp.y, z=maxp.z+16}
 	)
 	t1 = time_elapsed( t1, 'vm calc lighting' );
 
