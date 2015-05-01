@@ -57,29 +57,29 @@ mg_villages.villages_in_mapchunk = function( minp, mapchunk_size )
 end
 
 
---mg_villages.node_is_ground = {}; -- store nodes which have previously been identified as ground
+--replacements_group.node_is_ground = {}; -- store nodes which have previously been identified as ground
 
 mg_villages.check_if_ground = function( ci )
 
 	-- pre-generate a list of no-ground-nodes for caching
-	if( #mg_villages.node_is_ground < 1 ) then
+	if( #replacements_group.node_is_ground < 1 ) then
 		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
 			'default:pinewood','default:pinetree',
 			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom'};
 		for _,name in ipairs( no_ground_nodes ) do
-			mg_villages.node_is_ground[ minetest.get_content_id( name )] = false;
+			replacements_group.node_is_ground[ minetest.get_content_id( name )] = false;
 		end
 		local ground_nodes = {'ethereal:dry_dirt'};
 		for _,name in ipairs( ground_nodes ) do
-			mg_villages.node_is_ground[ minetest.get_content_id( name )] = true;
+			replacements_group.node_is_ground[ minetest.get_content_id( name )] = true;
 		end
 	end
 
 	if( not( ci )) then
 		return false;
 	end
-	if( mg_villages.node_is_ground[ ci ] ~= nil) then
-		return mg_villages.node_is_ground[ ci ];
+	if( replacements_group.node_is_ground[ ci ] ~= nil) then
+		return replacements_group.node_is_ground[ ci ];
 	end
 	-- analyze the node
 	-- only nodes on which walking is possible may be counted as ground
@@ -87,19 +87,19 @@ mg_villages.check_if_ground = function( ci )
 	local def = minetest.registered_nodes[ node_name ];	
 	-- store information about this node type for later use
 	if(     not( def )) then
-		mg_villages.node_is_ground[ ci ] = false;
+		replacements_group.node_is_ground[ ci ] = false;
 	elseif( not( def.walkable)) then
-		mg_villages.node_is_ground[ ci ] = false;
+		replacements_group.node_is_ground[ ci ] = false;
 	elseif( def.groups and def.groups.tree ) then
-		mg_villages.node_is_ground[ ci ] = false;
+		replacements_group.node_is_ground[ ci ] = false;
 	elseif(	def.drop   and def.drop == 'default:dirt') then
-		mg_villages.node_is_ground[ ci ] = true;
+		replacements_group.node_is_ground[ ci ] = true;
 	elseif( def.walkable == true and def.is_ground_content == true and not(def.node_box)) then
-		mg_villages.node_is_ground[ ci ] = true;
+		replacements_group.node_is_ground[ ci ] = true;
 	else
-		mg_villages.node_is_ground[ ci ] = false;
+		replacements_group.node_is_ground[ ci ] = false;
 	end
-	return mg_villages.node_is_ground[ ci ];
+	return replacements_group.node_is_ground[ ci ];
 end
 
 
