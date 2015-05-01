@@ -28,13 +28,6 @@ mg_villages.mg_generated_map = save_restore.restore_data( 'mg_generated_map.data
 
 dofile(mg_villages.modpath.."/config.lua")
 
--- read size from schematics files directly
--- analyze_mts_file.lua uses handle_schematics.* namespace
-dofile(mg_villages.modpath.."/worldedit_file.lua") -- deserialize worldedit savefiles
-dofile(mg_villages.modpath.."/analyze_mts_file.lua") 
-dofile(mg_villages.modpath.."/analyze_we_file.lua")
-dofile(mg_villages.modpath.."/rotate.lua")
-
 -- adds a special gravel node which will neither fall nor be griefed by mapgen
 dofile(mg_villages.modpath.."/nodes.lua")
 
@@ -44,21 +37,12 @@ dofile(mg_villages.modpath.."/trees.lua")
 -- the replacement groups do add some non-ground nodes
 mg_villages.node_is_ground = {};
 
--- replace some materials for entire villages randomly
-replacements_group = {};
-dofile(mg_villages.modpath.."/replacements_wood.lua")
-dofile(mg_villages.modpath.."/replacements_realtest.lua")
-dofile(mg_villages.modpath.."/replacements_farming.lua")
-dofile(mg_villages.modpath.."/replacements_roof.lua")
 dofile(mg_villages.modpath.."/replacements.lua")
 
 -- multiple diffrent village types with their own sets of houses are supported
 -- The function mg_villages.add_village_type( village_type_name, village_type_data )
 --   allows other mods to add new village types.
 dofile(mg_villages.modpath.."/village_types.lua")
-
--- a chest for spawning buildings manually
-dofile(mg_villages.modpath.."/build_chest.lua")
 
 -- Note: the "buildings" talbe is not in the mg_villages.* namespace
 -- The function mg_villages.add_building( building_data ) allows other mods to add buildings.
@@ -71,8 +55,6 @@ dofile(mg_villages.modpath.."/init_weights.lua")
 -- generate village names
 dofile(mg_villages.modpath.."/name_gen.lua");
 
-dofile(mg_villages.modpath.."/village_traders.lua")
-dofile(mg_villages.modpath.."/place_buildings.lua")
 dofile(mg_villages.modpath.."/villages.lua")
 
 -- adds a command that allows to teleport to a known village

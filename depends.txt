@@ -1,3 +1,4 @@
+handle_schematics
 default
 doors
 farming
