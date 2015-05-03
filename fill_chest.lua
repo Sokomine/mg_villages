@@ -155,6 +155,9 @@ mg_villages.fill_chest_random = function( pos, pr, building_nr, building_typ )
 	local count = 0;
 
 	local typ = minetest.get_name_from_content_id( pos.typ );
+	if( pos.typ_name ) then
+		typ = pos.typ_name;
+	end
 	if( not( typ ) or (typ ~= 'cottages:shelf' and typ ~= 'cottages:chest_work' and typ ~= 'cottages:chest_storage' and typ ~= 'cottages:chest_private' )) then
 		typ = building_data.typ;
 	else
