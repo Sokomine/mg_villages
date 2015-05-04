@@ -57,6 +57,12 @@ mg_villages.villages_in_mapchunk = function( minp, mapchunk_size )
 end
 
 
+-- TODO: determine water level from mapgens?
+local MG_VILLAGES_WATER_LEVEL = 1;
+if( minetest.get_modpath( 'mg' )) then
+	MG_VILLAGES_WATER_LEVEL = 0;
+end
+
 --replacements_group.node_is_ground = {}; -- store nodes which have previously been identified as ground
 
 mg_villages.check_if_ground = function( ci )
@@ -116,7 +122,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	-- search for a surface and set everything above target_height to air
 	while( y > minp.y) do
 		local ci = data[a:index(x, y, z)];
-		if(     ci == cid.c_snow ) then
+		if(     ci == cid.c_snow or ci == cid.c_ice ) then
 			has_snow = true;
 		elseif( ci == cid.c_tree ) then
 			tree  = true;
@@ -188,8 +194,11 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 			target_height = old_height;
 		end
 		for y = yblend, maxp.y do
-			if( y<=1 ) then
-				data[a:index( x, y, z)] = cid.c_water;
+			if( y<=MG_VILLAGES_WATER_LEVEL ) then
+				-- keep ice
+				if( data[a:index( x, y, z )] ~= cid.c_ice ) then
+					data[a:index( x, y, z)] = cid.c_water;
+				end
 			else
 				data[a:index( x, y, z)] = cid.c_air;
 			end
@@ -624,8 +633,6 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	if( not( cid.c_soil_sand )) then
 		cid.c_soil_sand = cid.c_soil_wet;
 	end
-	local c_water_source    = minetest.get_content_id( 'default:water_source');
-	local c_clay            = minetest.get_content_id( 'default:clay');
 	local c_feldweg         = minetest.get_content_id( 'cottages:feldweg');
 	if( not( c_feldweg )) then
 		c_feldweg = cid.c_dirt_with_grass;
@@ -776,6 +783,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_msnow_10 = minetest.get_content_id( 'moresnow:snow_ramp_outer_top');
 	cid.c_msnow_11 = minetest.get_content_id( 'moresnow:snow_ramp_inner_top');
 	cid.c_msnow_soil=minetest.get_content_id( 'moresnow:snow_soil' );
+
+	cid.c_ice      = minetest.get_content_id( 'default:ice' );
 
 	cid.c_plotmarker = minetest.get_content_id( 'mg_villages:plotmarker');
 
