@@ -22,7 +22,8 @@ mg_villages.print = function( level, msg )
 end
 
 
-dofile(mg_villages.modpath.."/save_restore.lua")
+-- save_restore is now part of handle_schematics
+--dofile(mg_villages.modpath.."/save_restore.lua")
 mg_villages.all_villages     = save_restore.restore_data( 'mg_all_villages.data' ); -- read mg_villages.all_villages data saved for this world from previous runs
 mg_villages.mg_generated_map = save_restore.restore_data( 'mg_generated_map.data' );
 
