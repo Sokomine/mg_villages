@@ -895,7 +895,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.flatten_village_area( villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
 	t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
-	mg_villages.repair_outer_shell(   villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
+	mg_villages.repair_outer_shell(   villages, {x=tmin.x,   y=tmin.y,z=tmin.z},    {x=tmin.x+16, y=tmax.y, z=tmax.z}, vm, data, param2_data, a, village_area, cid );
+	mg_villages.repair_outer_shell(   villages, {x=tmax.x-16,y=tmin.y,z=tmin.z},    {x=tmax.x,    y=tmax.y, z=tmax.z}, vm, data, param2_data, a, village_area, cid );
+	mg_villages.repair_outer_shell(   villages, {x=tmin.x+16,y=tmin.y,z=tmin.z},    {x=tmax.x-16, y=tmax.y, z=tmin.z+16}, vm, data, param2_data, a, village_area, cid );
+	mg_villages.repair_outer_shell(   villages, {x=tmin.x+16,y=tmin.y,z=tmax.z-16}, {x=tmax.x-16, y=tmax.y, z=tmax.z},    vm, data, param2_data, a, village_area, cid );
+--	mg_villages.repair_outer_shell(   villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
+
 	t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
@@ -1019,10 +1024,16 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 end
 
 
+--minetest.set_gen_notify('dungeon, temple, cave_begin, cave_end, large_cave_begin, large_cave_end',{});
+
 
 -- the actual mapgen
 -- It only does changes if there is at least one village in the area that is to be generated.
 minetest.register_on_generated(function(minp, maxp, seed)
+-- this is just for learning more about dungeons and caves; it is not used anywhere here
+--	local structures = minetest.get_mapgen_object('gennotify');
+--	print('STRUCTURES BY MAPGEN: '..minetest.serialize( structures ));
+
 	-- only generate village on the surface chunks
 	if( minp.y ~= -32 or minp.y < -32 or minp.y > 64) then
 		return;
