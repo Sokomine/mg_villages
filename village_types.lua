@@ -26,7 +26,10 @@ local village_type_data_list = {
 			 replacement_function = mg_villages.replacements_taoki },
 	medieval     = { min = 25, max = 60,   space_between_buildings=2, mods={'cottages'},  texture = 'cottages_darkage_straw.png', -- they often have straw roofs
 			 sapling_divisor = 10, plant_type = 'farming:wheat_8',     plant_frequency = 1,
-			 replacement_function = mg_villages.replacements_medieval },
+			 replacement_function = mg_villages.replacements_medieval,
+			roadsize_list = {2,3,4,5,6},
+--			road_materials = {'default:cobble','default:gravel','default:stonebrick','default:coalblock'},
+			}, --roadsize_list = {1,1,2,3,4} },
 	charachoal   = { min = 10, max = 15,   space_between_buildings=1, mods={'cottages'},  texture = 'default_coal_block.png',
 			 replacement_function = mg_villages.replacements_charachoal },
 	lumberjack   = { min = 10, max = 30,   space_between_buildings=1, mods={'cottages'},  texture = 'default_tree.png', name_prefix = 'Camp ',
