@@ -1,4 +1,30 @@
 
+------------------------------------------------------------------------------
+-- Interface for other mdos
+
+-- this function gets executed only once per village - namely when the first
+-- part of a village is generated;
+-- relevant data about the vilalge can be found in the following data structure:
+--     mg_villages.all_villages[ village_id ]
+mg_villages.new_village_spawned = function( village_id )
+	-- dummy function
+end
+
+
+-- use this function if you want to i.e. spawn mobs/traders/etc;
+-- the village data structure contains information about the entire village;
+-- minp, maxp indicates which part has actually been spawned;
+-- the function may add information to the  village  data structure if needed;
+-- the voxelmanip data (data, param2_data, a) is just for reading, i.e. finding
+--   a good spawning position for the trader
+mg_villages.part_of_village_spawned = function( village, minp, maxp, data, param2_data, a, cid )
+	-- mobf needs a way to spawn its traders
+	if( minetest.get_modpath( 'mobf_trader' )) then
+		mob_village_traders.part_of_village_spawned( village, minp, maxp, data, param2_data, a, cid );
+	end
+end
+------------------------------------------------------------------------------
+
 
 mg_villages.wseed = 0;
 
@@ -931,11 +957,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
 
-	vm:calc_lighting(
-		tmin, tmax
---		{x=minp.x-16, y=minp.y, z=minp.z-16},
---		{x=maxp.x+16, y=maxp.y, z=maxp.z+16}
-	)
+	vm:calc_lighting()
 	t1 = time_elapsed( t1, 'vm calc lighting' );
 
 	vm:write_to_map(data)
@@ -967,22 +989,10 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	-- TODO: extra_calls.signs
 
 	
-	-- spawn traders
+	-- useful for spawning mobs etc.
 	for _, village in ipairs(villages) do
-		if( mob_basics and mob_basics.spawn_mob ) then
-			local traderlist = village.to_add_data.extra_calls.traders;
-			-- for each trader
-			for _,v in ipairs( traderlist) do
-				-- spawn the trader
-				mob_basics.spawn_mob( {x=v.x, y=v.y, z=v.z}, v.typ, nil, nil, nil, nil );
-			end
-			-- store the traders
-			if( traderlist and #traderlist > 0 ) then
-				village.to_add_data.bpos[ traderlist[1].bpos_i ].traders = traderlist;
-			end
-		end
+		mg_villages.part_of_village_spawned( village, minp, maxp, data, param2_data, a, cid );
 	end
-
 
 	-- initialize the pseudo random generator so that the chests will be filled in a reproducable pattern
 	local meta
@@ -1014,6 +1024,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 					tostring( village.village_type ).."\' of size "..tostring( village.vs )..
 					" spawned at: x = "..village.vx..", z = "..village.vz)
 			village_data_updated = true;
+
+			-- hook for doing stuff that needs to be done exactly once per village
+			mg_villages.new_village_spawned( village_id );
 		end
 	end
 	-- always save the changed village data
