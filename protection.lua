@@ -10,11 +10,17 @@ mg_villages.get_town_id_at_pos = function( pos )
 			if( mg_villages.inside_village_area( pos.x,  pos.z, v, village_noise)) then
 
 				local node = minetest.get_node( pos );
+				-- leaves can be digged in villages
 				if( node
 				   and node.name
 				   and minetest.registered_nodes[ node.name ]
 				   and minetest.registered_nodes[ node.name ].groups
 				   and minetest.registered_nodes[ node.name ].groups.leaves ) then
+					return nil;
+				-- bones can be digged in villages
+				elseif( node
+				   and node.name
+				   and node.name == 'bones:bones' ) then
 					return nil;
 				else
 					return id;
