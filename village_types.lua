@@ -97,6 +97,9 @@ mg_villages.add_village_type = function( type_name, v )
 	end
 	if( not( v.plant_type )) then
 		v.plant_type      = 'default:grass_5';
+		if( not( minetest.registered_nodes[ v.plant_type ])) then
+			v.plant_type = 'default:dry_shrub';
+		end
 	end
 	if( not( v.plant_frequency )) then
 		v.plant_frequency = 3;
