@@ -957,7 +957,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
 
-	vm:calc_lighting()
+	vm:calc_lighting( tmin, tmax)
 	t1 = time_elapsed( t1, 'vm calc lighting' );
 
 	vm:write_to_map(data)
