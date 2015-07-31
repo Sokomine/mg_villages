@@ -99,3 +99,41 @@ minetest.register_node("mg_villages:plotmarker", {
 		end
 })
 
+
+-- default to safe lava
+if( not( mg_villages.use_normal_unsafe_lava )) then
+	local lava = minetest.registered_nodes[ "default:lava_source"];
+	if( lava ) then
+		-- a deep copy for the table would be more helpful...but, well, ...
+		local new_def = minetest.deserialize( minetest.serialize( lava ));
+		-- this lava does not cause fire to spread
+		new_def.name           = nil;
+		new_def.groups.lava    = nil;
+		new_def.groups.hot     = nil;
+		new_def.groups.igniter = nil;
+		new_def.groups.lava_tamed = 3;
+		new_def.description = "Lava Source (tame)";
+		new_def.liquid_alternative_flowing = "mg_villages:lava_flowing_tamed";
+		new_def.liquid_alternative_source = "mg_villages:lava_source_tamed";
+		-- we create a NEW type of lava for this
+		minetest.register_node( "mg_villages:lava_source_tamed", new_def );
+	end
+	
+	-- take care of the flowing variant as well
+	lava = minetest.registered_nodes[ "default:lava_flowing"];
+	if( lava ) then
+		-- a deep copy for the table would be more helpful...but, well, ...
+		local new_def = minetest.deserialize( minetest.serialize( lava ));
+		-- this lava does not cause fire to spread
+		new_def.name           = nil;
+		new_def.groups.lava    = nil;
+		new_def.groups.hot     = nil;
+		new_def.groups.igniter = nil;
+		new_def.groups.lava_tamed = 3;
+		new_def.description = "Flowing Lava (tame)";
+		new_def.liquid_alternative_flowing = "mg_villages:lava_flowing_tamed";
+		new_def.liquid_alternative_source = "mg_villages:lava_source_tamed";
+		-- and a NEW type of flowing lava...
+		minetest.register_node( "mg_villages:lava_flowing_tamed", new_def );
+	end
+end

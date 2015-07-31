@@ -943,6 +943,13 @@ mg_villages.get_replacement_table = function( housetype, pr, replacements )
 	end
 	-- it is very problematic if the torches on houses melt snow and cause flooding; thus, we use a torch that is not hot
 	table.insert( replacements, {'default:torch', 'mg_villages:torch'});
+
+	-- make charachoal villages safe from spreading fire
+	if( not( mg_villages.use_normal_unsafe_lava )) then
+		table.insert( replacements, {'default:lava_source',  'mg_villages:lava_source_tamed'});
+		table.insert( replacements, {'default:lava_flowing', 'mg_villages:lava_flowing_tamed'});
+	end
+
 	for i,v in ipairs( replacements ) do
 		if( v and #v == 2 ) then
 			rtable[ v[1] ] = v[2];

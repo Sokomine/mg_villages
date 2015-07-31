@@ -49,6 +49,8 @@ end
 -- currently not really used; does not look as good as expected
 mg_villages.medieval_subtype = false;
 
+-- set this to true if you want to use normal lava - but beware: charachoal villages may cause bushfires!
+--mg_villages.use_normal_unsafe_lava = false;
 
 -----------------------------------------------------------------------------
 -- decrese these values slightly if you want MORE trees around your villages;
