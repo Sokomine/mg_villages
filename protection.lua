@@ -47,6 +47,9 @@ minetest.is_protected = function(pos, name)
 			  and p.z <= pos.z and (p.z + p.bsizez) >= pos.z) then
 				if( p.owner and p.owner == name ) then
 					return false;
+				-- the allmende can be used by all
+				elseif( mg_villages.BUILDINGS[p.btype] and mg_villages.BUILDINGS[p.btype].typ=="allmende" ) then
+					return false;
 				-- the player cannot modify other plots, even though he may be house owner of another house and be allowed to modify common ground
 				else
 					return true;
