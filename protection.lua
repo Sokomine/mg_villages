@@ -42,9 +42,22 @@ minetest.is_protected = function(pos, name)
 	if( village_id ) then
 		local is_houseowner = false;
 		for nr, p in ipairs( mg_villages.all_villages[ village_id ].to_add_data.bpos ) do
+
 			-- we have located the right plot; the player can build here if he owns this particular plot
 			if(   p.x <= pos.x and (p.x + p.bsizex) >= pos.x
 			  and p.z <= pos.z and (p.z + p.bsizez) >= pos.z) then
+
+			  	-- If player has been trusted by owner, can build
+				trustedusers = p.can_edit
+
+				print(trustedusers)
+				for trusted in string.gmatch(trustedusers, "([^\n]+)") do
+					if trusted == name then
+						return false
+					end
+				end
+
+				-- If player is owner, can build
 				if( p.owner and p.owner == name ) then
 					return false;
 				-- the allmende can be used by all
@@ -102,6 +115,8 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 --	end
 
 	local meta = minetest.get_meta( pos );
+	local settrustees = 0;
+	local justabandoned = 0;
 	if( not( meta )) then
 		return;
 	end
@@ -140,8 +155,8 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			 "label[2.5,0.5;Building:]"..
 			 "label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm ).."]"..
 			 "field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
-	if(     owner == pname and fields['abandom'] ) then
-		formspec = formspec.."label[0,2;You have abandomed this plot.]";
+	if(     owner == pname and fields['abandon'] ) then
+		formspec = formspec.."label[1,2;You have abandoned this plot.]";
 		mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = nil;
 		meta:set_string('infotext', plot_descr );
 		mg_villages.save_data();
@@ -161,31 +176,54 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		else
 			formspec = formspec.."label[0,0;Sorry. You are not able to pay the price.]";
 		end
+	elseif (owner == pname and fields['add_remove']) then
+		if (previousTrustees) then
+			local previousTrustees = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit
+		else
+			previousTrustees = "";
+		end
+		formspec = "size[8,3]"..
+			"field[0,0;8,2.5;ownerplayers;;"..previousTrustees.."]"..
+			"button_exit[3.25,2.5;1.5,0.5;save;Save]";
+		settrustees = 1;
+	elseif (fields['save']) then
+		mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit = fields.ownerplayers;
+		settrustees = 0;
+		formspec = 
+			"label[1,1;This is your plot. You have bought it.]"..
+			"button[0.75,2.5;3,0.5;add_remove;Add/Remove Players]"..
+			"button_exit[3.75,2.5;2.0,0.5;abandon;Abandon plot]"..
+			"button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
+		mg_villages.save_data();
 	end
+
 	-- update the owner information
 	owner      = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner;
+	if (settrustees == 0) then
+		if( owner == pname) then
+			formspec = formspec..
+				"label[1,1;This is your plot. You have bought it.]"..
+				"button[0.75,2.5;3,0.5;add_remove;Add/Remove Players]"..
+				"button_exit[3.75,2.5;2.0,0.5;abandon;Abandon plot]"..
+				"button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
 
-
-	if( owner == pname ) then
-		formspec = formspec.."label[1,1;This is your plot. You have bought it.]"..
-				"button_exit[2,2.5;2.0,0.5;abandom;Abandom plot]"..
-				"button_exit[4,2.5;1.5,0.5;abort;Exit]";
-	elseif( not( owner ) or owner=="" ) then
-		formspec = formspec.."label[1,1;You can buy this plot for]".. 
-				"label[3.8,1;"..tostring( price_stack:get_count() ).." x ]"..
-				"item_image[4.3,0.8;1,1;"..(  price_stack:get_name() ).."]"..
-				"button_exit[2,2.5;1.5,0.5;buy;Buy plot]"..
-				"button_exit[4,2.5;1.5,0.5;abort;Exit]";
-	else
-		formspec = formspec.."label[1,1;"..tostring( owner ).." owns this plot.]"..
-				"button_exit[3,2.5;1.5,0.5;abort;Exit]";
+		elseif( not( owner ) or owner=="") then
+			formspec = formspec.."label[1,1;You can buy this plot for]".. 
+					"label[3.8,1;"..tostring( price_stack:get_count() ).." x ]"..
+					"item_image[4.3,0.8;1,1;"..(  price_stack:get_name() ).."]"..
+					"button_exit[2,2.5;1.5,0.5;buy;Buy plot]"..
+					"button_exit[4,2.5;1.5,0.5;abort;Exit]";
+		else
+			formspec = formspec.."label[1,1;"..tostring( owner ).." owns this plot.]"..
+					"button_exit[3,2.5;1.5,0.5;abort;Exit]";
+		end
 	end
 
 	if(   btype ~= 'road'
 	  and mg_villages.BUILDINGS[btype]
 	  and mg_villages.BUILDINGS[btype].inh
 	  and mg_villages.BUILDINGS[btype].inh > 0 ) then
-		if( owner==pname ) then
+		if( owner==pname and settrustees == 0) then
 			formspec = formspec.."label[1,1.5;You are allowed to modify the common village area.]";
 		else
 			formspec = formspec.."label[1,1.5;Owners of this plot count as village inhabitants.]";
