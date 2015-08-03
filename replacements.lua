@@ -1009,11 +1009,7 @@ mg_villages.get_fruit_replacements = function( replacements, fruit)
 			-- this is mostly used by the voxelmanip based spawning of .we files
 			replacements.ids[ minetest.get_content_id( old_name )] = minetest.get_content_id( new_name );
 			-- this is used by the place_schematic based spawning	
-			for i,v in ipairs( replacements.table ) do
-				if( v and #v and v[1]==old_name ) then
-					v[2] = new_name;
-				end
-			end
+			replacements.table[ old_name ] = new_name;
 		end
 	end
 end
