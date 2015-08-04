@@ -141,28 +141,29 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
         "field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
     local formspec = "";
     local ifinhabit = "";
-    
+
+    -- Get Price
+    local price = "default:gold_ingot 2";
+
+    if (btype ~= 'road' and mg_villages.BUILDINGS[btype]) then
+        local plot_descr = 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm)
+
+        if (mg_villages.BUILDINGS[btype].price) then
+            price = mg_villages.BUILDINGS[btype].price;
+        elseif (mg_villages.BUILDINGS[btype].typ and mg_villages.prices[ mg_villages.BUILDINGS[btype].typ ]) then
+            price = mg_villages.prices[ mg_villages.BUILDINGS[btype].typ ];
+        end
+
+        if (mg_villages.BUILDINGS[btype].inh and mg_villages.BUILDINGS[btype].inh > 0 ) then
+            ifinhabit = "label[1,1.5;Owners of this plot count as village inhabitants.]";
+        end
+    end
+    -- Determine price depending on building type
+    local price_stack= ItemStack( price );
+
+
     -- If nobody owns the plot
     if (not(owner) or owner=='') then
-
-        -- Get Price
-        local price = "default:gold_ingot 2";
-
-        if (btype ~= 'road' and mg_villages.BUILDINGS[btype]) then
-            local plot_descr = 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm)
-
-            if (mg_villages.BUILDINGS[btype].price) then
-                price = mg_villages.BUILDINGS[btype].price;
-            elseif (mg_villages.BUILDINGS[btype].typ and mg_villages.prices[ mg_villages.BUILDINGS[btype].typ ]) then
-                price = mg_villages.prices[ mg_villages.BUILDINGS[btype].typ ];
-            end
-
-            if (mg_villages.BUILDINGS[btype].inh and mg_villages.BUILDINGS[btype].inh > 0 ) then
-                ifinhabit = "label[1,1.5;Owners of this plot count as village inhabitants.]";
-            end
-        end
-        -- Determine price depending on building type
-        local price_stack= ItemStack( price );
 
         formspec = original_formspec ..
             "label[1,1;You can buy this plot for]".. 
@@ -230,6 +231,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
                 "label[1,2;You have abandoned this plot.]"..
                 "button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
             mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = nil;
+            -- Return price to player
+            local inv = player:get_inventory();
+            inv:add_item( 'main', price_stack );
             meta:set_string('infotext', 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm) );
             mg_villages.save_data();
         end
