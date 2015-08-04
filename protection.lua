@@ -170,18 +170,26 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
             "label[3.8,1;"..tostring( price_stack:get_count() ).." x ]"..
             "item_image[4.3,0.8;1,1;"..(  price_stack:get_name() ).."]"..
             ifinhabit..
-            "button_exit[2,2.5;1.5,0.5;buy;Buy plot]"..
+            "button[2,2.5;1.5,0.5;buy;Buy plot]"..
             "button_exit[4,2.5;1.5,0.5;abort;Exit]";
 
         -- On Press buy button
         if (fields['buy']) then
             -- check if the price can be paid
             local inv = player:get_inventory();
-            if( inv and inv:contains_item( 'main', price_stack )) then
+            if mg_villages.all_villages[village_id].ownerlist[pname] then
+                formspec = formspec.."label[0,0;Sorry. You already have a plot in this village.]";
+            elseif( inv and inv:contains_item( 'main', price_stack )) then
                 formspec = original_formspec..
                     "label[0,0;Congratulations! You have bought this plot.]"..
                     "button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
                 mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = pname;
+                if mg_villages.all_villages[village_id].ownerlist then
+                    mg_villages.all_villages[village_id].ownerlist[pname] = true;
+                else
+                    mg_villages.all_villages[village_id].ownerlist = {}
+                    mg_villages.all_villages[village_id].ownerlist[pname] = true;
+                end
                 meta:set_string('infotext', 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm)..' (owned by '..tostring( pname )..')');
                 -- save the data so that it survives server restart
                 mg_villages.save_data();
@@ -230,6 +238,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
             formspec = original_formspec..
                 "label[1,2;You have abandoned this plot.]"..
                 "button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
+            mg_villages.all_villages[village_id].ownerlist[pname] = nil;
             mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = nil;
             -- Return price to player
             local inv = player:get_inventory();
