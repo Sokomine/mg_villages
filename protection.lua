@@ -1,3 +1,4 @@
+settrustees = 0
 
 -- get the id of the village pos lies in (or nil if outside of villages)
 mg_villages.get_town_id_at_pos = function( pos )
@@ -139,7 +140,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
         "label[2.5,0.5;Building:]"..
         "label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm ).."]"..
         "field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
-    local formspec = "";
+    if settrustees == 0 then
+        local formspec = "";
+    end
     local ifinhabit = "";
 
     -- Get Price
@@ -177,6 +180,10 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
         if (fields['buy']) then
             -- check if the price can be paid
             local inv = player:get_inventory();
+            if not mg_villages.all_villages[village_id].ownerlist then
+                mg_villages.all_villages[village_id].ownerlist = {}
+            end
+
             if mg_villages.all_villages[village_id].ownerlist[pname] then
                 formspec = formspec.."label[0,0;Sorry. You already have a plot in this village.]";
             elseif( inv and inv:contains_item( 'main', price_stack )) then
@@ -187,7 +194,6 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
                 if mg_villages.all_villages[village_id].ownerlist then
                     mg_villages.all_villages[village_id].ownerlist[pname] = true;
                 else
-                    mg_villages.all_villages[village_id].ownerlist = {}
                     mg_villages.all_villages[village_id].ownerlist[pname] = true;
                 end
                 meta:set_string('infotext', 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm)..' (owned by '..tostring( pname )..')');
@@ -202,21 +208,6 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
     -- If player is the owner of the plot
     elseif (owner==pname) then
-
-        -- Save trusted players
-        if (fields['savetrustees']) then
-            settrustees = 0;
-
-            mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,"15125251253521");
-
-            local x = 1;
-            for _, player in ipairs(fields.ownerplayers:split("\n")) do
-                mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit[x] = player
-                local x = x + 1
-            end
-
-            mg_villages.save_data();
-        end
 
         if(btype ~= 'road'
             and mg_villages.BUILDINGS[btype]
@@ -249,31 +240,68 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
         -- If Player wants to add/remove trusted players
         if (fields['add_remove']) then
+            settrustees = 1
             local previousTrustees = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit
             local output = "";
             if previousTrustees == nil then
                 previousTrustees = {}
             else
                 for _, player in ipairs(previousTrustees) do
-                    output = output..player
+                    output = output..player.."\n"
                 end
             end
-            formspec = "size[8,3]"..
+            formspec = original_formspec..
                 "textarea[0,0;8,2.5;ownerplayers;;"..output.."]"..
                 "button[3.25,2.5;1.5,0.5;savetrustees;Save]";
+
+            mg_villages.save_data()
         end
+
+        -- Save trusted players
+        if (fields["savetrustees"] == "Save") then
+            settrustees = 0;
+
+            if not mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit then
+                mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit = {}
+            end
+
+            local x = 1;
+            for _, player in ipairs(fields.ownerplayers:split("\n")) do
+                mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit[x] = player
+                x = x + 1
+            end
+
+            mg_villages.save_data();
+        end
+
+        -- if settrustees == 1 then
+        --     local previousTrustees = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit
+        --     local output = "";
+        --     if previousTrustees == nil then
+        --         previousTrustees = {}
+        --     else
+        --         for _, player in ipairs(previousTrustees) do
+        --             output = output..player.."\n"
+        --         end
+        --     end
+        --     formspec = original_formspec..
+        --         "textarea[0,0;8,2.5;ownerplayers;;"..output.."]"..
+        --         "button[3.25,2.5;1.5,0.5;savetrustees;Save]";
+        -- end
 
     -- If A different Player owns plot
     else
         formspec = formspec.."label[1,1;"..tostring( owner ).." owns this plot.]"..
                     "button_exit[3,2.5;1.5,0.5;abort;Exit]";
     end
+
     minetest.show_formspec( pname, "mg_villages:plotmarker", formspec );
 end
 
 
 
 mg_villages.form_input_handler = function( player, formname, fields)
+    mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,minetest.serialize(fields));
     if( not( mg_villages.ENABLE_PROTECTION )) then
         return false;
     end
