@@ -5,7 +5,7 @@ mg_villages.random_chest_content = {};
 
 -- add random chest content
 local ADD_RCC = function( data )
-	if( data and #data>3 and minetest.registered_nodes[ data[1] ] ) then
+	if( data and #data>3 and ( minetest.registered_nodes[ data[1] ] or minetest.registered_items[ data[1] ]) ) then
 		table.insert( mg_villages.random_chest_content, data );
 	end
 end
