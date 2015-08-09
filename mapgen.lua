@@ -145,6 +145,25 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	local ptree         = false;
 	local old_height    = maxp.y;
 	local y = maxp.y;
+
+	-- if we are working on a mapchunk above, set all to air;
+	-- any terrain blending happens in the mapchunk below
+	if( minp.y > vh ) then
+		local air_counted = 0;
+		for y=minp.y, minp.y+16 do
+			if( data[a:index( x, y, z )] == cid.c_air ) then
+				air_counted = air_counted + 1;
+			end
+		end
+		if( air_counted > 3 or blend==0) then
+			for y=minp.y+16, maxp.y do
+				data[a:index( x, y, z)] = cid.c_air;
+			end
+		end
+		-- else do nothing
+		return;
+	end
+
 	-- search for a surface and set everything above target_height to air
 	while( y > minp.y) do
 		local ci = data[a:index(x, y, z)];
@@ -211,7 +230,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	end
 
 	-- do terrain blending; target_height has to be calculated based on old_height
-	if( target_height == maxp.y ) then
+	if( target_height == maxp.y and old_height < maxp.y ) then
 		local yblend = old_height;
 		if blend > 0 then -- leave some cliffs unblended
 			yblend = math.floor(vh + blend * (old_height - vh))
@@ -219,7 +238,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		else	
 			target_height = old_height;
 		end
-		for y = yblend, maxp.y do
+		for y = math.max( minp.y, yblend), maxp.y do
 			if( y<=MG_VILLAGES_WATER_LEVEL ) then
 				-- keep ice
 				if( data[a:index( x, y, z )] ~= cid.c_ice ) then
@@ -231,30 +250,33 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		end
 	end
 	
-	if( target_height < 1 ) then
-		-- no trees or snow below water level
-	elseif( tree  and not( mg_villages.ethereal_trees ) and treepos) then
-		data[       a:index( x, target_height+1, z)] = cid.c_sapling
-		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=0, snow=has_artificial_snow});
-	elseif( jtree and not( mg_villages.ethereal_trees ) and treepos) then
-		data[       a:index( x, target_height+1, z)] = cid.c_jsapling
-		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=1, snow=has_artificial_snow});
-	elseif( ptree and not( mg_villages.ethereal_trees ) and treepos) then
-		data[       a:index( x, target_height+1, z)] = cid.c_psapling
-		table.insert( treepos, {x=x, y=target_height+1, z=z, typ=2, snow=has_artificial_snow});
-	elseif( has_snow ) then
-		data[       a:index( x, target_height+1, z)] = cid.c_snow;
-	end
-	data[               a:index( x, target_height,   z)] = surface_node;
-	if( target_height-1 >= minp.y ) then
-		data[       a:index( x, target_height-1, z)] = below_1;
+	-- only place the surface node if it is actually contained in this node
+	if( target_height >= minp.y and target_height < maxp.y ) then
+		if( target_height < 1 ) then
+			-- no trees or snow below water level
+		elseif( tree  and not( mg_villages.ethereal_trees ) and treepos) then
+			data[       a:index( x, target_height+1, z)] = cid.c_sapling
+			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=0, snow=has_artificial_snow});
+		elseif( jtree and not( mg_villages.ethereal_trees ) and treepos) then
+			data[       a:index( x, target_height+1, z)] = cid.c_jsapling
+			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=1, snow=has_artificial_snow});
+		elseif( ptree and not( mg_villages.ethereal_trees ) and treepos) then
+			data[       a:index( x, target_height+1, z)] = cid.c_psapling
+			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=2, snow=has_artificial_snow});
+		elseif( has_snow ) then
+			data[       a:index( x, target_height+1, z)] = cid.c_snow;
+		end
+		data[               a:index( x, target_height,   z)] = surface_node;
+		if( target_height-1 >= minp.y ) then
+			data[       a:index( x, target_height-1, z)] = below_1;
+		end
 	end
 
 	-- not every column will get a coal block; some may get two
 	local coal_height1 = math.random( minp.y, maxp.y );
 	local coal_height2 = math.random( minp.y, maxp.y );
 	y = target_height-2;
-	while( y > minp.y and y > target_height-40 ) do
+	while( y > minp.y and y > target_height-40 and y <=maxp.y) do
 		local old_node = data[a:index( x, y, z)];
 		-- abort as soon as we hit anything other than air
 		if( old_node == cid.c_air or old_node == cid.c_water ) then
@@ -645,6 +667,10 @@ end
 
 -- places trees and plants at empty spaces
 mg_villages.village_area_fill_with_plants = function( village_area, villages, minp, maxp, data, param2_data, a, cid )
+	-- do not place any plants if we are working on the mapchunk above
+	if( minp.y > 0 ) then
+		return;
+	end
 	-- trees which require grow functions to be called
 	cid.c_savannasapling  = minetest.get_content_id( 'mg:savannasapling');
 	cid.c_pinesapling     = minetest.get_content_id( 'mg:pinesapling');
@@ -1048,7 +1074,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 --	print('STRUCTURES BY MAPGEN: '..minetest.serialize( structures ));
 
 	-- only generate village on the surface chunks
-	if( minp.y ~= -32 or minp.y < -32 or minp.y > 64) then
+	if( minp.y < -32 or minp.y > mg_villages.MAX_HEIGHT_TREATED) then --64
 		return;
 	end
 	
