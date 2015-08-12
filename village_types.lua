@@ -39,8 +39,6 @@ local village_type_data_list = {
 			 replacement_function = mg_villages.replacements_claytrader },
 	logcabin     = { min = 15, max = 30,   space_between_buildings=1, mods={'cottages'},  texture = 'default_wood.png',
 			 replacement_function = mg_villages.replacements_logcabin },
-	canadian     = { min = 40, max = 110,  space_between_buildings=1, mods={'hdb','nbu'}, texture = 'wool_white.png',
-			 replacement_function = mg_villages.replacements_canadian },
 	grasshut     = { min = 10, max = 40,   space_between_buildings=1, mods={'dryplants'}, texture = 'dryplants_reed.png',
 			 replacement_function = mg_villages.replacements_grasshut },
 	tent         = { min =  5, max = 20,   space_between_buildings=2, mods={'cottages'},  texture = 'wool_white.png', name_preifx = 'Tent at',

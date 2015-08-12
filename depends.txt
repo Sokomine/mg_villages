@@ -1,8 +1,8 @@
 handle_schematics
 default
-doors
-farming
-wool
+doors?
+farming?
+wool?
 stairs?
 cottages?
 moretrees?
