@@ -366,7 +366,7 @@ local function generate_road(village, l, pr, roadsize_list, road_materials, rx, 
 			rxmax = rxmax+1;
 		end
 	end
-	l[#l+1] = {x = rxmin, y = vh, z = rzmin, btype = "road",
+	l[#l+1] = {x = rxmin+1, y = vh, z = rzmin, btype = "road",
 		bsizex = rxmax - rxmin + 1, bsizez = rzmax - rzmin + 1, brotate = 0, road_nr = mg_villages.road_nr}
 	if( road_materials and road_materials[ iteration_depth ] and minetest.registered_nodes[ road_materials[ iteration_depth ]] ) then
 		l[#l].road_material = minetest.get_content_id( road_materials[ iteration_depth ] );
