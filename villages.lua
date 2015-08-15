@@ -189,7 +189,7 @@ mg_villages.road_nr = 0;
 
 local function generate_road(village, l, pr, roadsize_list, road_materials, rx, rz, rdx, rdz, vnoise, space_between_buildings, iteration_depth)
 	local roadsize = math.floor(roadsize_list[ iteration_depth ]/2);
-	if( not( roadsize )) then
+	if( not( roadsize ) or roadsize==0) then
 		roadsize = mg_villages.FIRST_ROADSIZE;
 	end
 	local roadsize_a = roadsize;
@@ -456,7 +456,7 @@ local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	-- the function below is recursive; we need a way to count roads
 	mg_villages.road_nr = 0;
 	local roadsize_list = {};
-	for i=1,mg_villages.FIRST_ROADSIZE do
+	for i=1,mg_villages.FIRST_ROADSIZE*2 do
 		roadsize_list[i] = i;
 	end
 	if( mg_villages.village_type_data[ village.village_type ].roadsize_list ) then
