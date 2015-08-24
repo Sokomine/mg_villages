@@ -168,8 +168,10 @@ end
 mg_villages.replace_tree_trunk = function( replacements, wood_type )
 	if(     wood_type == 'default:junglewood' ) then
 		table.insert( replacements, {'default:tree',  'default:jungletree'});
-	elseif( wood_type == 'default:pinewood' ) then
-		table.insert( replacements, {'default:tree',  'default:pinetree'});
+	elseif( wood_type == 'default:pine_wood' ) then
+		table.insert( replacements, {'default:tree',  'default:pine_tree'});
+	elseif( wood_type == 'default:acacia_wood' ) then
+		table.insert( replacements, {'default:tree',  'default:acacia_tree'});
 	elseif( wood_type == 'mg:savannawood' ) then
 		table.insert( replacements, {'default:tree',  'mg:savannatree'});
 	elseif( wood_type == 'mg:pinewood' ) then
@@ -266,8 +268,10 @@ end
 mg_villages.replace_saplings = function( replacements, wood_type )
 	if(     wood_type == 'default:junglewood' ) then
 		table.insert( replacements, {'default:sapling',  'default:junglesapling'});
-	elseif( wood_type == 'default:pinewood' ) then
+	elseif( wood_type == 'default:pine_wood' ) then
 		table.insert( replacements, {'default:sapling',  'default:pine_sapling'});
+	elseif( wood_type == 'default:acacia_wood' ) then
+		table.insert( replacements, {'default:sapling',  'default:acacia_sapling'});
 	elseif( wood_type == 'mg:savannawood' ) then
 		table.insert( replacements, {'default:sapling',  'mg:savannasapling'});
 	elseif( wood_type == 'mg:pinewood' ) then

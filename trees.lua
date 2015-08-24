@@ -127,7 +127,7 @@ mg_villages.grow_pinetree = function(data, a, pos, snow)
 
 	local c_air = minetest.get_content_id("air")
 	local c_ignore = minetest.get_content_id("ignore")
-	local c_pinetree = minetest.get_content_id("default:pinetree")
+	local c_pinetree = minetest.get_content_id("default:pine_tree")
 	local c_pine_needles  = minetest.get_content_id("default:pine_needles")
 	local c_snow = minetest.get_content_id("default:snow")
 	local c_snowblock = minetest.get_content_id("default:snowblock")
