@@ -143,6 +143,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	local tree          = false;
 	local jtree         = false;
 	local ptree         = false;
+	local atree         = false;
 	local old_height    = maxp.y;
 	local y = maxp.y;
 
