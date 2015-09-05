@@ -291,7 +291,7 @@ end
 
 
 mg_villages.form_input_handler = function( player, formname, fields)
-	mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,minetest.serialize(fields));
+--	mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,minetest.serialize(fields));
 	if( not( mg_villages.ENABLE_PROTECTION )) then
 		return false;
 	end
