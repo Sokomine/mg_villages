@@ -7,7 +7,14 @@ minetest.register_node("mg_villages:road", {
         sounds = default.node_sound_dirt_defaults({
                 footstep = {name="default_gravel_footstep", gain=0.5},
                 dug = {name="default_gravel_footstep", gain=1.0},
-        }),
+	}),
+	paramtype  = "light",
+	paramtype2 = "facedir",
+	drawtype   = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed = { { -0.5, -0.5, -0.5, 0.5, 0.5-2/16, 0.5}, },
+		},
 })
 
 mg_villages.road_node = minetest.get_content_id( 'mg_villages:road' );
