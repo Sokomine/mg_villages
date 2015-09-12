@@ -40,6 +40,10 @@ mg_villages.MAX_HEIGHT_TREATED = 200;
 -- choose the debug level you want
 mg_villages.DEBUG_LEVEL = mg_villages.DEBUG_LEVEL_NORMAL
 
+-- if set to true (or anything else but nil or false), highlandpools by paramat (see
+-- https://forum.minetest.net/viewtopic.php?t=8400) will be created
+mg_villages.CREATE_HIGHLANDPOOLS = true
+
 -- background image for the /vmap command
 -- RealTest comes with a diffrent texture
 if(     minetest.get_modpath('grounds') and minetest.get_modpath('joiner_table')) then

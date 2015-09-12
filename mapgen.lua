@@ -94,10 +94,11 @@ end
 mg_villages.check_if_ground = function( ci )
 
 	-- pre-generate a list of no-ground-nodes for caching
-	if( #replacements_group.node_is_ground < 1 ) then
+	if( replacements_group.node_is_ground[ minetest.get_content_id('air')]==nil) then
 		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
 			'default:pine_wood','default:pine_tree','default:acacia_wood','default:acacia_tree',
 			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom'};
+		-- TODO: add all those other tree and leaf nodes that might be added by mapgen
 		for _,name in ipairs( no_ground_nodes ) do
 			replacements_group.node_is_ground[ minetest.get_content_id( name )] = false;
 		end
@@ -872,7 +873,7 @@ mg_villages.save_data = function()
 end
 
 
-mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top )
+mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top, seed )
 	local t1 = minetest.get_us_time();
 
 	local cid = {}
@@ -1059,6 +1060,11 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	t1 = time_elapsed( t1, 'fill_with_plants' );
 
+	if( mg_villages.CREATE_HIGHLANDPOOLS ) then
+		mg_villages.do_highlandpools(minp, maxp, seed, vm, a, data, village_area);
+	end
+	t1 = time_elapsed( t1, 'create highlandpools' );
+
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
@@ -1192,7 +1198,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	end
 
 	if( villages and #villages > 0 ) then
-		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil );
+		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil, seed );
 	end
 end)
 

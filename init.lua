@@ -66,6 +66,8 @@ dofile(mg_villages.modpath.."/fill_chest.lua")
 
 -- terrain blending for individual houses
 dofile(mg_villages.modpath.."/terrain_blend.lua")
+-- highlandpools
+dofile(mg_villages.modpath.."/highlandpools.lua")
 -- the interface for the mapgen;
 -- also takes care of spawning the player
 dofile(mg_villages.modpath.."/mapgen.lua")
