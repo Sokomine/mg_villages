@@ -96,7 +96,7 @@ mg_villages.check_if_ground = function( ci )
 	-- pre-generate a list of no-ground-nodes for caching
 	if( replacements_group.node_is_ground[ minetest.get_content_id('air')]==nil) then
 		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
-			'default:pine_wood','default:pine_tree','default:acacia_wood','default:acacia_tree',
+			'default:pine_wood','default:pine_tree','default:acacia_wood','default:acacia_tree', 'default:aspen_wood', 'default:aspen_tree',
 			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom'};
 		-- TODO: add all those other tree and leaf nodes that might be added by mapgen
 		for _,name in ipairs( no_ground_nodes ) do
@@ -145,6 +145,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	local jtree         = false;
 	local ptree         = false;
 	local atree         = false;
+        local asptree       = false;
 	local old_height    = maxp.y;
 	local y = maxp.y;
 
@@ -188,6 +189,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		-- acacia
 		elseif( ci == cid.c_atree and data[a:index( x, y-1, z)]==cid.c_atree) then
 			atree = true;
+                -- aspen
+		elseif( ci == cid.c_asptree and data[a:index( x, y-1, z)]==cid.c_asptree) then
+			asptree = true;
 		elseif( not( surface_node) and ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) then
 			-- we have found a surface of some kind
 			surface_node = ci;
@@ -280,6 +284,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=2, snow=has_artificial_snow});
 		elseif( atree and not( mg_villages.ethereal_trees ) and treepos) then
 			data[       a:index( x, target_height+1, z)] = cid.c_asapling
+			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=3, snow=has_artificial_snow});
+		elseif( asptree and not( mg_villages.ethereal_trees ) and treepos) then
+			data[       a:index( x, target_height+1, z)] = cid.c_aspsapling
 			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=3, snow=has_artificial_snow});
 		elseif( has_snow ) then
 			data[       a:index( x, target_height+1, z)] = cid.c_snow;
@@ -726,6 +733,10 @@ mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr,
 	elseif( plant_id == cid.c_asapling and minetest.registered_nodes[ 'default:acacia_tree']) then
 		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_asapling;
 		return true;
+        -- aspen tree from newer minetest game
+	elseif( plant_id == cid.c_aspsapling and minetest.registered_nodes[ 'default:aspen_tree']) then
+		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_aspsapling;
+		return true;
 	-- a savannatree from the mg mod
 	elseif( plant_id == cid.c_savannasapling and mg_villages.add_savannatree) then
 		mg_villages.add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr) -- TODO: snow
@@ -896,6 +907,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_psapling = minetest.get_content_id( 'default:pine_sapling');
 	cid.c_atree    = minetest.get_content_id( 'default:acacia_tree');
 	cid.c_asapling = minetest.get_content_id( 'default:acacia_sapling');
+	cid.c_asptree    = minetest.get_content_id( 'default:aspen_tree');
+	cid.c_aspsapling = minetest.get_content_id( 'default:aspen_sapling');
 	cid.c_water = minetest.get_content_id( 'default:water_source'); -- PM ^
 	cid.c_stone_with_coal = minetest.get_content_id( 'default:stone_with_coal');
 	cid.c_sandstone       = minetest.get_content_id( 'default:sandstone');
@@ -1061,7 +1074,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	t1 = time_elapsed( t1, 'fill_with_plants' );
 
 	if( mg_villages.CREATE_HIGHLANDPOOLS ) then
-		mg_villages.do_highlandpools(minp, maxp, seed, vm, a, data, village_area);
+		mg_villages.do_highlandpools(minp, maxp, seed, vm, a, data, village_area, cid);
 	end
 	t1 = time_elapsed( t1, 'create highlandpools' );
 
