@@ -330,6 +330,8 @@ mg_villages.add_building = function( building_data )
 		building_data.nodenames        = res.nodenames;
 		building_data.on_constr        = res.on_constr;
 		building_data.after_place_node = res.after_place_node;
+		building_data.door_a           = res.door_a;
+		building_data.door_b           = res.door_b;
 
 		if( res.scm_data_cache ) then
 			building_data.scm_data_cache   = res.scm_data_cache;

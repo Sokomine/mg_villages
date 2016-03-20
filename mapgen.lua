@@ -1104,6 +1104,27 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
 	end
 
+	-- the doors need to be adjusted as well
+	for _, village in ipairs(villages) do
+		for k, v in pairs( village.to_add_data.extra_calls.door_b ) do
+			local meta = minetest.get_meta( v );
+
+			local l = 2 -- b
+			local h = meta:get_int("right") + 1
+
+			local replace = {
+			        { { type = "a", state = 0 }, { type = "a", state = 3 } },
+			        { { type = "b", state = 1 }, { type = "b", state = 2 } }
+			}
+			local new = replace[l][h]
+--			minetest.swap_node(v, {name = name .. "_" .. new.type, param2 = v.p2})
+			meta:set_int("state", new.state)
+			-- wipe meta on top node as it's unused
+			minetest.set_node({x = v.x, y = v.y + 1, z = v.z}, { name = "doors:hidden" })
+		end
+	end
+
+
 	local pr = PseudoRandom(mg_villages.get_bseed(minp));
 	for _, village in ipairs(villages) do
 		for _,v in ipairs( village.to_add_data.extra_calls.chests ) do

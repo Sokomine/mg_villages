@@ -354,6 +354,14 @@ mg_villages.get_replacement_list = function( housetype, pr )
   	table.insert(         replacements, {'default:apple',           'air' });
   	table.insert(         replacements, {'default:cobble',          'default:stone_macadam' });
   	table.insert(         replacements, {'default:obsidian_glass',  'default:glass' });
+
+   -- the default doors from minetest game have been changed since the schematics where built
+   -- TODO: the door replacement function needs to be more complex; doesn't really work this way
+   else
+	table.insert( replacements, {'doors:door_wood_t_1',  'doors:hidden'});
+	table.insert( replacements, {'doors:door_wood_b_1',  'doors:door_wood_a'});
+	table.insert( replacements, {'doors:door_wood_t_2',  'doors:hidden'});
+	table.insert( replacements, {'doors:door_wood_b_2',  'doors:door_wood_b'});
    end
 
    if( housetype and mg_villages.village_type_data[ housetype ] and mg_villages.village_type_data[ housetype ].replacement_function ) then
