@@ -1106,6 +1106,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	-- the doors need to be adjusted as well
 	for _, village in ipairs(villages) do
+	  if( village.to_add_data.extra_calls.door_b ) then
 		for k, v in pairs( village.to_add_data.extra_calls.door_b ) do
 			local meta = minetest.get_meta( v );
 
@@ -1122,6 +1123,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			-- wipe meta on top node as it's unused
 			minetest.set_node({x = v.x, y = v.y + 1, z = v.z}, { name = "doors:hidden" })
 		end
+          end
 	end
 
 
