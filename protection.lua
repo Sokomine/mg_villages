@@ -36,6 +36,10 @@ end
 -- checks if the plot marker is still present; places a new one if needed
 -- p: plot data (position, size, orientation, owner, ..)
 mg_villages.check_plot_marker = function( p, plot_nr, village_id )
+	-- roads cannot be bought
+	if( p.btype and p.btype=="road" ) then
+		return;
+	end
 	local plot_pos = { x=p.x, y=p.y, z=p.z };
 	if(      p.o==3 ) then
 		plot_pos = { x=p.x,            y=p.y+1, z=p.z-1          };
