@@ -32,6 +32,37 @@ mg_villages.get_town_id_at_pos = function( pos )
 	return nil;
 end
 
+
+-- checks if the plot marker is still present; places a new one if needed
+-- p: plot data (position, size, orientation, owner, ..)
+mg_villages.check_plot_marker = function( p, plot_nr, village_id )
+	local plot_pos = { x=p.x, y=p.y, z=p.z };
+	if(      p.o==3 ) then
+		plot_pos = { x=p.x,            y=p.y+1, z=p.z-1          };
+	elseif(  p.o==1 ) then
+		plot_pos = { x=p.x+p.bsizex-1, y=p.y+1, z=p.z+p.bsizez   };
+	elseif ( p.o==2 ) then
+		plot_pos = { x=p.x+p.bsizex,   y=p.y+1, z=p.z            };
+	elseif ( p.o==0 ) then
+		plot_pos = { x=p.x-1,          y=p.y+1, z=p.z+p.bsizez-1 };
+	end
+	-- is the plotmarker still present?
+	local node = minetest.get_node( plot_pos );
+	if( not(node) or not(node.name) or node.name ~= "mg_villages:plotmarker" ) then
+		-- place a new one if needed
+		minetest.set_node( plot_pos, {name="mg_villages:plotmarker", param2=p.o});
+		local meta = minetest.get_meta( plot_pos );
+		-- strange error happend; maybe we're more lucky next time...
+		if( not( meta )) then
+			return;
+		end
+		meta:set_string('village_id', village_id );
+		meta:set_int(   'plot_nr',    plot_nr );
+	end
+end
+
+
+
 local old_is_protected = minetest.is_protected
 minetest.is_protected = function(pos, name)
 
@@ -57,6 +88,9 @@ minetest.is_protected = function(pos, name)
 			-- we have located the right plot; the player can build here if he owns this particular plot
 			if(   p.x <= pos.x and (p.x + p.bsizex) >= pos.x
 			  and p.z <= pos.z and (p.z + p.bsizez) >= pos.z) then
+
+				-- place a new plot marker if necessary
+				mg_villages.check_plot_marker( p, nr, village_id );
 
 				-- If player has been trusted by owner, can build
 				if (trustedUser) then
