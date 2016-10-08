@@ -1,3 +1,6 @@
+-- Intllib
+local S = mg_villages.intllib
+
 -- get the id of the village pos lies in (or nil if outside of villages)
 mg_villages.get_town_id_at_pos = function( pos )
 	for id, v in pairs( mg_villages.all_villages ) do
@@ -159,13 +162,13 @@ minetest.register_on_protection_violation( function(pos, name)
 
 	local found = mg_villages.get_town_id_at_pos( pos );
 	if( not( found ) or not( mg_villages.all_villages[ found ]))  then
-		minetest.chat_send_player( name, 'Error: This area does not belong to a village.');
+		minetest.chat_send_player( name, S("Error: This area does not belong to a village."));
 		return;
 	end
 
-	minetest.chat_send_player( name, "You are inside of the area of the village "..
+	minetest.chat_send_player( name, S("You are inside of the area of the village").." "..
 		tostring( mg_villages.all_villages[ found ].name )..
-		". The inhabitants do not allow you any modifications.");
+		S(". The inhabitants do not allow you any modifications."));
 end );
 
 
@@ -190,7 +193,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		or not( mg_villages.all_villages[ village_id ].to_add_data )
 		or not( mg_villages.all_villages[ village_id ].to_add_data.bpos )
 		or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ] )) then
-		minetest.chat_send_player( pname, 'Error. This plot marker is not configured correctly.'..minetest.serialize({village_id,plot_nr }));
+		minetest.chat_send_player( pname, S("Error. This plot marker is not configured correctly.")..minetest.serialize({village_id,plot_nr }));
 		return;
 	end
 
@@ -200,9 +203,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	local owner_name = plot.owner;
 	if( not( owner_name ) or owner_name == "" ) then
 		if( plot.btype=="road" ) then
-			owner_name = "- the village community -";
+			owner_name = " - "..S("the village community").." - ";
 		else
-			owner_name = "- for sale -";
+			owner_name = " - "..S("for sale").." - ";
 		end
 	end
 
@@ -217,28 +220,28 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 	-- create the header
 	local formspec = "size[13,10]"..
-		"label[3.3,0.0;Plot No.: "..tostring( plot_nr )..", with "..tostring( mg_villages.BUILDINGS[ plot.btype ].scm ).."]"..
-		"label[0.3,0.4;Located at:]"      .."label[3.3,0.4;"..(minetest.pos_to_string( pos ) or '?')..", which is "..tostring( distance ).." m away]"
-		                                  .."label[7.3,0.4;from the village center]"..
-		"label[0.3,0.8;Part of village:]" .."label[3.3,0.8;"..(village.name or "- name unknown -").."]"
-		                                  .."label[7.3,0.8;located at "..(village_pos).."]"..
-		"label[0.3,1.2;Owned by:]"        .."label[3.3,1.2;"..(owner_name).."]"..
-		"label[3.3,1.6;Click on a menu entry to select it:]"..
+		"label[3.3,0.0;"..S("Plot No.").." : "..tostring( plot_nr )..", "..S("with")..' '..tostring( mg_villages.BUILDINGS[ plot.btype ].scm ).."]"..
+		"label[0.3,0.4;"..S("Located at").." : ]"      .."label[3.3,0.4;"..(minetest.pos_to_string( pos ) or '?')..S(", which is")..' '..tostring( distance )..' '..S("m away").."]"
+		                                  .."label[7.3,0.4;"..S("from the village center").."]"..
+		"label[0.3,0.8;"..S("Part of village").." :]" .."label[3.3,0.8;"..(village.name or " - "..S("name unknown")).." - ".."]"
+		                                  .."label[7.3,0.8;"..S("Located at").." : "..(village_pos).."]"..
+		"label[0.3,1.2;"..S("Owned by").." : ]"        .."label[3.3,1.2;"..(owner_name).."]"..
+		"label[3.3,1.6;"..S("Click on a menu entry to select it").." : ]"..
 		"field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
                             build_chest.show_size_data( building_name );
 
 	if( plot and plot.traders ) then
 		if( #plot.traders > 1 ) then
-			formspec = formspec.."label[0.3,7.0;Some traders live here. One works as a "..tostring(plot.traders[1].typ)..".]";
+			formspec = formspec.."label[0.3,7.0;"..S("Some traders live here. One works as a")..' '..tostring(plot.traders[1].typ)..".]";
 			for i=2,#plot.traders do
-				formspec = formspec.."label[0.3,"..(6.0+i)..";Another trader works as a "..tostring(plot.traders[i].typ)..".]";
+				formspec = formspec.."label[0.3,"..(6.0+i).."; "..S("Another trader works as a")..' '..tostring(plot.traders[i].typ)..".]";
 			end
 		elseif( plot.traders[1] and plot.traders[1].typ) then
 			formspec = formspec..
-				"label[0.3,7.0;A trader lives here. He works as a "..tostring( plot.traders[1].typ )..".]";
+				"label[0.3,7.0;"..S("A trader lives here. He works as a")..' '..tostring( plot.traders[1].typ )..".]";
 		else
 			formspec = formspec..
-				"label[0.3,7.0;No trader currently works at this place.]";
+				"label[0.3,7.0;"..S("No trader currently works at this place.").."]";
 		end
 		-- add buttons for visiting (teleport to trader), calling (teleporting trader to plot) and firing the trader
 		for i,trader in ipairs(plot.traders) do
@@ -252,8 +255,8 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			if( fields[ "visit_trader_"..i ] ) then
 
 				player:moveto( {x=trader.x, y=(village.vh+1), z=trader.z} );
-				minetest.chat_send_player( pname, "You are visiting the "..tostring( trader.typ )..
-					" trader, who is supposed to be somewhere here. He might also be on a floor above you.");
+				minetest.chat_send_player( pname, S("You are visiting the")..' '..tostring( trader.typ )..' '..
+					S("trader, who is supposed to be somewhere here. He might also be on a floor above you."));
 				return;
 			end
 			if( fields[ "visit_call_"..i ] ) then
@@ -261,7 +264,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			end
 			-- TODO: fire mob
 		end
-		formspec = formspec.."button[3.75,"..(7.0+math.max(1,#plot.traders))..";3.5,0.5;hire_trader;Hire a new random trader]";
+		formspec = formspec.."button[3.75,"..(7.0+math.max(1,#plot.traders))..";3.5,0.5;hire_trader;"..S("Hire a new random trader").."]";
 		-- TODO: hire mob
 	end
 
@@ -330,11 +333,12 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	elseif(   (fields.reset_building  and fields.reset_building  ~= "")
            or (fields.remove_building and fields.remove_building ~= "")) then
 
-		formspec = formspec.."button[9.9,0.4;2,0.5;back;Back]";
+		formspec = formspec.."button[9.9,0.4;2,0.5;back;"..S("Back").."]";
 
 		if( not( minetest.check_player_privs( pname, {protection_bypass=true}))) then
 			minetest.show_formspec( pname, "mg_villages:plotmarker", formspec..
-				"label[3,3;You need the protection_bypass priv in order to use this functin.]" );
+				"label[3,3;"..S("You need the 'protection_bypass' priv in order to use this function.").."]"
+				);
 			return;
 		end
 
@@ -355,7 +359,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			handle_schematics.clear_area( start_pos, end_pos, pos.y-1);
 			-- also clear the meta data to avoid strange effects
 			handle_schematics.clear_meta( start_pos, end_pos );
-			formspec = formspec.."label[3,3;The plot has been cleared.]";
+			formspec = formspec.."label[3,3;"..S("The plot has been cleared.").."]";
 		else
 			-- actually place it (disregarding mirroring)
 			local error_msg = handle_schematics.place_building_from_file(
@@ -365,7 +369,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 						replacements,
 						plot.o,
 						build_chest.building[ building_name ].axis, plot.mirror, 1, true );
-			formspec = formspec.."label[3,3;The building has been reset.]";
+			formspec = formspec.."label[3,3;"..S("The building has been reset.").."]";
 			if( error_msg ) then
 				formspec = formspec..'label[4,3;Error: '..tostring( fields.error_msg ).."]";
 	                end
@@ -374,18 +378,19 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		return;
 
 	elseif( fields.info and fields.info ~= "" ) then
-		local show_material_text = "Change materials used";
+		local show_material_text = S("Change materials used");
 		if( not( minetest.check_player_privs( pname, {protection_bypass=true}))) then
-			show_material_text = "Show materials used";
+			show_material_text = S("Show materials used");
 		end
 
 		minetest.show_formspec( pname, "mg_villages:plotmarker",
 			formspec..
-				"button[9.9,0.4;2,0.5;back;Back]"..
-				"button[3,3;5,0.5;create_backup;Create backup of current stage]"..
+				"button[9.9,0.4;2,0.5;back;"..S("Back").."]"..
+				"button[3,3;5,0.5;create_backup;"..S("Create backup of current stage").."]"..
 				"button[4,4;3,0.5;show_materials;"..show_material_text.."]"..
-				"button[4,5;3,0.5;reset_building;Reset building]"..
-				"button[4,6;3,0.5;remove_building;Remove building]");
+				"button[4,5;3,0.5;reset_building;"..S("Reset building").."]"..
+				"button[4,6;3,0.5;remove_building;"..S("Remove building").."]"
+				);
 		return;
 	end
 
@@ -394,9 +399,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 
 	local original_formspec = "size[8,3]"..
-		"button[7.0,0.0;1.0,0.5;info;Info]"..
-		"label[1.0,0.5;Plot No.: "..tostring( plot_nr ).."]"..
-		"label[2.5,0.5;Building:]"..
+		"button[7.0,0.0;1.0,0.5;info;"..S("Info").."]"..
+		"label[1.0,0.5;"..S("Plot No.").." : "..tostring( plot_nr ).."]"..
+		"label[2.5,0.5;"..S("Building").." : ]"..
 		"label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm ).."]"..
 		"field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
 		local formspec = "";
@@ -406,7 +411,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	local price = "default:gold_ingot 2";
 
 	if (btype ~= 'road' and mg_villages.BUILDINGS[btype]) then
-		local plot_descr = 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm)
+		local plot_descr = S("Plot No.")..' '..tostring( plot_nr )..' '..S("with")..' '..tostring( mg_villages.BUILDINGS[btype].scm)
 
 		if (mg_villages.BUILDINGS[btype].price) then
 			price = mg_villages.BUILDINGS[btype].price;
@@ -415,7 +420,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		end
 		-- Get if is inhabitant house
 		if (mg_villages.BUILDINGS[btype].inh and mg_villages.BUILDINGS[btype].inh > 0 ) then
-			ifinhabit = "label[1,1.5;Owners of this plot count as village inhabitants.]";
+			ifinhabit = "label[1,1.5;"..S("Owners of this plot count as village inhabitants.").."]";
 		end
 	end
 	-- Determine price depending on building type
@@ -426,12 +431,12 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	if (not(owner) or owner=='') then
 
 		formspec = original_formspec ..
-			"label[1,1;You can buy this plot for]".. 
+			"label[1,1;"..S("You can buy this plot for").."]".. 
 			"label[3.8,1;"..tostring( price_stack:get_count() ).." x ]"..
 			"item_image[4.3,0.8;1,1;"..(  price_stack:get_name() ).."]"..
 			ifinhabit..
-			"button[2,2.5;1.5,0.5;buy;Buy plot]"..
-			"button_exit[4,2.5;1.5,0.5;abort;Exit]";
+			"button[2,2.5;1.5,0.5;buy;"..S("Buy plot").."]"..
+			"button_exit[4,2.5;1.5,0.5;abort;"..S("Exit").."]";
 
 		-- On Press buy button
 		if (fields['buy']) then
@@ -443,26 +448,26 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 			-- Check if player already has a house in the village
 			if mg_villages.all_villages[village_id].ownerlist[pname] then
-				formspec = formspec.."label[1,1.9;Sorry. You already have a plot in this village.]";
+				formspec = formspec.."label[1,1.9;"..S("Sorry. You already have a plot in this village.").."]";
 
 			-- Check if the price can be paid
 			elseif( inv and inv:contains_item( 'main', price_stack )) then
 				formspec = original_formspec..
-					"label[1,1;Congratulations! You have bought this plot.]"..
-					"button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
+					"label[1,1;"..S("Congratulations! You have bought this plot.").."]"..
+					"button_exit[5.75,2.5;1.5,0.5;abort;"..S("Exit").."]";
 				mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = pname;
 				if mg_villages.all_villages[village_id].ownerlist then
 					mg_villages.all_villages[village_id].ownerlist[pname] = true;
 				else
 					mg_villages.all_villages[village_id].ownerlist[pname] = true;
 				end
-				meta:set_string('infotext', 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm)..' (owned by '..tostring( pname )..')');
+				meta:set_string('infotext', S("Plot No.").." "..tostring( plot_nr ).." "..S("with").." "..tostring( mg_villages.BUILDINGS[btype].scm).." ("..S("owned by").." "..tostring( pname )..")");
 				-- save the data so that it survives server restart
 				mg_villages.save_data();
 				-- substract the price from the players inventory
 				inv:remove_item( 'main', price_stack );
 			else
-				formspec = formspec.."label[1,1.9;Sorry. You are not able to pay the price.]";
+				formspec = formspec.."label[1,1.9;"..S("Sorry. You are not able to pay the price.").."]";
 			end
 		end
 
@@ -475,28 +480,28 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			and mg_villages.BUILDINGS[btype].inh
 			and mg_villages.BUILDINGS[btype].inh > 0 ) then
 
-			ifinhabit = "label[1,1.5;You are allowed to modify the common village area.]";
+			ifinhabit = "label[1,1.5;"..S("You are allowed to modify the common village area.").."]";
 		end
 
 		formspec = original_formspec.."size[8,3]"..
-			"label[1,1;This is your plot. You have bought it.]"..
-			"button[0.75,2.5;3,0.5;add_remove;Add/Remove Players]"..
+			"label[1,1;"..S("This is your plot. You have bought it.").."]"..
+			"button[0.75,2.5;3,0.5;add_remove;"..S("Add/Remove Players").."]"..
 			ifinhabit..
-			"button_exit[3.75,2.5;2.0,0.5;abandon;Abandon plot]"..
-			"button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
+			"button_exit[3.75,2.5;2.0,0.5;abandon;"..S("Abandon plot").."]"..
+			"button_exit[5.75,2.5;1.5,0.5;abort;"..S("Exit").."]";
 
 		-- If Player wants to abandon plot
 		if(fields['abandon'] ) then
 			formspec = original_formspec..
-				"label[1,1;You have abandoned this plot.]"..
-				"button_exit[5.75,2.5;1.5,0.5;abort;Exit]";
+				"label[1,1;"..S("You have abandoned this plot.").."]"..
+				"button_exit[5.75,2.5;1.5,0.5;abort;"..S("Exit").."]";
 			mg_villages.all_villages[village_id].ownerlist[pname] = nil;
 			mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].can_edit = {}
 			mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].owner = nil;
 			-- Return price to player
 			local inv = player:get_inventory();
 			inv:add_item( 'main', price_stack );
-			meta:set_string('infotext', 'Plot No. '..tostring( plot_nr ).. ' with '..tostring( mg_villages.BUILDINGS[btype].scm) );
+			meta:set_string('infotext', S("Plot No.").." "..tostring( plot_nr ).." "..S("with").." "..tostring( mg_villages.BUILDINGS[btype].scm) );
 			mg_villages.save_data();
 		end
 
@@ -513,8 +518,8 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			end
 			formspec = "size[8,3]"..
 				"field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]"..
-				"textarea[0.3,0.2;8,2.5;ownerplayers;Trusted Players;"..output.."]"..
-				"button[3.25,2.5;1.5,0.5;savetrustees;Save]";
+				"textarea[0.3,0.2;8,2.5;ownerplayers;"..S("Trusted Players")..";"..output.."]"..
+				"button[3.25,2.5;1.5,0.5;savetrustees;"..S("Save").."]";
 
 			mg_villages.save_data()
 		end
@@ -537,8 +542,8 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 	-- If A different Player owns plot
 	else
-		formspec = original_formspec.."label[1,1;"..tostring( owner ).." owns this plot.]"..
-					"button_exit[3,2.5;1.5,0.5;abort;Exit]";
+		formspec = original_formspec.."label[1,1;"..tostring( owner )..' '..S("owns this plot")..".]"..
+					"button_exit[3,2.5;1.5,0.5;abort;"..S("Exit").."]";
 	end
 
 	minetest.show_formspec( pname, "mg_villages:plotmarker", formspec );

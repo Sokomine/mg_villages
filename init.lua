@@ -14,7 +14,7 @@ mg_villages.all_villages  = {}
 mg_villages.mg_generated_map = {}
 mg_villages.anz_villages = 0;
 
-mg_villages.modpath = minetest.get_modpath( "mg_villages");
+mg_villages.modpath = minetest.get_modpath("mg_villages");
 
 
 mg_villages.DEBUG_LEVEL_NONE    = -1 -- -1: disable all printed messages

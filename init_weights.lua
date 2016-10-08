@@ -1,3 +1,6 @@
+-- Intllib
+local S = mg_villages.intllib
+
 -- this functions needs to be called once after *all* village types and buildings have been added
 mg_villages.init_weights = function()
 
@@ -8,7 +11,7 @@ mg_villages.init_weights = function()
 			table.insert( mg_villages.village_types, k );
 		end
 	end
-	mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,'Will create villages of the following types: '..minetest.serialize( mg_villages.village_types ));
+	mg_villages.print(mg_villages.DEBUG_LEVEL_NORMAL,S("Will create villages of the following types").." : "..minetest.serialize( mg_villages.village_types ));
 
 
 
