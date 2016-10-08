@@ -1,6 +1,14 @@
-
 -- reserve namespace for the villages
 mg_villages = {}
+
+-- Intllib
+local S
+if minetest.get_modpath("intllib") then
+	S = intllib.Getter()
+else
+	S = function(s) return s end
+end
+mg_villages.intllib = S
 
 mg_villages.all_villages  = {}
 mg_villages.mg_generated_map = {}
