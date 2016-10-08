@@ -248,9 +248,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			local trader_entity = mg_villages.plotmarker_search_trader( trader, village.vh );
 
 			formspec = formspec..
-					"button[6.0,"..(6.0+i)..";1.2,0.5;visit_trader_"..i..";visit]"..
-					"button[7.4,"..(6.0+i)..";1.2,0.5;call_trader_"..i..";call]"..
-					"button[8.8,"..(6.0+i)..";1.2,0.5;fire_trader_"..i..";fire]";
+					"button[6.0,"..(6.0+i)..";1.2,0.5;visit_trader_"..i..";"..S("visit").."]"..
+					"button[7.4,"..(6.0+i)..";1.2,0.5;call_trader_"..i..";"..S("call").."]"..
+					"button[8.8,"..(6.0+i)..";1.2,0.5;fire_trader_"..i..";"..S("fire").."]";
 
 			if( fields[ "visit_trader_"..i ] ) then
 
