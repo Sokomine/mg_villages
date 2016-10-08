@@ -86,3 +86,6 @@ Buy plot =
 Info = 
 Exit = 
 Hire a new random trader = 
+visit = 
+call = 
+fire = 
