@@ -318,7 +318,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	 or (fields.replace_row_with     and fields.replace_row_with ~= "")
 	 or (fields.replace_row_material and fields.replace_row_material ~= "")) then
 
-		formspec = formspec.."button[9.9,0.4;2,0.5;info;Back]";
+		formspec = formspec.."button[9.9,0.4;2,0.5;info;"..S("Back").."]";
 		if( not( minetest.check_player_privs( pname, {protection_bypass=true}))) then
 			-- do not allow any changes; just show the materials and their replacements
 			minetest.show_formspec( pname, "mg_villages:plotmarker",
