@@ -137,6 +137,12 @@ minetest.is_protected = function(pos, name)
 				  and mg_villages.BUILDINGS[btype].inh
 				  and mg_villages.BUILDINGS[btype].inh > 0 ) then
 					is_houseowner = true;
+					-- check the node below
+					local node = minetest.get_node( {x=pos.x, y=pos.y-1, z=pos.z});
+					-- replace the fake, inaktive village soil with real farming soil if a player diggs the plant above
+					if( node and node.name and node.name=="mg_villages:soil" ) then
+						minetest.swap_node( {x=pos.x, y=pos.y-1, z=pos.z}, {name="farming:soil_wet"});
+					end
 				end
 			end
 		end

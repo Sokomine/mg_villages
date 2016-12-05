@@ -829,7 +829,12 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	
 				-- grow wheat and cotton on normal wet soil (and re-plant if it had been removed by mudslide)
 				elseif( on_soil and (g==cid.c_dirt_with_grass or g==cid.c_soil_wet or g==cid.c_dirt_with_snow)) then	
-					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
+					-- wheat needs another option there
+					if( plant_id == cid.c_wheat ) then
+						param2_data[a:index( x, h+1, z)] = 0;
+					else
+						param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
+					end
 					data[a:index( x,  h,   z)] = cid.c_soil_wet;
 					-- no plants in winter
 					if( has_snow_cover and mg_villages.use_soil_snow) then
@@ -841,7 +846,12 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 
 				-- grow wheat and cotton on desert sand soil - or on soil previously placed (before mudslide overflew it; same as above)
 				elseif( on_soil and (g==cid.c_desert_sand or g==cid.c_soil_sand) and cid.c_soil_sand and cid.c_soil_sand > 0) then
-					param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
+					-- wheat needs another option there
+					if( plant_id == cid.c_wheat ) then
+						param2_data[a:index( x, h+1, z)] = 0;
+					else
+						param2_data[a:index( x, h+1, z)] = math.random( 1, 179 );
+					end
 					data[a:index( x,  h,   z)] = cid.c_soil_sand;
 					-- no plants in winter
 					if( has_snow_cover and mg_villages.use_soil_snow) then
@@ -863,6 +873,11 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				-- put a snow cover on plants where needed
 				if( has_snow_cover and cid.c_msnow_1 ~= cid.c_ignore) then
 					data[a:index( x,  h+2, z)] = cid.c_msnow_1;
+				end
+
+				-- place a water source now and then so that the fake soil can later be turned into real soil if needed
+				if( on_soil and x%3==0 and z%3==0 and h>minp.y) then
+					data[a:index( x, h-1, z)] = cid.c_water;
 				end
 			end
 		end
@@ -989,8 +1004,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
 		}
 
-		data = vm:get_data()
-		param2_data = vm:get_param2_data()
+		data = vm:get_data(data);
+		param2_data = vm:get_param2_data(param2_data);
 	end
 	t1 = time_elapsed( t1, 'get_vmap_data' );
 
@@ -1234,7 +1249,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	end
 
 	if( villages and #villages > 0 ) then
-		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, nil,  nil, nil, nil, seed );
+		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, data_vm, data_param2_data, nil, nil, seed );
 	end
 end)
 
