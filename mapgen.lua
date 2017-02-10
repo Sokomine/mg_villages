@@ -94,17 +94,24 @@ end
 mg_villages.check_if_ground = function( ci )
 
 	-- pre-generate a list of no-ground-nodes for caching
-	if( replacements_group.node_is_ground[ minetest.get_content_id('air')]==nil) then
+	if( ci==nil or replacements_group.node_is_ground[ minetest.get_content_id('air')]==nil) then
 		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
 			'default:pine_wood','default:pine_tree','default:acacia_wood','default:acacia_tree', 'default:aspen_wood', 'default:aspen_tree',
-			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom'};
+			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom',
+                        'ethereal:bush', 'default:grass', 'default:grass_1','default:grass_2','default:grass_3','default:grass_4','default:grass_5'};
 		-- TODO: add all those other tree and leaf nodes that might be added by mapgen
 		for _,name in ipairs( no_ground_nodes ) do
-			replacements_group.node_is_ground[ minetest.get_content_id( name )] = false;
+			if( minetest.registered_nodes[ name ]) then
+				replacements_group.node_is_ground[ minetest.get_content_id( name )] = false;
+			end
 		end
-		local ground_nodes = {'ethereal:dry_dirt'};
+		local ground_nodes = {'ethereal:dry_dirt', 'default:dirt_with_dry_grass','default:stone','default:sandstone','default:desertstone',
+                        'ethereal:grey_dirt', 'default:dirt_with_snow', 'default:dirt_with_grass', 'ethereal:grove_dirt', 'ethereal:green_dirt',
+			'ethereal:grove_dirt','ethereal:jungle_dirt'};
 		for _,name in ipairs( ground_nodes ) do
-			replacements_group.node_is_ground[ minetest.get_content_id( name )] = true;
+			if( minetest.registered_nodes[ name ]) then
+				replacements_group.node_is_ground[ minetest.get_content_id( name )] = true;
+			end
 		end
 	end
 
@@ -134,6 +141,9 @@ mg_villages.check_if_ground = function( ci )
 	end
 	return replacements_group.node_is_ground[ ci ];
 end
+
+-- call it once this way so that some grounds and non-grounds get identified
+mg_villages.check_if_ground(nil);
 
 
 -- sets evrything at x,z and above height target_height to air;
