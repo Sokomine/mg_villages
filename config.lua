@@ -44,6 +44,10 @@ mg_villages.DEBUG_LEVEL = mg_villages.DEBUG_LEVEL_NORMAL
 -- https://forum.minetest.net/viewtopic.php?t=8400) will be created
 mg_villages.CREATE_HIGHLANDPOOLS = true
 
+-- Torches are replaced by mg_villages:torch - which does not melt snow. If you want to use the normal
+-- torches from minetest_game, set this to true.:w!
+mg_villages.USE_DEFAULT_3D_TORCHES = true;
+
 -- background image for the /vmap command
 -- RealTest comes with a diffrent texture
 if(     minetest.get_modpath('grounds') and minetest.get_modpath('joiner_table')) then
