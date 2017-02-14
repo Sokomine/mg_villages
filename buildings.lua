@@ -246,6 +246,10 @@ local buildings = {
 			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
 	{scm="empty_5", yoff=0, typ='empty', inh=0, pervillage=2,
 			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
+
+	{scm="house_medieval_fancy_1_90", yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4, single=1  }, inh=6},
+	{scm="cow_shed_1_270",            yoff= 0, orients={0}, farming_plus=0, avoid='', typ='shed',      weight={medieval=1/4, single=1  }, inh=-1},
+	{scm="shed_with_forge_v2_1_0",    yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=1,single=1/2}, inh=1},
 }
 
 
