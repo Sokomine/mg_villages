@@ -155,6 +155,16 @@ mg_villages.prices = {
 
 	-- chateaus are expensive
 	chateau        = "default:diamondblock 5",
+
+	-- one mese crystal per square meter in the spawn town :-)
+	empty6x12      = "default:mese_crystal 72",
+	empty8x8       = "default:mese_crystal 64",
+	-- a large plot costs mese blocks
+	empty16x16     = "default:mese 56",
+	-- this is just enough space to grow a tree
+        empty5x5       = "default:mese_crystal 12",
+	-- nobody is supposed to buy the spawn building...except for the admin
+	spawn          = "nyancat:nyancat 99",
 }
 
 
