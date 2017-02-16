@@ -6,6 +6,7 @@ mg_villages.random_chest_content = {};
 -- add random chest content
 local ADD_RCC = function( data )
 	if( data and #data>3 and ( minetest.registered_nodes[ data[1] ] or minetest.registered_items[ data[1] ]) ) then
+		data.chest_default = 1;
 		table.insert( mg_villages.random_chest_content, data );
 	end
 end
@@ -158,7 +159,7 @@ mg_villages.fill_chest_random = function( pos, pr, building_nr, building_typ )
 	if( pos.typ_name ) then
 		typ = pos.typ_name;
 	end
-	if( not( typ ) or (typ ~= 'cottages:shelf' and typ ~= 'cottages:chest_work' and typ ~= 'cottages:chest_storage' and typ ~= 'cottages:chest_private' )) then
+	if( not( typ ) or (typ ~= 'cottages:shelf' and typ ~= 'cottages:chest_work' and typ ~= 'cottages:chest_storage' and typ ~= 'cottages:chest_private' and typ ~= 'cottages:chest_default')) then
 		typ = building_data.typ;
 	else
 		typ = string.sub( typ, 10 );
