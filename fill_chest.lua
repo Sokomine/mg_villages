@@ -29,7 +29,9 @@ ADD_RCC({"default:sword_steel",             1,  1, 3, forge=1, guard=1 });
 ADD_RCC({"default:stick",                  20, 40, 2, church=1, library=1, chest_private=1, shelf=5, shed=1, lumberjack=1, hut=1 }); 
 ADD_RCC({"default:torch",                  50, 10, 4, church=1, library=1, chest_private=1, shelf=1, shed=1, lumberjack=1, hut=1 });
 
-ADD_RCC({"default:book",                   60,  1, 2, church=1, library=1 });
+ADD_RCC({"default:book",                   60,  1, 1, church=1, library=1 });
+ADD_RCC({"default:book",                   90,  1,12, chest_bookshelf=1 });
+
 ADD_RCC({"default:paper",                  60,  6, 4, church=1, library=1 });
 ADD_RCC({"default:apple",                  50, 10, 2, chest_storage=4, chest_private=1, shelf=5});
 ADD_RCC({"default:ladder",                 20,  1, 2, church=1, library=1, shed=1, lumberjack=1, hut=1 });
@@ -153,26 +155,47 @@ mg_villages.fill_chest_random = function( pos, pr, building_nr, building_typ )
 	local meta = minetest.env:get_meta( pos );
 	local inv  = meta:get_inventory();
 
-	local count = 0;
-
+	-- bookshelves use "books" instead of "main" for their inventory
+	local inv_source = 'main';
+	-- which kind of content might be expected for this particular chest?
 	local typ = minetest.get_name_from_content_id( pos.typ );
 	if( pos.typ_name ) then
 		typ = pos.typ_name;
 	end
-	if( not( typ ) or (typ ~= 'cottages:shelf' and typ ~= 'cottages:chest_work' and typ ~= 'cottages:chest_storage' and typ ~= 'cottages:chest_private' and typ ~= 'cottages:chest_default')) then
+	if(     typ == 'default:bookshelf') then
+		typ = 'chest_bookshelf';
+		inv_source = 'books';
+	elseif( typ == 'default:chest') then
+		typ = 'chest_default';
+	elseif( not( typ ) or (typ ~= 'cottages:shelf' and typ ~= 'cottages:chest_work' and typ ~= 'cottages:chest_storage' and typ ~= 'cottages:chest_private')) then
 		typ = building_data.typ;
 	else
 		typ = string.sub( typ, 10 );
 	end
 	local typ2 = nil;
-	if( typ == 'cottages:chest_work' and building_data.typ ) then
+	if( typ == 'chest_work' and building_data.typ ) then
 		typ2 = building_data.typ;
 	end
---print('FILLING chest of type '..tostring( typ )..' and '..tostring( typ2));
 	if( not( typ ) or typ=='' ) then
 		return;
 	end
-	local inv_size = inv:get_size('main');
+	local inv_size = inv:get_size( inv_source );
+	mg_villages.fill_one_chest_random( pos, pr, typ, typ2, inv, inv_size, inv_source, building_nr, building_typ, building_data);
+end
+
+
+-- pos: position (x,y,z) of the chest that is to be filled
+-- pr: pseudo-random number generator
+-- typ: typ of the chest (i.e. chest_work, chest_default, chest_bookshelf, ...)
+-- typ2: if the typ is chest_work, typ2 will contain the type of the building
+-- inv: the inventory that is to be filled
+-- inv_size: the size of the inventory that is to be filled
+-- building_nr: number of the building inside the villages data structure
+-- building_typ: i.e. house, farm, church, library, forge, ...
+-- building_data: data about the building that contains the chest
+mg_villages.fill_one_chest_random = function( pos, pr, typ, typ2, inv, inv_size, inv_source, building_nr, building_typ, building_data)
+
+	local count;
 	for i,v in ipairs( mg_villages.random_chest_content ) do
 
 		-- repeat this many times
@@ -185,7 +208,7 @@ mg_villages.fill_chest_random = function( pos, pr, building_nr, building_typ )
 	
 				--inv:add_item('main', v[ 1 ].." "..tostring( math.random( 1, tonumber(v[ 3 ]) )));
 				-- add itemstack at a random position in the chests inventory 
-				inv:set_stack( 'main', pr:next( 1, inv:get_size( 'main' )), v[ 1 ].." "..tostring( pr:next( 1, tonumber(v[ 3 ]) )) );
+				inv:set_stack( inv_source, pr:next( 1, inv_size), v[ 1 ].." "..tostring( pr:next( 1, tonumber(v[ 3 ]) )) );
 				count = count+1;
 			end
 		end
