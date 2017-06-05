@@ -25,7 +25,7 @@ local buildings = {
 	{yoff= 0, scm="church", orients={3}, pervillage=1,  typ='church',   weight={nore=1   },             axis=1, inh=-1},
 	{yoff= 0, scm="tower", orients={0},                 typ='tower',    weight={nore=1/7, single=1   },         inh=-1},
 	{yoff= 0, scm="forge", orients={0}, pervillage=2,   typ='forge',    weight={nore=1,   single=1/3 },         inh=-1},
-	{yoff= 0, scm="library", orients={1}, pervillage=2, typ='secular',  weight={nore=1               }, axis=1, inh=-1},
+	{yoff= 0, scm="library", orients={1}, pervillage=2, typ='library',  weight={nore=1               }, axis=1, inh=-1},
 	{yoff= 0, scm="inn", orients={1}, pervillage=4,     typ='tavern',   weight={nore=1/2, single=1/3 }, axis=1, inh=-1}, -- has room for 4 guests
 	{yoff= 0, scm="pub", orients={3}, pervillage=2,     typ='tavern',   weight={nore=1/3, single=1/3 }, axis=1, inh=-1},
 
@@ -309,6 +309,9 @@ mg_villages.add_building = function( building_data )
 		building_data.sizez = res.size.z;
 		building_data.ysize = res.size.y;
 			
+		-- how many beds does the building contain?
+		building_data.bed_count = res.bed_count;
+
 		-- some buildings may be rotated	
 		if( not( building_data.orients ) and res.rotated ) then
 			building_data.orients = {};
