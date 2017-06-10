@@ -14,20 +14,20 @@ mg_villages.all_buildings_list = {}
 local buildings = {
 
 -- the houses the mod came with
-	{yoff= 0, scm="house", orients={2},                 typ='house',    weight={nore=1,   single=2   },         inh=4},
+	{yoff= 0, scm="house_1_0",                          typ='house',    weight={nore=1,   single=2   }, inh=4},
 	{yoff= 0, scm="wheat_field",                        typ='field',    weight={nore=1   }, inh=-1},
 	{yoff= 0, scm="cotton_field",                       typ='field',    weight={nore=1   }, inh=-1},
 	{yoff= 1, scm="lamp", no_rotate=true,               typ='deco',     weight={nore=1/5 }},
 	{yoff=-5, scm="well", no_rotate=true, pervillage=1, typ='well',     weight={nore=1   }},
 	{yoff= 0, scm="fountain", pervillage=3,             typ='fountain', weight={nore=1/4 },             axis=1},
-	{yoff= 0, scm="small_house", orients={3},           typ='house',    weight={nore=1,   single=2   }, axis=1, inh=2},
-	{yoff= 0, scm="house_with_garden", orients={1},     typ='house',    weight={nore=1,   single=2   }, axis=1, inh=3},
-	{yoff= 0, scm="church", orients={3}, pervillage=1,  typ='church',   weight={nore=1   },             axis=1, inh=-1},
-	{yoff= 0, scm="tower", orients={0},                 typ='tower',    weight={nore=1/7, single=1   },         inh=-1},
-	{yoff= 0, scm="forge", orients={0}, pervillage=2,   typ='forge',    weight={nore=1,   single=1/3 },         inh=-1},
-	{yoff= 0, scm="library", orients={1}, pervillage=2, typ='library',  weight={nore=1               }, axis=1, inh=-1},
-	{yoff= 0, scm="inn", orients={1}, pervillage=4,     typ='tavern',   weight={nore=1/2, single=1/3 }, axis=1, inh=-1}, -- has room for 4 guests
-	{yoff= 0, scm="pub", orients={3}, pervillage=2,     typ='tavern',   weight={nore=1/3, single=1/3 }, axis=1, inh=-1},
+	{yoff= 0, scm="small_house_1_0",                    typ='house',    weight={nore=1,   single=2   }, inh=2},
+	{yoff= 0, scm="house_with_garden_1_0",              typ='house',    weight={nore=1,   single=2   }, inh=3},
+	{yoff= 0, scm="church_1_0",           pervillage=1, typ='church',   weight={nore=1   },             inh=-1},
+	{yoff= 0, scm="tower_1_0",                          typ='tower',    weight={nore=1/7, single=1   }, inh=-1},
+	{yoff= 0, scm="forge_1_0",            pervillage=2, typ='forge',    weight={nore=1,   single=1/3 }, inh=-1},
+	{yoff= 0, scm="library_1_0",          pervillage=2, typ='library',  weight={nore=1               }, inh=-1},
+	{yoff= 0, scm="inn_1_0",              pervillage=4, typ='tavern',   weight={nore=1/2, single=1/3 }, inh=-1}, -- has room for 4 guests
+	{yoff= 0, scm="pub_1_0",              pervillage=2, typ='tavern',   weight={nore=1/3, single=1/3 }, inh=-1},
 
 
 -- log cabins by Sokomine (requiring cottages, glasspanes)
