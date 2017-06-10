@@ -1,6 +1,6 @@
 
 ------------------------------------------------------------------------------
--- Interface for other mdos
+-- Interface for other mods
 
 -- this function gets executed only once per village - namely when the first
 -- part of a village is generated;
@@ -18,12 +18,15 @@ end
 -- the voxelmanip data (data, param2_data, a) is just for reading, i.e. finding
 --   a good spawning position for the trader
 mg_villages.part_of_village_spawned = function( village, minp, maxp, data, param2_data, a, cid )
-	-- mobf needs a way to spawn its traders
-	if( minetest.get_modpath( 'mobf_trader' )) then
-		mob_village_traders.part_of_village_spawned( village, minp, maxp, data, param2_data, a, cid );
-	end
+	-- assign jobs and names and age and gender etc. to bed positions
+	mg_villages.inhabitants.part_of_village_spawned( village, minp, maxp, data, param2_data, a, cid );
 end
 ------------------------------------------------------------------------------
+
+local vm_data_buffer;
+local param2_data_buffer;
+local data_vm;
+local data_param2_data;
 
 
 mg_villages.wseed = 0;
@@ -337,6 +340,7 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 		for village_nr, village in ipairs(villages) do
 			local force_ground = nil;
 			local force_underground = nil;
+			local has_artificial_snow = false;
 			if( village.village_type
 			   and mg_villages.village_type_data[ village.village_type ] 
 			   and mg_villages.village_type_data[ village.village_type ].force_ground
@@ -355,7 +359,6 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 			   and village_area[ x ][ z ][ 2 ]~= 0
 			   and data[a:index(x,village.vh,z)] ~= cid.c_ignore) then
 
-				local has_artificial_snow = false;
 				if( village.artificial_snow and village.artificial_snow==1) then
 					has_artificial_snow = true;
 				end
@@ -911,6 +914,8 @@ end
 
 mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top, seed )
 	local t1 = minetest.get_us_time();
+	local data;
+	local param2data;
 
 	local cid = {}
 	cid.c_air    = minetest.get_content_id( 'air' );
@@ -1014,8 +1019,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
 		}
 
-		data = vm:get_data(data);
-		param2_data = vm:get_param2_data(param2_data);
+		data = vm:get_data(vm_data_buffer);
+		param2_data = vm:get_param2_data(param2_data_buffer);
 	end
 	t1 = time_elapsed( t1, 'get_vmap_data' );
 
@@ -1109,6 +1114,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	-- only update lighting where we actually placed the nodes
 	vm:calc_lighting( e1, e2 ); --minp, maxp ); --tmin, tmax)
+--	vm:calc_lighting( {x=e1.x+1,y=e1.y+1,z=e1.z+1}, {x=e2.x-1,y=e2.y-1,z=e2.z-1});
 	t1 = time_elapsed( t1, 'vm calc lighting' );
 
 	vm:write_to_map(data)
@@ -1189,6 +1195,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			for _,v in pairs( mg_villages.all_villages ) do
 				count = count + 1;
 			end
+			village.to_add_data.extra_calls = {};
 			village.extra_calls = {}; -- do not save these values
 			village.nr = count;
 			mg_villages.anz_villages = count;

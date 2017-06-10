@@ -3,6 +3,8 @@
 -- how the buildings are rotated, where the roads will be, which replacement materials
 -- will be used etc.
 
+local calls;
+
 local function is_village_block(minp)
 	local x, z = math.floor(minp.x/80), math.floor(minp.z/80)
 	local vcc = mg_villages.VILLAGE_CHECK_COUNT

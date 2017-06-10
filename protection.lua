@@ -221,6 +221,11 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 					      + (village.vh - pos.y ) * (village.vh - pos.y )
 					      + (village.vz - pos.z ) * (village.vz - pos.z ) ));
 
+	if( fields and fields.inhabitants ) then
+		minetest.chat_send_player( player:get_player_name(), mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
+		return;
+	end
+
 	-- create the header
 	local formspec = "size[13,10]"..
 		"label[3.3,0.0;Plot No.: "..tostring( plot_nr )..", with "..tostring( mg_villages.BUILDINGS[ plot.btype ].scm ).."]"..
@@ -233,7 +238,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		"field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
                             build_chest.show_size_data( building_name );
 
-	if( plot and plot.traders ) then
+	if( plot and plot.traders ) then -- TODO: deprecated; but may be useful in a new form for mobs that live in the house
 		if( #plot.traders > 1 ) then
 			formspec = formspec.."label[0.3,7.0;Some traders live here. One works as a "..tostring(plot.traders[1].typ)..".]";
 			for i=2,#plot.traders do
@@ -270,7 +275,6 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		formspec = formspec.."button[3.75,"..(7.0+math.max(1,#plot.traders))..";3.5,0.5;hire_trader;Hire a new random trader]";
 		-- TODO: hire mob
 	end
-
 
 	local replace_row = -1;
 	-- the player selected a material which ought to be replaced
@@ -401,6 +405,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 	local original_formspec = "size[8,3]"..
 		"button[7.0,0.0;1.0,0.5;info;Info]"..
+		"button[6.0,1.0;2.0,0.5;inhabitants;Who lives here]"..
 		"label[1.0,0.5;Plot No.: "..tostring( plot_nr ).."]"..
 		"label[2.5,0.5;Building:]"..
 		"label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm ).."]"..
