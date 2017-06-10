@@ -8,6 +8,7 @@
 --   we_origin		Only needed for very old .we files (savefile format version 3) which do not start at 0,0,0 but have an offset.
 --  price               Stack that has to be paid in order to become owner of the plot the building stands on and the building;
 --                      overrides mg_villages.prices[ building_typ ].
+--  guests		Negative value, i.e. -2: 2 of the beds will belong to the family working here; the rest will be guests.
 
 mg_villages.all_buildings_list = {}
 
@@ -26,7 +27,7 @@ local buildings = {
 	{yoff= 0, scm="tower_1_0",                          typ='tower',    weight={nore=1/7, single=1   }, inh=-1},
 	{yoff= 0, scm="forge_1_0",            pervillage=2, typ='forge',    weight={nore=1,   single=1/3 }, inh=-1},
 	{yoff= 0, scm="library_1_0",          pervillage=2, typ='library',  weight={nore=1               }, inh=-1},
-	{yoff= 0, scm="inn_1_0",              pervillage=4, typ='tavern',   weight={nore=1/2, single=1/3 }, inh=-1}, -- has room for 4 guests
+	{yoff= 0, scm="inn_1_0",              pervillage=4, typ='tavern',   weight={nore=1/2, single=1/3 }, inh=-1, guests=-2}, -- has room for 4 guests
 	{yoff= 0, scm="pub_1_0",              pervillage=2, typ='tavern',   weight={nore=1/3, single=1/3 }, inh=-1},
 
 
@@ -42,9 +43,9 @@ local buildings = {
 	{yoff= 0, scm="logcabin9",    orients={1}, weight={logcabin=1,   single=1}, axis=1, inh=1, typ='hut'},
 	{yoff= 0, scm="logcabin10",   orients={2}, weight={logcabin=1,   single=1},         inh=3, typ='hut'},
 	{yoff= 0, scm="logcabin11",   orients={2}, weight={logcabin=1,   single=1},         inh=6, typ='hut'},
-	{yoff= 0, scm="logcabinpub1", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=1}, -- +5 guests
-	{yoff= 0, scm="logcabinpub2", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2}, -- +8 guests
-	{yoff= 0, scm="logcabinpub3", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2}, -- +12 guest
+	{yoff= 0, scm="logcabinpub1", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=1, guests=-2}, -- +5 guests
+	{yoff= 0, scm="logcabinpub2", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2, guests=-3}, -- +8 guests
+	{yoff= 0, scm="logcabinpub3", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2, guests=-4}, -- +12 guest
 
 -- grass huts (requiring cottages, dryplants, cavestuff/undergrowth, plantlife)
 	{yoff= 0, scm="grasshut1", orients={2}, weight={grasshut=1, single=1}, inh=3,   typ='hut'},
@@ -78,7 +79,7 @@ local buildings = {
 	{scm="farm_tiny_5",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1,   single=1  },                 inh=4},
 	{scm="farm_tiny_6",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1,   single=1  },                 inh=4},
 	{scm="farm_tiny_7",     yoff= 0, orients={0}, farming_plus=1, avoid='', typ='farm_tiny', weight={medieval=1,   single=1  },                 inh=7},
-	{scm="taverne_1",       yoff= 0, orients={0}, farming_plus=1, avoid='', typ='tavern',    weight={medieval=1/2, single=1  }, pervillage=1, inh=6},  -- 19 beds: 10 guest, 3 worker, 6 family
+	{scm="taverne_1",       yoff= 0, orients={0}, farming_plus=1, avoid='', typ='tavern',    weight={medieval=1/2, single=1  }, pervillage=1, inh=6, guests=-3},  -- 19 beds: 10 guest, 3 worker, 6 family
 	{scm="taverne_2",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2, single=1/3}, pervillage=1, inh=2},  -- no guests
 	{scm="taverne_3",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2, single=1/3}, pervillage=1, inh=2},  -- no guests
 	{scm="taverne_4",       yoff= 0, orients={0}, farming_plus=0, avoid='', typ='tavern',    weight={medieval=1/2, single=1/3}, pervillage=1, inh=1},  -- no guests
@@ -172,7 +173,7 @@ local buildings = {
 	{scm="lumberjack_stable",   yoff= 0, orients={3},     avoid='', typ='lumberjack', weight={lumberjack=1, single=3}, axis=1, inh=-1},
 	{scm="lumberjack_pub_1",    yoff= 1, orients={1},     avoid='', typ='tavern',     weight={lumberjack=3, single=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_church_1", yoff= 1, orients={1},     avoid='', typ='church',     weight={lumberjack=3}, pervillage=1, axis=1, inh=-1},
-	{scm="lumberjack_hotel_1",  yoff= 1, orients={1},     avoid='', typ='house',      weight={lumberjack=1, single=1}, axis=1,               inh=16}, -- all 16 are guests
+	{scm="lumberjack_hotel_1",  yoff= 1, orients={1},     avoid='', typ='house',      weight={lumberjack=1, single=1}, axis=1,               inh=16, guests=-1}, -- all but one of the 16 are guests
 	{scm="lumberjack_shop_1",   yoff= 1, orients={1},     avoid='', typ='shop',       weight={lumberjack=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_sawmill_1",yoff=-7, orients={1},     avoid='', typ='sawmill',    weight={lumberjack=2, single=1}, pervillage=1, axis=1, inh=-1},
 
