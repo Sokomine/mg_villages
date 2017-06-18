@@ -138,13 +138,26 @@ mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
 end
 
 
+-- override this function if you want more specific names (regional, age based, ..)
+-- usually just "gender" is of intrest
+-- name_exclude will be evaluated in get_new_inhabitant
+-- village contains the village data of the entire village
+mg_villages.inhabitants.get_names_list_full = function( data, gender, generation, name_exclude, min_age, village)
+	if( gender=="f") then
+		return mg_villages.inhabitants.names_female;
+	else -- if( gender=="m" ) then
+		return mg_villages.inhabitants.names_male;
+	end
+end
+
+
 -- configure a new inhabitant
 -- 	gender		can be "m" or "f"
 --	generation	2 for parent-generation, 1 for children, 3 for grandparents
 --	name_exlcude	names the npc is not allowed to carry (=avoid duplicates)
 --			(not a list but a hash table)
 -- there can only be one mob with the same first name and the same profession per village
-mg_villages.inhabitants.get_new_inhabitant = function( data, gender, generation, name_exclude, min_age )
+mg_villages.inhabitants.get_new_inhabitant = function( data, gender, generation, name_exclude, min_age, village )
 	-- only create a new inhabitant if this one has not yet been configured
 	if( not( data ) or data.first_name ) then
 		return data;
@@ -159,12 +172,10 @@ mg_villages.inhabitants.get_new_inhabitant = function( data, gender, generation,
 		end
 	end
 
-	local name_list = {};
+	local name_list = mg_villages.inhabitants.get_names_list_full( data, gender, generation, name_exclude, min_age, village );
 	if( gender=="f") then
-		name_list = mg_villages.inhabitants.names_female;
 		data.gender     = "f";   -- female
 	else -- if( gender=="m" ) then
-		name_list = mg_villages.inhabitants.names_male;
 		data.gender     = "m";   -- male
 	end
 	local name_list_tmp = {};
@@ -195,7 +206,7 @@ end
 -- assign inhabitants to bed positions; create families;
 -- bpos needs to contain at least { beds = {list_of_bed_positions}, btype = building_type}
 -- bpos is the building position data of one building each
-mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_to_add_data_bpos )
+mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_to_add_data_bpos, village )
 
 	if( not( bpos ) or not( bpos.btype ) or not( bpos.beds)) then
 		return bpos;
@@ -263,7 +274,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 
 		for i,v in ipairs( bpos.beds ) do
 			-- lumberjacks do not have families and are all male
-			v = mg_villages.inhabitants.get_new_inhabitant( v, "m", 2, worker_names_with_same_profession, nil );
+			v = mg_villages.inhabitants.get_new_inhabitant( v, "m", 2, worker_names_with_same_profession, nil, village );
 			-- the first worker in a lumberjack hut can get work assigned and own other plots
 			if( works_at and i==1) then
 				v.works_at = works_at;
@@ -282,7 +293,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 	else
 		-- the first inhabitant will be the male worker
 		if( not( bpos.beds[1].first_name )) then
-			bpos.beds[1] = mg_villages.inhabitants.get_new_inhabitant( bpos.beds[1], "m", 2, worker_names_with_same_profession, nil ); -- male of parent generation
+			bpos.beds[1] = mg_villages.inhabitants.get_new_inhabitant( bpos.beds[1], "m", 2, worker_names_with_same_profession, nil, village ); -- male of parent generation
 			if( works_at ) then
 				bpos.beds[1].works_at = works_at;
 				bpos.beds[1].title    = title;
@@ -296,7 +307,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		local name_exclude = {};
 		-- the second inhabitant will be the wife of the male worker
 		if( bpos.beds[2] and not( bpos.beds[2].first_name )) then
-			bpos.beds[2] = mg_villages.inhabitants.get_new_inhabitant( bpos.beds[2], "f", 2, {}, nil ); -- female of parent generation
+			bpos.beds[2] = mg_villages.inhabitants.get_new_inhabitant( bpos.beds[2], "f", 2, {}, nil, village ); -- female of parent generation
 			-- first names ought to be uniq withhin a family
 			name_exclude[ bpos.beds[2].first_name ] = 1;
 		end
@@ -323,14 +334,14 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			-- at max 7 npc per house (taverns may have more beds than that)
 			elseif( v and not( v.first_name )) then
 				if( i>guest_id ) then
-					v = mg_villages.inhabitants.get_new_inhabitant( v, "r", math.random(3), name_exclude, nil ); -- get a random guest
+					v = mg_villages.inhabitants.get_new_inhabitant( v, "r", math.random(3), name_exclude, nil, village ); -- get a random guest
 					v.title = 'guest';
 				elseif( i==grandmother_bed_id ) then
-					v = mg_villages.inhabitants.get_new_inhabitant( v, "f", 3, name_exclude, bpos.beds[1].age+18 ); -- get the grandmother
+					v = mg_villages.inhabitants.get_new_inhabitant( v, "f", 3, name_exclude, bpos.beds[1].age+18, village ); -- get the grandmother
 				elseif( i==grandfather_bed_id ) then
-					v = mg_villages.inhabitants.get_new_inhabitant( v, "m", 3, name_exclude, bpos.beds[1].age+18 ); -- get the grandfather
+					v = mg_villages.inhabitants.get_new_inhabitant( v, "m", 3, name_exclude, bpos.beds[1].age+18, village ); -- get the grandfather
 				else
-					v = mg_villages.inhabitants.get_new_inhabitant( v, "r", 1, name_exclude, nil ); -- get a child of random gender
+					v = mg_villages.inhabitants.get_new_inhabitant( v, "r", 1, name_exclude, nil, village ); -- get a child of random gender
 					-- find out how old the oldest child is
 					if( v.age > oldest_child ) then
 						oldest_child = v.age;
@@ -668,7 +679,7 @@ mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp,
 	for house_nr,bpos in ipairs(village.to_add_data.bpos) do
 
 		-- each bed gets a mob assigned
-		bpos = mg_villages.inhabitants.assign_mobs_to_beds( bpos, house_nr, village.to_add_data.bpos );
+		bpos = mg_villages.inhabitants.assign_mobs_to_beds( bpos, house_nr, village.to_add_data.bpos, village );
 
 		-- actually spawn the mobs
 		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, minp, maxp );
