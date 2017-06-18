@@ -223,6 +223,42 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 	if( fields and fields.inhabitants ) then
 		minetest.chat_send_player( player:get_player_name(), mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
+
+		if( not( minetest.get_modpath( "mob_world_interaction"))) then
+			return;
+		end
+		-- TODO: only for testing
+		local bpos = village.to_add_data.bpos[ plot_nr ];
+		-- position in front of the building, with the building stretching equally to the right and left
+		local p_in_front = handle_schematics.get_pos_in_front_of_house( bpos);
+		if( bpos and bpos.beds ) then
+			for i,bed in ipairs( bpos.beds ) do
+				-- find a place next to the bed where the mob can stand
+				local p_next_to_bed = mob_world_interaction.find_place_next_to( bed, 0, {x=0,y=0,z=0});
+				if( not( p_next_to_bed ) or p_next_to_bed.iteration==99 ) then
+					minetest.chat_send_player("singleplayer", "Bed "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a place to stand.");
+				else
+					local path = mob_world_interaction.find_path( p_next_to_bed, p_in_front, { collisionbox = {1,0,3,4,2}});
+					if( path ) then
+						minetest.chat_send_player("singleplayer","Path to bed "..tostring(i).." at "..minetest.pos_to_string( bed )..": "..tostring( table.getn( path )).." Steps.");
+						local front_door_pos = nil;
+						for j,p in ipairs( path ) do
+							local n = minetest.get_node( p );
+							if( n and n.name and mob_world_interaction.door_type[ n.name ]=="door_a_b") then
+								front_door_pos = p;
+							end
+						end
+						if( front_door_pos ) then
+							minetest.chat_send_player("singleplayer","FRONT door found at: "..minetest.pos_to_string( front_door_pos ));
+						end
+					else
+						minetest.chat_send_player("singleplayer", "Bed "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a path to it.");
+					end
+				end
+			end
+		end
+
+
 		return;
 	end
 
@@ -238,6 +274,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		"field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
                             build_chest.show_size_data( building_name );
 
+--[[
 	if( plot and plot.traders ) then -- TODO: deprecated; but may be useful in a new form for mobs that live in the house
 		if( #plot.traders > 1 ) then
 			formspec = formspec.."label[0.3,7.0;Some traders live here. One works as a "..tostring(plot.traders[1].typ)..".]";
@@ -275,6 +312,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		formspec = formspec.."button[3.75,"..(7.0+math.max(1,#plot.traders))..";3.5,0.5;hire_trader;Hire a new random trader]";
 		-- TODO: hire mob
 	end
+--]]
 
 	local replace_row = -1;
 	-- the player selected a material which ought to be replaced
