@@ -229,18 +229,20 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		end
 		-- TODO: only for testing
 		local bpos = village.to_add_data.bpos[ plot_nr ];
-		-- position in front of the building, with the building stretching equally to the right and left
-		local p_in_front = handle_schematics.get_pos_in_front_of_house( bpos);
 		if( bpos and bpos.beds ) then
 			for i,bed in ipairs( bpos.beds ) do
 				-- find a place next to the bed where the mob can stand
 				local p_next_to_bed = mob_world_interaction.find_place_next_to( bed, 0, {x=0,y=0,z=0});
 				if( not( p_next_to_bed ) or p_next_to_bed.iteration==99 ) then
-					minetest.chat_send_player("singleplayer", "Bed "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a place to stand.");
+					minetest.chat_send_player("singleplayer", "Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a place to stand.");
 				else
+					-- position in front of the building, with the building stretching equally to the right and left
+					-- get a diffrent one for each mob
+					local p_in_front = handle_schematics.get_pos_in_front_of_house( bpos, i );
 					local path = mob_world_interaction.find_path( p_next_to_bed, p_in_front, { collisionbox = {1,0,3,4,2}});
+					local str = "";
 					if( path ) then
-						minetest.chat_send_player("singleplayer","Path to bed "..tostring(i).." at "..minetest.pos_to_string( bed )..": "..tostring( table.getn( path )).." Steps.");
+						str = str.."Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..": "..tostring( table.getn( path )).." Steps to outside.";
 						local front_door_pos = nil;
 						for j,p in ipairs( path ) do
 							local n = minetest.get_node( p );
@@ -249,11 +251,12 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 							end
 						end
 						if( front_door_pos ) then
-							minetest.chat_send_player("singleplayer","FRONT door found at: "..minetest.pos_to_string( front_door_pos ));
+							str = str.." Front door found at: "..minetest.pos_to_string( front_door_pos );
 						end
 					else
-						minetest.chat_send_player("singleplayer", "Bed "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a path to it.");
+						str = str.." FAILED to find a path from bed to front of house.";
 					end
+					minetest.chat_send_player("singleplayer", str );
 				end
 			end
 		end
