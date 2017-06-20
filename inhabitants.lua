@@ -366,7 +366,7 @@ end
 
 
 -- print information about which mobs "live" in a house
-mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, house_nr  )
+mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, house_nr, village_id )
 
 	local bpos = village_to_add_data_bpos[ house_nr ];
 	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
@@ -401,7 +401,7 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 	else
 		str = str.."is inhabitated by:\n";
 		-- make sure all mobs living here are spawned
-		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, nil, nil );
+		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, nil, nil, village_id, house_nr );
 		for i,v in ipairs( bpos.beds ) do
 			if( v and v.first_name ) then
 				str = str.."  "..mg_villages.inhabitants.mob_get_full_name( v, bpos.beds[1] );
@@ -643,18 +643,19 @@ end
 
 
 -- mob mods are expected to override this function! mobf_trader mobs are supported directly
-mg_villages.inhabitants.spawn_one_mob = function( bed )
+mg_villages.inhabitants.spawn_one_mob = function( bed, village_id, plot_nr, bed_nr, bpos )
 
+	--print("NPC spawned in village "..tostring( village_id ).." on plot "..tostring(plot_nr)..", sleeping in bed nr. "..tostring( bed_nr ));
 	if( minetest.get_modpath("mobf_trader") and mobf_trader and mobf_trader.spawn_one_trader) then
-		return mobf_trader.spawn_one_trader( bed );
+		return mobf_trader.spawn_one_trader( bed, village_id, plot_nr, bed_nr, bpos );
 	end
 end
 
-mg_villages.inhabitants.spawn_mobs_for_one_house = function( bpos, minp, maxp )
+mg_villages.inhabitants.spawn_mobs_for_one_house = function( bpos, minp, maxp, village_id, plot_nr )
 	if( not( bpos ) or not( bpos.beds )) then
 		return;
 	end
-	for i,bed in ipairs( bpos.beds ) do
+	for bed_nr,bed in ipairs( bpos.beds ) do
 		-- only for beds that exist, have a mob assigned and fit into minp/maxp
 		if( bed
 		  and bed.first_name
@@ -663,7 +664,7 @@ mg_villages.inhabitants.spawn_mobs_for_one_house = function( bpos, minp, maxp )
 		       and bed.y>=minp.y and bed.y<=maxp.y
 		       and bed.z>=minp.z and bed.z<=maxp.z))) then
 
-			bed.mob_id = mg_villages.inhabitants.spawn_one_mob( bed );
+			bed.mob_id = mg_villages.inhabitants.spawn_one_mob( bed, village_id, plot_nr, bed_nr, bpos );
 		end
 	end
 end
@@ -676,13 +677,14 @@ mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp,
 	village.to_add_data.bpos = mg_villages.inhabitants.assign_jobs_to_houses( village.to_add_data.bpos );
 
 	-- for each building in the village
-	for house_nr,bpos in ipairs(village.to_add_data.bpos) do
+	for plot_nr,bpos in ipairs(village.to_add_data.bpos) do
 
 		-- each bed gets a mob assigned
-		bpos = mg_villages.inhabitants.assign_mobs_to_beds( bpos, house_nr, village.to_add_data.bpos, village );
+		bpos = mg_villages.inhabitants.assign_mobs_to_beds( bpos, plot_nr, village.to_add_data.bpos, village );
 
 		-- actually spawn the mobs
-		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, minp, maxp );
+		local village_id = tostring( village.vx )..':'..tostring( village.vz );
+		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, minp, maxp, village_id, plot_nr );
 	end
 end
 
@@ -709,7 +711,7 @@ minetest.register_chatcommand( 'inhabitants', {
 				minetest.chat_send_player( name, "Printing information about inhabitants of village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown')).." to console.");
 				-- actually print it
 				for house_nr = 1,#v.to_add_data.bpos do
-					minetest.chat_send_player( name, mg_villages.inhabitants.print_house_info( v.to_add_data.bpos, house_nr ));
+					minetest.chat_send_player( name, mg_villages.inhabitants.print_house_info( v.to_add_data.bpos, house_nr, v.nr ));
 				end
 				return;
 			end
