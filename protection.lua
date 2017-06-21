@@ -94,6 +94,11 @@ minetest.is_protected = function(pos, name)
 		return old_is_protected( pos, name );
 	end
 
+	-- allow players with protection_bypass to build anyway
+	if( minetest.check_player_privs( name, {protection_bypass=true})) then
+		return false;
+	end
+
 	local village_id = mg_villages.get_town_id_at_pos( pos );
 	if( village_id ) then
 		local is_houseowner = false;
