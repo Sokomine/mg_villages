@@ -237,20 +237,25 @@ local buildings = {
 	{scm="baking_house_3",             yoff=0, orients={0}, farming_plus=0, avoid='', typ='bakery', weight={medieval=1/4}, pervillage=1, inh=-1},
 	{scm="baking_house_4",             yoff=0, orients={0}, farming_plus=0, avoid='', typ='bakery', weight={medieval=1/4}, pervillage=1, inh=-1},
 
-	{scm="empty_1", yoff=0, typ='empty', inh=0, pervillage=2,
-			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
-	{scm="empty_2", yoff=0, typ='empty', inh=0, pervillage=2,
-			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
-	{scm="empty_3", yoff=0, typ='empty', inh=0, pervillage=2,
-			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
-	{scm="empty_4", yoff=0, typ='empty', inh=0, pervillage=2,
-			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
-	{scm="empty_5", yoff=0, typ='empty', inh=0, pervillage=2,
-			weight={nore=1/8,taoki=1/8,medieval=1/8,charachoal=1/8,lumberjack=1/8,claytrader=1/8,logcabin=1/8,canadian=1/8,grasshut=1/8,tent=1/8}},
+	{scm="empty_1", yoff=0, typ='empty', inh=0, pervillage=4,
+			weight={nore=1,taoki=1,medieval=1,charachoal=1,lumberjack=1,claytrader=1,logcabin=1,canadian=1,grasshut=1,tent=1}},
+	{scm="empty_2", yoff=0, typ='empty', inh=1, pervillage=4,
+			weight={nore=1,taoki=1,medieval=1,charachoal=1,lumberjack=1,claytrader=1,logcabin=1,canadian=1,grasshut=1,tent=1}},
+	{scm="empty_3", yoff=0, typ='empty', inh=1, pervillage=4,
+			weight={nore=1,taoki=1,medieval=1,charachoal=1,lumberjack=1,claytrader=1,logcabin=1,canadian=1,grasshut=1,tent=1}},
+	{scm="empty_4", yoff=0, typ='empty', inh=1, pervillage=4,
+			weight={nore=1,taoki=1,medieval=1,charachoal=1,lumberjack=1,claytrader=1,logcabin=1,canadian=1,grasshut=1,tent=1}},
+	{scm="empty_5", yoff=0, typ='empty', inh=1, pervillage=4,
+			weight={nore=1,taoki=1,medieval=1,charachoal=1,lumberjack=1,claytrader=1,logcabin=1,canadian=1,grasshut=1,tent=1}},
 
 	{scm="house_medieval_fancy_1_90", yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4, single=1  }, inh=6},
 	{scm="cow_shed_1_270",            yoff= 0, orients={0}, farming_plus=0, avoid='', typ='shed',      weight={medieval=1/4, single=1  }, inh=-1},
 	{scm="shed_with_forge_v2_1_0",    yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=1,single=1/2}, inh=1},
+
+	{scm="empty_16x32_2_90", typ='empty', inh=1, pervillage=4,
+			weight={nore=3,taoki=3,medieval=3,charachoal=3,lumberjack=3,claytrader=3,logcabin=3,canadian=3,grasshut=3,tent=3}},
+	{scm="empty_32x32_2_90", typ='empty', inh=1, pervillage=4,
+			weight={nore=3,taoki=3,medieval=3,charachoal=3,lumberjack=3,claytrader=3,logcabin=3,canadian=3,grasshut=3,tent=3}},
 }
 
 
