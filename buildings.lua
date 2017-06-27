@@ -170,7 +170,7 @@ local buildings = {
 	{scm="lumberjack_15",       yoff= 1, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1, single=3}, axis=1, inh=2},
 	{scm="lumberjack_16",       yoff= 0, orients={1},     avoid='', typ='lumberjack', weight={lumberjack=1, single=3}, axis=1, inh=2},
 	{scm="lumberjack_school",   yoff= 1, orients={1},     avoid='', typ='school',     weight={lumberjack=2          }, axis=1, inh=1},
-	{scm="lumberjack_stable",   yoff= 0, orients={3},     avoid='', typ='lumberjack', weight={lumberjack=1, single=3}, axis=1, inh=-1},
+	{scm="lumberjack_stable",   yoff= 0, orients={3},     avoid='', typ='horsestable',     weight={lumberjack=1, single=3}, axis=1, inh=-1},
 	{scm="lumberjack_pub_1",    yoff= 1, orients={1},     avoid='', typ='tavern',     weight={lumberjack=3, single=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_church_1", yoff= 1, orients={1},     avoid='', typ='church',     weight={lumberjack=3}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_hotel_1",  yoff= 1, orients={1},     avoid='', typ='house',      weight={lumberjack=1, single=1}, axis=1,               inh=16, guests=-1}, -- all but one of the 16 are guests
@@ -182,9 +182,9 @@ local buildings = {
 
 	-- clay traders depend on cottages as well
 	{scm="trader_clay_1",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3, single=3}, axis=1, inh=1}, -- poor guy who has to live in that small thing
-	{scm="trader_clay_2",   yoff= 1, orients={3}, avoid='', typ='trader',     weight={claytrader=3, single=3}, axis=1, inh=1}, -- not that he'll live very comftable there...
-	{scm="trader_clay_3",   yoff= 1, orients={0}, avoid='', typ='trader',     weight={claytrader=3, single=3},         inh=2},
-	{scm="trader_clay_4",   yoff= 1, orients={2}, avoid='', typ='trader',     weight={claytrader=3, single=3},         inh=2},
+	{scm="trader_clay_2",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3, single=3}, axis=1, inh=1}, -- not that he'll live very comftable there...
+	{scm="trader_clay_3",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3, single=3},         inh=2},
+	{scm="trader_clay_4",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3, single=3},         inh=2},
 	{scm="trader_clay_5",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3, single=3}, axis=1, inh=2},
 
 	{scm="clay_pit_1",      yoff=-3, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
