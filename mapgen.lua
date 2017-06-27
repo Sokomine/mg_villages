@@ -1134,6 +1134,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			end
 		end
 	end
+	t1 = time_elapsed( t1, 'do on_construct calls' );
+
 
 	-- the doors need to be adjusted as well
 	for _, village in ipairs(villages) do
@@ -1156,6 +1158,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		end
           end
 	end
+	t1 = time_elapsed( t1, 'do door setup' );
 
 
 	local pr = PseudoRandom(mg_villages.get_bseed(minp));
@@ -1166,6 +1169,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			mg_villages.fill_chest_random( v, pr, building_nr, building_typ );
 		end
 	end
+	t1 = time_elapsed( t1, 'do fill chests' );
 	-- TODO: extra_calls.signs
 
 	
@@ -1173,6 +1177,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for _, village in ipairs(villages) do
 		mg_villages.part_of_village_spawned( village, minp, maxp, data, param2_data, a, cid );
 	end
+	t1 = time_elapsed( t1, 'do spawn mobs' );
 
 	-- initialize the pseudo random generator so that the chests will be filled in a reproducable pattern
 	local meta
