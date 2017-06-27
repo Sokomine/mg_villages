@@ -186,6 +186,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 --	if( not( mg_villages.ENABLE_PROTECTION )) then
 --		return;
 --	end
+	if( not( pos )) then
+		return;
+	end
 	local meta = minetest.get_meta( pos );
 	if( not( meta )) then
 		return;
@@ -259,7 +262,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 							str = str.." Front door found at: "..minetest.pos_to_string( front_door_pos );
 						end
 					else
-						str = str.." FAILED to find a path from bed to front of house.";
+						str = str.." FAILED to find a path from bed at "..minetest.pos_to_string( p_next_to_bed ).." to front of house.";
 					end
 					minetest.chat_send_player("singleplayer", str );
 				end
