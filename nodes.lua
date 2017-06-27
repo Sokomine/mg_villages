@@ -109,6 +109,14 @@ minetest.register_node("mg_villages:plotmarker", {
 })
 
 
+minetest.register_node("mg_villages:mob_spawner", {
+	description = "Mob spawner",
+	tiles = {"wool_cyan.png^beds_bed_fancy.png","wool_blue.png^doors_door_wood.png"},
+	is_ground_content = false,
+	groups = {not_in_creative_inventory = 1 }, -- cannot be digged by players
+})
+
+
 -- default to safe lava
 if( not( mg_villages.use_normal_unsafe_lava )) then
 	local lava = minetest.registered_nodes[ "default:lava_source"];
