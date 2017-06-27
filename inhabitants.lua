@@ -643,6 +643,18 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 end
 
 
+-- get the information mg_villages has about a mob (useful for mg_villages:mob_spawner)
+mg_villages.inhabitants.get_mob_data = function( village_id, plot_nr, bed_nr )
+	if( not( village_id ) or not( plot_nr ) or not( bed_nr )
+	  or not( mg_villages.all_villages[ village_id ] )
+	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ])
+	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].beds )) then
+		return;
+	end
+	return mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].beds[ bed_nr ];
+end
+
+
 -- mob mods are expected to override this function! mobf_trader mobs are supported directly
 mg_villages.inhabitants.spawn_one_mob = function( bed, village_id, plot_nr, bed_nr, bpos )
 

@@ -114,6 +114,25 @@ minetest.register_node("mg_villages:mob_spawner", {
 	tiles = {"wool_cyan.png^beds_bed_fancy.png","wool_blue.png^doors_door_wood.png"},
 	is_ground_content = false,
 	groups = {not_in_creative_inventory = 1 }, -- cannot be digged by players
+	on_rightclick = function( pos, node, clicker, itemstack, pointed_thing)
+		if( not( clicker )) then
+			return;
+		end
+		local meta = minetest.get_meta( pos );
+		if( not( meta )) then
+			return;
+		end
+		local village_id = meta:get_string( "village_id" );
+		local plot_nr    = meta:get_int(    "plot_nr" );
+		local bed_nr     = meta:get_int(    "bed_nr" );
+		-- direction for the mob to look at
+		local yaw        = meta:get_int(    "yaw" );
+
+		local mob_info = mg_villages.inhabitants.get_mob_data( village_id, plot_nr, bed_nr );
+
+		-- TODO: also of intrest: position next to bed, place to stand, path between both, front door
+		minetest.chat_send_player( clicker:get_player_name(), "Mob data: "..minetest.serialize(mob_info));
+	end
 })
 
 
