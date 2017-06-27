@@ -262,7 +262,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 							str = str.." Front door found at: "..minetest.pos_to_string( front_door_pos );
 						end
 					else
-						str = str.." FAILED to find a path from bed at "..minetest.pos_to_string( p_next_to_bed ).." to front of house.";
+						str = str.." FAILED to find a path from bed "..minetest.pos_to_string(bed )..", standing at "..minetest.pos_to_string( p_next_to_bed )..", to front of house.";
 					end
 					minetest.chat_send_player("singleplayer", str );
 				end
