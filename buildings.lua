@@ -317,6 +317,8 @@ mg_villages.add_building = function( building_data )
 			
 		-- how many beds does the building contain?
 		building_data.bed_count = res.bed_count;
+		-- and where are the beds placed in the original schematic?
+		building_data.bed_list = res.bed_list;
 
 		-- some buildings may be rotated	
 		if( not( building_data.orients ) and res.rotated ) then
@@ -349,6 +351,14 @@ mg_villages.add_building = function( building_data )
 		if( res.scm_data_cache ) then
 			building_data.scm_data_cache   = res.scm_data_cache;
 			building_data.is_mts = 0;
+		end
+
+		-- now try to find places next to the beds if possible
+		if( building_data.bed_count > 0
+		  and building_data.bed_list
+		  and minetest.get_modpath( "mob_world_interaction" )) then
+			--print("BEDS in "..tostring( file_name )..":");
+			building_data.path_info = mob_world_interaction.analyze_building( building_data, building_data.bed_list );
 		end
 
 	-- missing data regarding building size - do not use this building for anything
