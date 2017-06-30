@@ -212,18 +212,18 @@ local buildings = {
 
 	{scm="tent_tiny_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
 	{scm="tent_tiny_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
-	{scm="tent_big_1",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1}},           -- no sleeping place
+	{scm="tent_big_1",                 yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1}},           -- no sleeping place
 	{scm="tent_big_2",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=2},
-	{scm="tent_medium_1",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
+	{scm="tent_medium_1",              yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
 	{scm="tent_medium_2",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
-	{scm="tent_medium_3",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
-	{scm="tent_medium_4",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
+	{scm="tent_medium_3",              yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
+	{scm="tent_medium_4",              yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
 	{scm="tent_open_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
 	{scm="tent_open_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
-	{scm="tent_open_3",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
-	{scm="tent_open_big_1",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
-	{scm="tent_open_big_2",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
-	{scm="tent_open_big_3",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
+	{scm="tent_open_3",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='shop',    weight={tent=1/5}},
+	{scm="tent_open_big_1",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='pub',     weight={tent=1/5}},
+	{scm="tent_open_big_2",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='church',  weight={tent=1/5}},
+	{scm="tent_open_big_3",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='village_square',    weight={tent=5}, pervillage=1},
 
 	{scm="hochsitz_1",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
 	{scm="hochsitz_2",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
