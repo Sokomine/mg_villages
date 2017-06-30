@@ -42,7 +42,7 @@ local buildings = {
 	{yoff= 0, scm="logcabin8",    orients={1}, weight={logcabin=1,   single=1}, axis=1, inh=2, typ='hut'},
 	{yoff= 0, scm="logcabin9",    orients={1}, weight={logcabin=1,   single=1}, axis=1, inh=1, typ='hut'},
 	{yoff= 0, scm="logcabin10",   orients={2}, weight={logcabin=1,   single=1},         inh=3, typ='hut'},
-	{yoff= 0, scm="logcabin11",   orients={2}, weight={logcabin=1,   single=1},         inh=6, typ='hut'},
+	{yoff= 0, scm="logcabin11",   orients={1}, weight={logcabin=1,   single=1},         inh=6, typ='hut'},
 	{yoff= 0, scm="logcabinpub1", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=1, guests=-2}, -- +5 guests
 	{yoff= 0, scm="logcabinpub2", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2, guests=-3}, -- +8 guests
 	{yoff= 0, scm="logcabinpub3", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2, guests=-4}, -- +12 guest
@@ -353,13 +353,41 @@ mg_villages.add_building = function( building_data )
 			building_data.is_mts = 0;
 		end
 
+		building_data.path_info = {};
 		-- now try to find places next to the beds if possible
 		if( building_data.bed_count > 0
 		  and building_data.bed_list
 		  and minetest.get_modpath( "mob_world_interaction" )) then
-			--print("BEDS in "..tostring( file_name )..":");
-			building_data.path_info = mob_world_interaction.analyze_building( building_data, building_data.bed_list );
+			print("BEDS in "..tostring( file_name )..":");
+
+			local path_info = mob_world_interaction.analyze_building( building_data, building_data.bed_list );
+			-- a block that is undefined and just acts as a placeholder
+			table.insert( building_data.nodenames, "default:does_not_exist" );
+			while( path_info and path_info.front_door_at and path_info.front_door_at.x) do
+
+				local d = path_info.front_door_at;
+				path_info.door_node = building_data.scm_data_cache[ d.y ][ d.x ][ d.z ][1];
+				table.insert( building_data.path_info, path_info );
+
+				-- put a not existing block in order to block the door
+				building_data.scm_data_cache[ d.y ][ d.x ][ d.z ][1] = #building_data.nodenames;
+				path_info = mob_world_interaction.analyze_building( building_data, building_data.bed_list );
+			end
+			print( "  "..tostring( #building_data.path_info ).." front doors found. orients: "..tostring( building_data.orients[1] ).." yoff: "..tostring( building_data.yoff).. " ground: "..tostring( (building_data.yoff*-1)+1 ).." size: "..minetest.serialize( res.size).."\n"); --TODO
 		end
+
+		-- place the doors back
+		for i,path_info in ipairs( building_data.path_info ) do
+			if( path_info and path_info.front_door_at ) then
+				local d = path_info.front_door_at;
+				building_data.scm_data_cache[ d.y ][ d.x ][ d.z ][1] = path_info.door_node;
+			end
+		end
+		-- remove the placeholder entry
+		if( building_data.nodenames[ #building_data.nodenames ] == "default:does_not_exist" ) then
+			table.remove( building_data.nodenames, #building_data.nodenames );
+		end
+
 
 	-- missing data regarding building size - do not use this building for anything
 	elseif( not( building_data.sizex )    or not( building_data.sizez )
