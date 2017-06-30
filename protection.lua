@@ -250,7 +250,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 					local path = mob_world_interaction.find_path( p_next_to_bed, p_in_front, { collisionbox = {1,0,3,4,2}});
 					local str = "";
 					if( path ) then
-						str = str.."Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..": "..tostring( table.getn( path )).." Steps to outside.";
+						str = str.."Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..", standing at "..minetest.pos_to_string( p_next_to_bed )..": "..tostring( table.getn( path )).." Steps to outside.";
 						local front_door_pos = nil;
 						for j,p in ipairs( path ) do
 							local n = minetest.get_node( p );
