@@ -173,7 +173,7 @@ local buildings = {
 	{scm="lumberjack_stable",   yoff= 0, orients={3},     avoid='', typ='horsestable',     weight={lumberjack=1, single=3}, axis=1, inh=-1},
 	{scm="lumberjack_pub_1",    yoff= 1, orients={1},     avoid='', typ='tavern',     weight={lumberjack=3, single=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_church_1", yoff= 1, orients={1},     avoid='', typ='church',     weight={lumberjack=3}, pervillage=1, axis=1, inh=-1},
-	{scm="lumberjack_hotel_1",  yoff= 1, orients={1},     avoid='', typ='house',      weight={lumberjack=1, single=1}, axis=1,               inh=16, guests=-1}, -- all but one of the 16 are guests
+	{scm="lumberjack_hotel_1",  yoff= 1, orients={0},     avoid='', typ='house',      weight={lumberjack=1, single=1}, axis=1,               inh=16, guests=-1}, -- all but one of the 16 are guests
 	{scm="lumberjack_shop_1",   yoff= 1, orients={1},     avoid='', typ='shop',       weight={lumberjack=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_sawmill_1",yoff=-7, orients={1},     avoid='', typ='sawmill',    weight={lumberjack=2, single=1}, pervillage=1, axis=1, inh=-1},
 
