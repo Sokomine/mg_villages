@@ -101,7 +101,14 @@ mg_villages.check_if_ground = function( ci )
 		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
 			'default:pine_wood','default:pine_tree','default:acacia_wood','default:acacia_tree', 'default:aspen_wood', 'default:aspen_tree',
 			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom',
-                        'ethereal:bush', 'default:grass', 'default:grass_1','default:grass_2','default:grass_3','default:grass_4','default:grass_5'};
+                        'ethereal:bush', 'default:grass', 'default:grass_1','default:grass_2','default:grass_3','default:grass_4','default:grass_5',
+			'farming_plus:banana_leaves', 'farming_plus:banana',
+			'farming_plus:cocoa_sapling', 'farming_plus:cocoa_leaves', 'farming_plus:cocoa',
+			'farming_plus:melon', 'farming_plus:orangeb', 'farming_plus:peach',
+			'farming_plus:peach_4b', 'farming_plus:peach_5b',
+			'farming:pumpkin', 'farming:pumpkin_face', 'farming:pumpkin_face_light',
+			'cavestuff:desert_pebble_2', 'cavestuff:desert_pebble_1',
+			'cavestuff:pebble_1', 'cavestuff:pebble_2'};
 		-- TODO: add all those other tree and leaf nodes that might be added by mapgen
 		for _,name in ipairs( no_ground_nodes ) do
 			if( minetest.registered_nodes[ name ]) then
