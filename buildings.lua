@@ -27,7 +27,7 @@ local buildings = {
 	{yoff= 0, scm="tower_1_0",                          typ='tower',    weight={nore=1/7, single=1   }, inh=-1},
 	{yoff= 0, scm="forge_1_0",            pervillage=2, typ='forge',    weight={nore=1,   single=1/3 }, inh=-1},
 	{yoff= 0, scm="library_1_0",          pervillage=2, typ='library',  weight={nore=1               }, inh=-1},
-	{yoff= 0, scm="inn_1_0",              pervillage=4, typ='tavern',   weight={nore=1/2, single=1/3 }, inh=-1, guests=-2}, -- has room for 4 guests
+	{yoff= 0, scm="inn_1_0",              pervillage=4, typ='inn',      weight={nore=1/2, single=1/3 }, inh=-1, guests=-2}, -- has room for 4 guests
 	{yoff= 0, scm="pub_1_0",              pervillage=2, typ='tavern',   weight={nore=1/3, single=1/3 }, inh=-1},
 
 
@@ -48,13 +48,13 @@ local buildings = {
 	{yoff= 0, scm="logcabinpub3", orients={1}, weight={logcabin=1/6, single=1}, pervillage=1, typ='tavern', axis=1, inh=2, guests=-4}, -- +12 guest
 
 -- grass huts (requiring cottages, dryplants, cavestuff/undergrowth, plantlife)
-	{yoff= 0, scm="grasshut1", orients={2}, weight={grasshut=1, single=1}, inh=3,   typ='hut'},
-	{yoff= 0, scm="grasshut2", orients={2}, weight={grasshut=1, single=1}, inh=10,  typ='hut'}, -- community hut for meetings
-	{yoff= 0, scm="grasshut3", orients={2}, weight={grasshut=1, single=1}, inh=3,   typ='hut'},
-	{yoff= 0, scm="grasshut4", orients={2}, weight={grasshut=1, single=1}, inh=3,   typ='hut'},
-	{yoff= 0, scm="grasshut5", orients={2}, weight={grasshut=1, single=1}, inh=1,   typ='hut'},
-	{yoff= 0, scm="grasshut6", orients={2}, weight={grasshut=1, single=1}, inh=3,   typ='hut'},
-	{yoff= 0, scm="grasshutcenter", orients={2}, pervillage=1, weight={grasshut=2}, typ = 'tavern'}, -- open meeting place
+	{yoff= 0, scm="grasshut1_1_90", weight={grasshut=1, single=1}, nomirror=1, typ='hut'},
+	{yoff= 0, scm="grasshut2_1_90", weight={grasshut=1, single=1}, nomirror=1, typ='townhall'}, -- community hut for meetings
+	{yoff= 0, scm="grasshut3_1_90", weight={grasshut=1, single=1}, nomirror=1, typ='hut'},
+	{yoff= 0, scm="grasshut4_1_90", weight={grasshut=1, single=1}, nomirror=1, typ='hut'},
+	{yoff= 0, scm="grasshut5_1_90", weight={grasshut=1, single=1}, nomirror=1, typ='hut'},
+	{yoff= 0, scm="grasshut6_1_90", weight={            single=1}, nomirror=1, typ='hut'},
+	{yoff= 0, scm="grasshutcenter_1_90", pervillage=1, weight={grasshut=2}, nomirror=1, typ = 'tavern'}, -- open meeting place
 
 -- for the buildings below, sizex, sizez and ysize are read from the file directly;
 
@@ -173,7 +173,7 @@ local buildings = {
 	{scm="lumberjack_stable",   yoff= 0, orients={3},     avoid='', typ='horsestable',     weight={lumberjack=1, single=3}, axis=1, inh=-1},
 	{scm="lumberjack_pub_1",    yoff= 1, orients={1},     avoid='', typ='tavern',     weight={lumberjack=3, single=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_church_1", yoff= 1, orients={1},     avoid='', typ='church',     weight={lumberjack=3}, pervillage=1, axis=1, inh=-1},
-	{scm="lumberjack_hotel_1",  yoff= 1, orients={0},     avoid='', typ='house',      weight={lumberjack=1, single=1}, axis=1,               inh=16, guests=-1}, -- all but one of the 16 are guests
+	{scm="lumberjack_hotel_1",  yoff= 1, orients={0},     avoid='', typ='inn',        weight={lumberjack=1, single=1}, axis=1,               inh=16, guests=-1}, -- all but one of the 16 are guests
 	{scm="lumberjack_shop_1",   yoff= 1, orients={1},     avoid='', typ='shop',       weight={lumberjack=1}, pervillage=1, axis=1, inh=-1},
 	{scm="lumberjack_sawmill_1",yoff=-7, orients={1},     avoid='', typ='sawmill',    weight={lumberjack=2, single=1}, pervillage=1, axis=1, inh=-1},
 
@@ -223,7 +223,7 @@ local buildings = {
 	{scm="tent_open_3",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='shop',    weight={tent=1/5}},
 	{scm="tent_open_big_1",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='pub',     weight={tent=1/5}},
 	{scm="tent_open_big_2",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='church',  weight={tent=1/5}},
-	{scm="tent_open_big_3",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='village_square',    weight={tent=5}, pervillage=1},
+	{scm="tent_open_big_3",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='townhall',    weight={tent=5}, pervillage=1},
 
 	{scm="hochsitz_1",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
 	{scm="hochsitz_2",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
@@ -256,6 +256,15 @@ local buildings = {
 			weight={nore=3,taoki=3,medieval=3,charachoal=3,lumberjack=3,claytrader=3,logcabin=3,canadian=3,grasshut=3,tent=3}},
 	{scm="empty_32x32_2_90", typ='empty', inh=1, pervillage=4,
 			weight={nore=3,taoki=3,medieval=3,charachoal=3,lumberjack=3,claytrader=3,logcabin=3,canadian=3,grasshut=3,tent=3}},
+
+	-- some new grasshut variants
+	{scm="grasshut7_1_90",      weight={grasshut=1,   single=1}, nomirror=1, typ='hut'},
+	{scm="grasshut8_1_90",      weight={grasshut=1,   single=1}, nomirror=1, typ='hut'},
+	{scm="grasshut9_1_90",      weight={grasshut=1,   single=1}, nomirror=1, typ='hut'},
+	{scm="grasshut_pub_1_90",   weight={grasshut=1/4, single=1}, nomirror=1, typ='pub'},
+	{scm="grasshut_hotel_1_90", weight={grasshut=1/4, single=1}, nomirror=1, typ='inn'},
+	{scm="grasshut_shop_1_90",  weight={grasshut=1,   single=1}, nomirror=1, typ='shop'},
+	{scm="grasshutwell_8_90",   weight={grasshut=1,   single=1}, nomirror=1, typ='well'},
 }
 
 

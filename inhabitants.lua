@@ -460,6 +460,7 @@ mg_villages.inhabitants.jobs_in_buildings[ 'chateau'    ] = {'servant'};
 mg_villages.inhabitants.jobs_in_buildings[ 'sawmill'    ] = {'sawmill owner'};
 mg_villages.inhabitants.jobs_in_buildings[ 'forrest'    ] = {'lumberjack'}; -- TODO: we don't have forrests yet
 mg_villages.inhabitants.jobs_in_buildings['village_square']={'major'};
+mg_villages.inhabitants.jobs_in_buildings[ 'townhall'   ] = {'major'};
 mg_villages.inhabitants.jobs_in_buildings[ 'horsestable'] = {'horsekeeper'};
 
 

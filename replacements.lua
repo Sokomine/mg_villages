@@ -610,12 +610,14 @@ mg_villages.replacements_grasshut = function( housetype, pr, replacements )
          table.insert( replacements, {'cottages:straw',                   'dryplants:wetreed' });
          table.insert( replacements, {'stairs:slab_cobble',               'dryplants:reed_slab' });
       end
+--[[ does not look nice
       if( pr:next( 1, 4) == 1 ) then
          table.insert( replacements, {'dryplants:wetreed_roof_corner',    'default:wood' });
          table.insert( replacements, {'dryplants:wetreed_roof_corner_2',  'default:junglewood' });
       end
+--]]
       if( not( minetest.get_modpath( 'cavestuff' ))) then
-         table.insert( replacements, {'cavestuff:desert_pebble_2',        'default:slab_cobble' });
+         table.insert( replacements, {'cavestuff:desert_pebble_2',        'default:slab_desert_stone' });
       end
    
       table.insert( replacements, {'default:desert_sand', 'default:dirt_with_grass' });
