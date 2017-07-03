@@ -37,6 +37,9 @@ dofile(mg_villages.modpath.."/trees.lua")
 
 dofile(mg_villages.modpath.."/replacements.lua")
 
+-- fill mg_villages.all_buildings_list with precalculated paths
+dofile(mg_villages.modpath.."/mg_villages_path_info.data");
+
 -- multiple diffrent village types with their own sets of houses are supported
 -- The function mg_villages.add_village_type( village_type_name, village_type_data )
 --   allows other mods to add new village types.
