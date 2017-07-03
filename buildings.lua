@@ -63,7 +63,7 @@ local buildings = {
 --	{scm="church_2_twoelk", yoff= 0, orients={0}, farming_plus=0, avoid='', typ='church',    weight={medieval=4}, pervillage=1},    
 	{scm="forge_1",         yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=2,   single=1/2}, pervillage=1,   inh=-1},
 	{scm="mill_1",          yoff= 0, orients={0}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2            }, pervillage=1,   inh=-1},
-	{scm="watermill_1",     yoff=-3, orients={1}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2            }, pervillage=1,   inh=-2},
+	{scm="watermill_1",     yoff=-3, orients={3}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2            }, pervillage=1,   inh=-2},
 	{scm="hut_1",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1,   single=1  },                 inh=1},
 	{scm="hut_2",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1,   single=1  },                 inh=2},
 	{scm="farm_full_1",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4, single=1  },               inh=2},
@@ -365,9 +365,18 @@ mg_villages.add_building = function( building_data )
 		-- identify front doors and paths to them from the beds
 		-- TODO: provide a more general list with beds, work places etc.
 		if( building_data.bed_list
+		  and #building_data.bed_list > 0
 		  and minetest.get_modpath( "mob_world_interaction" )) then
-			print("BEDS in "..tostring( file_name )..":");
-			building_data.path_info = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
+			if(not( mg_villages.path_info[ file_name ])) then
+				print("BEDS in "..tostring( file_name )..":");
+				mg_villages.path_info[ file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
+			end
+			-- we are looking for the places in front of the front doors; not the front doors themshelves
+			building_data.all_entrances = {};
+			for i,e in ipairs( mg_villages.path_info[ file_name ] ) do
+				-- the last entry in the list for the first bed is what we are looking for
+				table.insert( building_data.all_entrances, e[1][ #e[1] ]);
+			end
 		end
 
 	-- missing data regarding building size - do not use this building for anything
@@ -450,6 +459,10 @@ end
 -- this list contains some information about previously imported buildings so that they will get the same id
 mg_villages.all_buildings_list =  save_restore.restore_data( 'mg_villages_all_buildings_list.data' );
 
+-- information about beds, positions to stand next to the beds, paths to the doors, and doors
+mg_villages.path_info = {};
+mg_villages.path_info =  save_restore.restore_data( 'mg_villages_path_info.data' );
+
 -- import all the buildings
 mg_villages.BUILDINGS = {};
 local mts_path = mg_villages.modpath.."/schems/";
@@ -462,3 +475,7 @@ buildings = nil;
 
 -- roads are built in a diffrent way
 mg_villages.BUILDINGS["road"] = {yoff = 0, ysize = 2, scm = {}}
+
+-- save the path data; wait a bit so that all mods may have registered their buildings
+--save_restore.save_data( 'mg_villages_path_info.data', mg_villages.path_info );
+minetest.after( 10, save_restore.save_data, 'mg_villages_path_info.data', mg_villages.path_info );
