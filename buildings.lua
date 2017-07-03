@@ -367,13 +367,14 @@ mg_villages.add_building = function( building_data )
 		if( building_data.bed_list
 		  and #building_data.bed_list > 0
 		  and minetest.get_modpath( "mob_world_interaction" )) then
-			if(not( mg_villages.path_info[ file_name ])) then
-				print("BEDS in "..tostring( file_name )..":");
-				mg_villages.path_info[ file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
+			local short_file_name = string.sub(file_name, mg_villages.file_name_offset, 256);
+			if(not( mg_villages.path_info[ short_file_name ])) then
+				print("BEDS in "..tostring( short_file_name )..":");
+				mg_villages.path_info[ short_file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
 			end
 			-- we are looking for the places in front of the front doors; not the front doors themshelves
 			building_data.all_entrances = {};
-			for i,e in ipairs( mg_villages.path_info[ file_name ] ) do
+			for i,e in ipairs( mg_villages.path_info[ short_file_name ] ) do
 				-- the last entry in the list for the first bed is what we are looking for
 				table.insert( building_data.all_entrances, e[1][ #e[1] ]);
 			end
@@ -460,8 +461,10 @@ end
 mg_villages.all_buildings_list =  save_restore.restore_data( 'mg_villages_all_buildings_list.data' );
 
 -- information about beds, positions to stand next to the beds, paths to the doors, and doors
-mg_villages.path_info = {};
-mg_villages.path_info =  save_restore.restore_data( 'mg_villages_path_info.data' );
+--mg_villages.path_info = {};
+--mg_villages.path_info =  save_restore.restore_data( 'mg_villages_path_info.data' );
+
+mg_villages.file_name_offset = string.len( minetest.get_modpath( "mg_villages" ))-11+1;
 
 -- import all the buildings
 mg_villages.BUILDINGS = {};
@@ -477,5 +480,4 @@ buildings = nil;
 mg_villages.BUILDINGS["road"] = {yoff = 0, ysize = 2, scm = {}}
 
 -- save the path data; wait a bit so that all mods may have registered their buildings
---save_restore.save_data( 'mg_villages_path_info.data', mg_villages.path_info );
-minetest.after( 10, save_restore.save_data, 'mg_villages_path_info.data', mg_villages.path_info );
+--minetest.after( 10, save_restore.save_data, 'mg_villages_path_info.data', mg_villages.path_info );
