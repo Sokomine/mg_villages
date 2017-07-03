@@ -28,6 +28,7 @@ local param2_data_buffer;
 local data_vm;
 local data_param2_data;
 
+local trees_to_grow_via_voxelmanip = {};
 
 mg_villages.wseed = 0;
 
@@ -105,6 +106,7 @@ mg_villages.check_if_ground = function( ci )
 			'farming_plus:banana_leaves', 'farming_plus:banana',
 			'farming_plus:cocoa_sapling', 'farming_plus:cocoa_leaves', 'farming_plus:cocoa',
 			'farming_plus:melon', 'farming_plus:orangeb', 'farming_plus:peach',
+			'farming_plus:lemonb', 'farming_plus:orange', 'farming_plus:preachb',
 			'farming_plus:peach_4b', 'farming_plus:peach_5b',
 			'farming:pumpkin', 'farming:pumpkin_face', 'farming:pumpkin_face_light',
 			'cavestuff:desert_pebble_2', 'cavestuff:desert_pebble_1',
@@ -309,7 +311,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=3, snow=has_artificial_snow});
 		elseif( asptree and not( mg_villages.ethereal_trees ) and treepos) then
 			data[       a:index( x, target_height+1, z)] = cid.c_aspsapling
-			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=3, snow=has_artificial_snow});
+			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=4, snow=has_artificial_snow});
 		elseif( has_snow ) then
 			data[       a:index( x, target_height+1, z)] = cid.c_snow;
 		end
@@ -417,6 +419,8 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 			plant_id = cid.c_psapling;
 		elseif( tree.typ == 3 ) then
 			plant_id = cid.c_asapling;
+		elseif( tree.typ == 4 ) then
+			plant_id = cid.c_aspsapling;
 		end
 		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, plant_id, minp, maxp, data, a, cid, nil, tree.snow ) -- no pseudorandom present
 	end
@@ -761,6 +765,20 @@ if( minetest.get_modpath( 'mg' )) then
 	mg_villages.add_pinetree    = add_pinetree;
 end
 
+mg_villages.grow_trees_voxelmanip = function( vm )
+	local path_acacia = minetest.get_modpath("default").."/schematics/acacia_tree_from_sapling.mts";
+	local path_aspen  = minetest.get_modpath("default").."/schematics/aspen_tree_from_sapling.mts";
+	for tree_nr, pos in ipairs( trees_to_grow_via_voxelmanip ) do
+		if(     pos and pos.typ==3 ) then
+			minetest.place_schematic_on_vmanip( vm, {x = pos.x - 4, y = pos.y - 1, z = pos.z - 4}, path_acacia, "random", nil, true);
+		elseif( pos and pos.typ==4) then
+			minetest.place_schematic_on_vmanip( vm, {x = pos.x - 2, y = pos.y - 1, z = pos.z - 2}, path_aspen, "0", nil, true);
+		end
+	end
+	trees_to_grow_via_voxelmanip = {};
+end
+
+
 mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr, snow )
 	-- a normal tree; sometimes comes with apples
 	if(     plant_id == cid.c_sapling and minetest.registered_nodes[ 'default:tree']) then
@@ -777,10 +795,12 @@ mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr,
 	-- an acacia tree; it does not have its own grow function
 	elseif( plant_id == cid.c_asapling and minetest.registered_nodes[ 'default:acacia_tree']) then
 		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_asapling;
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x, y=pos.y, z=pos.z, typ=3});
 		return true;
         -- aspen tree from newer minetest game
 	elseif( plant_id == cid.c_aspsapling and minetest.registered_nodes[ 'default:aspen_tree']) then
 		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_aspsapling;
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x, y=pos.y, z=pos.z, typ=4});
 		return true;
 	-- a savannatree from the mg mod
 	elseif( plant_id == cid.c_savannasapling and mg_villages.add_savannatree) then
@@ -1144,6 +1164,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
 
+	mg_villages.grow_trees_voxelmanip( vm );
+	t1 = time_elapsed( t1, 'vm growing trees' );
+
 	-- only update lighting where we actually placed the nodes
 	vm:calc_lighting( e1, e2 ); --minp, maxp ); --tmin, tmax)
 --	vm:calc_lighting( {x=e1.x+1,y=e1.y+1,z=e1.z+1}, {x=e2.x-1,y=e2.y-1,z=e2.z-1});
@@ -1154,6 +1177,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	vm:update_liquids()
 	t1 = time_elapsed( t1, 'vm update liquids' );
+
 
 	-- do on_construct calls AFTER the map data has been written - else i.e. realtest fences can not update themshevles
 	for _, village in ipairs(villages) do
