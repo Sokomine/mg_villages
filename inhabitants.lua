@@ -644,6 +644,74 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 end
 
 
+-- apply bpos.pos as offset and apply rotation
+mg_villages.transform_coordinates = function( pos, bpos )
+	-- start with the start position as stored in bpos
+	local p = {x=bpos.x, y=bpos.y, z=bpos.z};
+
+	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
+
+	-- the height is not affected by rotation
+	-- the positions are stored as array
+	p.y = p.y + building_data.yoff + pos[2] - 1;
+
+	local rel = {x=pos[1], y=pos[2], z=pos[3]}; -- relative position (usually of entrance)
+
+	-- all values start counting with index 1; we need to start with 0 for the offset
+	local sx = bpos.bsizex-1;
+	local sz = bpos.bsizez-1;
+	rel.x = rel.x-1;
+	rel.z = rel.z-1;
+
+	if( bpos.mirror and bpos.btype ) then
+		local o = building_data.orients[1];
+		if(     (o == 0 or o == 2) and (bpos.brotate==0  or bpos.brotate==2)) then
+			rel.z = sz - rel.z;
+		elseif( (o == 0 or o == 2) and (bpos.brotate==1  or bpos.brotate==3)) then
+			rel.z = sx - rel.z;
+
+		elseif( (o == 1 or o == 3) and (bpos.brotate==0  or bpos.brotate==2)) then
+			rel.x = sx - rel.x;
+		elseif( (o == 1 or o == 3) and (bpos.brotate==1  or bpos.brotate==3)) then
+			rel.x = sz - rel.x;
+		end
+	end
+
+	if(     bpos.brotate==0 ) then
+		p.x = p.x + rel.x;
+		p.z = p.z + rel.z;
+	elseif( bpos.brotate==1 ) then
+		p.x = p.x + rel.z;
+		p.z = p.z + sz - rel.x; -- bsizex and bsizez are swapped
+	elseif( bpos.brotate==2 ) then
+		p.x = p.x + sx - rel.x;
+		p.z = p.z + sz - rel.z;
+	elseif( bpos.brotate==3 ) then
+		p.x = p.x + sx - rel.z; -- bsizex and bsizez are swapped
+		p.z = p.z + rel.x;
+	end
+
+	return p;
+end
+
+
+mg_villages.get_entrance_list = function( village_id, plot_nr )
+	if(  not( mg_villages.all_villages[ village_id ])
+	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ] )) then
+		return {};
+	end
+	local bpos = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ];
+	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
+	if( not( building_data ) or not(building_data.all_entrances )) then
+		return {};
+	end
+	local entrance_list = {};
+	for i,e in ipairs( building_data.all_entrances ) do
+		table.insert( entrance_list, mg_villages.transform_coordinates( e, bpos ));
+	end
+	return entrance_list;
+end
+
 -- get the information mg_villages has about a mob (useful for mg_villages:mob_spawner)
 mg_villages.inhabitants.get_mob_data = function( village_id, plot_nr, bed_nr )
 	if( not( village_id ) or not( plot_nr ) or not( bed_nr )
