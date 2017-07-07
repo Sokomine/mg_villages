@@ -1,7 +1,7 @@
 
 
 local function spawnplayer(player)
-	if( minetest.settings:get("static_spawnpoint")) then
+	if( minetest.settings and minetest.settings:get("static_spawnpoint")) then
 		return;
 	end
 
