@@ -695,22 +695,71 @@ mg_villages.transform_coordinates = function( pos, bpos )
 end
 
 
-mg_villages.get_entrance_list = function( village_id, plot_nr )
+mg_villages.get_plot_and_building_data = function( village_id, plot_nr )
 	if(  not( mg_villages.all_villages[ village_id ])
 	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ] )) then
-		return {};
+		return;
 	end
 	local bpos = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ];
-	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
-	if( not( building_data ) or not(building_data.all_entrances )) then
+	if( not( bpos ) or not( bpos.btype ) or not( mg_villages.BUILDINGS[ bpos.btype ])) then
+		return;
+	end
+	return { bpos = bpos, building_data = mg_villages.BUILDINGS[ bpos.btype ]};
+end
+
+
+mg_villages.get_entrance_list = function( village_id, plot_nr )
+	local res = mg_villages.get_plot_and_building_data( village_id, plot_nr );
+	if( not( res ) or not( res.building_data ) or not(res.building_data.all_entrances )) then
 		return {};
 	end
 	local entrance_list = {};
-	for i,e in ipairs( building_data.all_entrances ) do
-		table.insert( entrance_list, mg_villages.transform_coordinates( e, bpos ));
+	for i,e in ipairs( res.building_data.all_entrances ) do
+		table.insert( entrance_list, mg_villages.transform_coordinates( e, res.bpos ));
 	end
 	return entrance_list;
 end
+
+
+mg_villages.get_path_from_bed_to_outside = function( village_id, plot_nr, bed_nr, door_nr )
+	local res = mg_villages.get_plot_and_building_data( village_id, plot_nr );
+	if( not( res ) or not( res.building_data ) or not(res.building_data.short_file_name)
+	  or not( mg_villages.path_info[ res.building_data.short_file_name ] )
+	  or not( mg_villages.path_info[ res.building_data.short_file_name ][ door_nr ])
+	  or not( mg_villages.path_info[ res.building_data.short_file_name ][ door_nr ][ bed_nr ])) then
+		return;
+	end
+	local path = {};
+	-- get the path from the bed to front door door_nr
+	for i,p in ipairs( mg_villages.path_info[ res.building_data.short_file_name ][ door_nr ][ bed_nr ]) do
+		table.insert( path, mg_villages.transform_coordinates( p, res.bpos ));
+	end
+	local rest_path_id = #mg_villages.path_info[ res.building_data.short_file_name ][ door_nr ];
+	-- the last entrance is the common path for all beds from the front door door_nr to the outside
+	if( rest_path_id == bed_nr ) then
+		return path;
+	end
+	-- add the path from the front door to the front of the building
+	for i,p in ipairs( mg_villages.path_info[ res.building_data.short_file_name ][ door_nr ][ rest_path_id ]) do
+		table.insert( path, mg_villages.transform_coordinates( p, res.bpos ));
+	end
+	return path;
+end
+
+
+-- door_nr ought to be 1 in most cases (unless the mob is standing in front of another door)
+mg_villages.get_path_from_outside_to_bed = function( village_id, plot_nr, bed_nr, door_nr )
+	local path = mg_villages.get_path_from_bed_to_outside( village_id, plot_nr, bed_nr, door_nr );
+	if( not( path )) then
+		return path;
+	end
+	local reverse_path = {};
+	for i = #path, 1, -1 do
+		table.insert( reverse_path, path[i]);
+	end
+	return reverse_path;
+end
+
 
 -- get the information mg_villages has about a mob (useful for mg_villages:mob_spawner)
 mg_villages.inhabitants.get_mob_data = function( village_id, plot_nr, bed_nr )
@@ -720,6 +769,16 @@ mg_villages.inhabitants.get_mob_data = function( village_id, plot_nr, bed_nr )
 	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].beds )) then
 		return;
 	end
+--[[
+	-- TODO: mark entrances for manual inspection
+	for i,p in ipairs( mg_villages.get_entrance_list( village_id, plot_nr )) do
+		local bpos = mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ];
+		minetest.chat_send_player("singleplayer","door: "..minetest.pos_to_string( p )..
+			" pos: "..minetest.pos_to_string( bpos )..
+			" o: "..tostring( bpos.o ).." r: "..tostring( bpos.brotate ).." m: "..tostring( bpos.mirror));
+		minetest.set_node( p, {name="wool:cyan",param2=0});
+	end
+--]]
 	return mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ].beds[ bed_nr ];
 end
 
