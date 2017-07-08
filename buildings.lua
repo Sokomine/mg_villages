@@ -480,4 +480,9 @@ buildings = nil;
 mg_villages.BUILDINGS["road"] = {yoff = 0, ysize = 2, scm = {}}
 
 -- save the path data; wait a bit so that all mods may have registered their buildings
+-- Note: uncomment the following line if you have added a larger amount of new buildings; then, after
+--       WORLDNAME/mg_villages_path_info.data has been written, copy that file over to your
+--       mods/mg_villages/ folder and replace the old one. Add
+--           mg_villages.path_info = ..
+--       at the start of the table so that a dofile can execute it.
 --minetest.after( 10, save_restore.save_data, 'mg_villages_path_info.data', mg_villages.path_info );
