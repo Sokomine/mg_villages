@@ -104,8 +104,8 @@ minetest.is_protected = function(pos, name)
 		local is_houseowner = false;
 		for nr, p in ipairs( mg_villages.all_villages[ village_id ].to_add_data.bpos ) do
 
-			trustedusers = p.can_edit
-			trustedUser = false
+			local trustedusers = p.can_edit
+			local trustedUser = false
 			if trustedusers ~= nil then
 				for _,trusted in ipairs(trustedusers) do
 					if trusted == name then
