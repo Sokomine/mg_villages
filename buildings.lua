@@ -253,9 +253,9 @@ local buildings = {
 	{scm="shed_with_forge_v2_1_0",    yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=1,single=1/2}, inh=1},
 
 	{scm="empty_16x32_2_90", typ='empty', inh=1, pervillage=4,
-			weight={nore=3,taoki=3,medieval=3,charachoal=3,lumberjack=3,claytrader=3,logcabin=3,canadian=3,grasshut=3,tent=3}},
+			weight={nore=2,taoki=2,medieval=2,charachoal=2,lumberjack=2,claytrader=2,logcabin=2,canadian=2,grasshut=2,tent=2}},
 	{scm="empty_32x32_2_90", typ='empty', inh=1, pervillage=4,
-			weight={nore=3,taoki=3,medieval=3,charachoal=3,lumberjack=3,claytrader=3,logcabin=3,canadian=3,grasshut=3,tent=3}},
+			weight={nore=2,taoki=2,medieval=2,charachoal=2,lumberjack=2,claytrader=2,logcabin=2,canadian=2,grasshut=2,tent=2}},
 
 	-- some new grasshut variants
 	{scm="grasshut7_1_90",      weight={grasshut=1,   single=1}, nomirror=1, typ='hut'},
@@ -368,6 +368,7 @@ mg_villages.add_building = function( building_data )
 		  and #building_data.bed_list > 0
 		  and minetest.get_modpath( "mob_world_interaction" )) then
 			local short_file_name = string.sub(file_name, mg_villages.file_name_offset, 256);
+			building_data.short_file_name = short_file_name;
 			if(not( mg_villages.path_info[ short_file_name ])) then
 				print("BEDS in "..tostring( short_file_name )..":");
 				mg_villages.path_info[ short_file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
