@@ -165,6 +165,8 @@ minetest.register_node("mg_villages:mob_spawner", {
 			-- get out of the bed, walk to the middle of the front of the house
 			if( path and #path>0 ) then
 				mob_world_interaction.stand_at( mob, path[1], yaw );
+				-- last step: go back to the mob spawner that belongs to the mob
+				table.insert( path, pos );
 				str = str.." The mob plans to get up from his bed and stand in front of his house.\n";
 			else
 				str = str.." FAILED to get a path from bed to outside.\n";
