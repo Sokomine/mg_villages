@@ -79,3 +79,6 @@ dofile(mg_villages.modpath.."/highlandpools.lua")
 dofile(mg_villages.modpath.."/mapgen.lua")
 
 dofile(mg_villages.modpath.."/spawn_player.lua")
+
+-- reconstruct the connection of the roads inside a village
+dofile(mg_villages.modpath.."/roads.lua")
