@@ -189,7 +189,7 @@ end
 
 mg_villages.road_nr = 0;
 
-local function generate_road(village, l, pr, roadsize_list, road_materials, rx, rz, rdx, rdz, vnoise, space_between_buildings, iteration_depth)
+local function generate_road(village, l, pr, roadsize_list, road_materials, rx, rz, rdx, rdz, vnoise, space_between_buildings, iteration_depth, parent_road)
 	local roadsize = math.floor(roadsize_list[ iteration_depth ]/2);
 	if( not( roadsize ) or roadsize==0) then
 		roadsize = mg_villages.FIRST_ROADSIZE;
@@ -226,7 +226,7 @@ local function generate_road(village, l, pr, roadsize_list, road_materials, rx, 
 	while mg_villages.inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize_a, l) do
 		if iteration_depth > 1 and pr:next(1, 4) == 1 and first_building_a then
 			--generate_road(vx, vz, vs, vh, l, pr, roadsize-1, rx, rz, math.abs(rdz), math.abs(rdx))
-			calls_to_do[#calls_to_do+1] = {rx=rx+(roadsize_a - 0)*rdx, rz=rz+(roadsize_a - 0)*rdz, rdx=math.abs(rdz), rdz=math.abs(rdx)}
+			calls_to_do[#calls_to_do+1] = {rx=rx+(roadsize_a - 0)*rdx, rz=rz+(roadsize_a - 0)*rdz, rdx=math.abs(rdz), rdz=math.abs(rdx), parent_road = mg_villages.road_nr }
 			m2x = rx + (roadsize_a - 0)*rdx
 			m2z = rz + (roadsize_a - 0)*rdz
 			rx = rx + (2*roadsize_a - 0)*rdx
@@ -276,7 +276,7 @@ local function generate_road(village, l, pr, roadsize_list, road_materials, rx, 
 	while mg_villages.inside_village(rx, rz, village, vnoise) and not road_in_building(rx, rz, rdx, rdz, roadsize_b, l) do
 		if roadsize_b > 1 and pr:next(1, 4) == 1 and first_building_b then
 			--generate_road(vx, vz, vs, vh, l, pr, roadsize-1, rx, rz, -math.abs(rdz), -math.abs(rdx))
-			calls_to_do[#calls_to_do+1] = {rx=rx+(roadsize_b - 0)*rdx, rz=rz+(roadsize_b - 0)*rdz, rdx=-math.abs(rdz), rdz=-math.abs(rdx)}
+			calls_to_do[#calls_to_do+1] = {rx=rx+(roadsize_b - 0)*rdx, rz=rz+(roadsize_b - 0)*rdz, rdx=-math.abs(rdz), rdz=-math.abs(rdx), parent_road = mg_villages.road_nr }
 			m2x = rx + (roadsize_b - 0)*rdx
 			m2z = rz + (roadsize_b - 0)*rdz
 			rx = rx + (2*roadsize_b - 0)*rdx
@@ -382,7 +382,7 @@ local function generate_road(village, l, pr, roadsize_list, road_materials, rx, 
 		end
 
 		--generate_road(vx, vz, vs, vh, l, pr, new_roadsize, i.rx, i.rz, i.rdx, i.rdz, vnoise)
-		calls[calls.index] = {village, l, pr, roadsize_list, road_materials, i.rx, i.rz, i.rdx, i.rdz, vnoise, space_between_buildings, iteration_depth-1}
+		calls[calls.index] = {village, l, pr, roadsize_list, road_materials, i.rx, i.rz, i.rdx, i.rdz, vnoise, space_between_buildings, iteration_depth-1, i.parent_road}
 		calls.index = calls.index+1
 	end
 end
@@ -464,7 +464,8 @@ local function generate_bpos(village, pr, vnoise, space_between_buildings)
 	if( mg_villages.village_type_data[ village.village_type ].roadsize_list ) then
 		roadsize_list = mg_villages.village_type_data[ village.village_type ].roadsize_list;
 	end
-	generate_road(village, l, pr, roadsize_list, mg_villages.village_type_data[ village.village_type ].road_materials, rx, rz, 1, 0, vnoise, space_between_buildings, #roadsize_list)
+	-- last 0 in parameter list: no parent road yet (this is the first)
+	generate_road(village, l, pr, roadsize_list, mg_villages.village_type_data[ village.village_type ].road_materials, rx, rz, 1, 0, vnoise, space_between_buildings, #roadsize_list, 0)
 	local i = 1
 	while i < calls.index do
 		generate_road(unpack(calls[i]))
