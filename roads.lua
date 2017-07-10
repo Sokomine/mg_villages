@@ -1,4 +1,23 @@
 
+-- helper function for get_path_from_pos_to_plot
+mg_villages.next_step_on_road_path = function( p, this_road_xdir, following_road )
+	if( this_road_xdir == true ) then
+		if( p.x < following_road.x ) then
+			p.x = following_road.x;
+		else
+			p.x = following_road.x + following_road.bsizex -1;
+		end
+	else
+		if( p.z < following_road.z ) then
+			p.z = following_road.z;
+		else
+			p.z = following_road.z + following_road.bsizez -1;
+		end
+	end
+	return p;
+end
+
+
 -- pos needs to be a position either on a road or at max 1 node away from a road
 mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_nr )
 	if(  not( mg_villages.all_villages[ village_id ] )
@@ -65,19 +84,7 @@ mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_n
 	-- let the mob take the first step onto the road
 	local first_road = bpos_list[ start_to_main_road[1] ];
 	local p = {x=pos.x, y=first_road.y+1, z=pos.z};
-	if( first_road.xdir == true ) then
-		if( pos.z <= first_road.z ) then
-			p.z = first_road.z;
-		else
-			p.z = first_road.z + first_road.bsizez -1;
-		end
-	else
-		if( pos.x <= first_road.x ) then
-			p.x = first_road.x;
-		else
-			p.x = first_road.x + first_road.bsizex -1;
-		end
-	end
+	p = mg_villages.next_step_on_road_path( p, not(first_road.xdir), first_road );
 	table.insert( path, {x=p.x, y=p.y, z=p.z} );
 
 	-- travel using all the given roads
@@ -85,24 +92,25 @@ mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_n
 		local this_road      = bpos_list[ start_to_main_road[i] ];
 		local following_road = bpos_list[ start_to_main_road[i+1]];
 		-- walk on the inside in curves instead of taking longer paths
-		if( this_road.xdir == true ) then
-			if( p.x < following_road.x ) then
-				p.x = following_road.x;
-			else
-				p.x = following_road.x + following_road.bsizex -1;
-			end
-		else
-			if( p.z < following_road.z ) then
-				p.z = following_road.z;
-			else
-				p.z = following_road.z + following_road.bsizez -1;
-			end
-		end
+		p = mg_villages.next_step_on_road_path( p, this_road.xdir, following_road );
 		table.insert( path, {x=p.x, y=p.y, z=p.z} );
 	end
 
-	-- TODO: take the last step and create the path up to the target plot
-local str = " path: ";
+	-- walk on the last road to the target plot
+	local last_road = bpos_list[ start_to_main_road[ #start_to_main_road ] ];
+	local target = {x=bpos_list[ target_plot_nr ].x + math.floor(bpos_list[ target_plot_nr ].bsizex/2),
+			y = p.y,
+			z=bpos_list[ target_plot_nr ].z + math.floor(bpos_list[ target_plot_nr ].bsizez/2),
+			bsizex = 2, bsizez = 2};
+local str = "target_plot_data: "..minetest.serialize( target);
+	p = mg_villages.next_step_on_road_path( p, last_road.xdir, target);
+	table.insert( path, {x=p.x, y=p.y, z=p.z} );
+
+	-- take the very last step and leave the road
+	p = mg_villages.next_step_on_road_path( p, not(last_road.xdir), target);
+	table.insert( path, {x=p.x, y=p.y, z=p.z} );
+
+str = str.." path: ";
 	for i,p in ipairs( path ) do
 		minetest.set_node( p, {name="wool:yellow"});
 str = str.." "..minetest.pos_to_string( p );
