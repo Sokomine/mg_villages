@@ -19,7 +19,7 @@ end
 
 
 -- pos needs to be a position either on a road or at max 1 node away from a road
-mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_nr )
+mg_villages.get_path_from_pos_to_plot_via_roads = function( village_id, pos, target_plot_nr )
 	if(  not( mg_villages.all_villages[ village_id ] )
 	  or not( target_plot_nr )
 	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ target_plot_nr ])
@@ -111,21 +111,33 @@ mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_n
 			y = p.y,
 			z=bpos_list[ target_plot_nr ].z + math.floor(bpos_list[ target_plot_nr ].bsizez/2),
 			bsizex = 2, bsizez = 2};
-local str = "target_plot_data: "..minetest.serialize( target);
 	p = mg_villages.next_step_on_road_path( p, last_road.xdir, target);
 	table.insert( path, {x=p.x, y=p.y, z=p.z} );
 
 	-- take the very last step and leave the road
 	p = mg_villages.next_step_on_road_path( p, not(last_road.xdir), target);
+	-- make sure we do not walk further than one step into the plot
+	if(     p.x <  last_road.x ) then
+		p.x =  last_road.x - 1;
+	elseif( p.x >= last_road.x + last_road.bsizex ) then
+		p.x =  last_road.x + last_road.bsizex + 1;
+	elseif( p.z <  last_road.z ) then
+		p.z =  last_road.z - 1;
+	elseif( p.z >= last_road.z + last_road.bsizez ) then
+		p.z =  last_road.z + last_road.bsizez + 1;
+	end
 	table.insert( path, {x=p.x, y=p.y, z=p.z} );
 
-str = str.." path: ";
+--[[
+	-- if you want to visualize the path with yellow wool blocks for debugging, uncomment this
+	local str = " path: ";
 	for i,p in ipairs( path ) do
 		minetest.set_node( p, {name="wool:yellow"});
-str = str.." "..minetest.pos_to_string( p );
+		str = str.." "..minetest.pos_to_string( p );
 	end
-
-minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_target)..str);
+	minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_target)..str);
+--]]
+	return path;
 end
 
 -- try to reconstruct the tree-like road network structure (the data was
