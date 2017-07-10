@@ -55,12 +55,60 @@ mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_n
 	end
 
 	-- combine the full walk through the tree-like road structure into one list of roads
-	for i,r in ipairs( target_to_main_road ) do
-		table.insert( start_to_main_road, r );
+	for i=#target_to_main_road,1,-1 do
+		table.insert( start_to_main_road, target_to_main_road[i] );
 	end
 
-	-- translate the roads into positions
-minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_main_road));
+	-- generate a path for travelling on these roads
+	local path = {};
+
+	-- let the mob take the first step onto the road
+	local first_road = bpos_list[ start_to_main_road[1] ];
+	local p = {x=pos.x, y=first_road.y+1, z=pos.z};
+	if( first_road.xdir == true ) then
+		if( pos.z <= first_road.z ) then
+			p.z = first_road.z;
+		else
+			p.z = first_road.z + first_road.bsizez -1;
+		end
+	else
+		if( pos.x <= first_road.x ) then
+			p.x = first_road.x;
+		else
+			p.x = first_road.x + first_road.bsizex -1;
+		end
+	end
+	table.insert( path, {x=p.x, y=p.y, z=p.z} );
+
+	-- travel using all the given roads
+	for i=1,#start_to_main_road-1 do
+		local this_road      = bpos_list[ start_to_main_road[i] ];
+		local following_road = bpos_list[ start_to_main_road[i+1]];
+		-- walk on the inside in curves instead of taking longer paths
+		if( this_road.xdir == true ) then
+			if( p.x < following_road.x ) then
+				p.x = following_road.x;
+			else
+				p.x = following_road.x + following_road.bsizex -1;
+			end
+		else
+			if( p.z < following_road.z ) then
+				p.z = following_road.z;
+			else
+				p.z = following_road.z + following_road.bsizez -1;
+			end
+		end
+		table.insert( path, {x=p.x, y=p.y, z=p.z} );
+	end
+
+	-- TODO: take the last step and create the path up to the target plot
+local str = " path: ";
+	for i,p in ipairs( path ) do
+		minetest.set_node( p, {name="wool:yellow"});
+str = str.." "..minetest.pos_to_string( p );
+	end
+
+minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_main_road)..str);
 end
 
 -- try to reconstruct the tree-like road network structure (the data was
