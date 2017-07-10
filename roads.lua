@@ -1,17 +1,21 @@
 
 -- pos needs to be a position either on a road or at max 1 node away from a road
 mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_nr )
-	if( not( mg_villages.all_villages[ village_id ] )) then
+	if(  not( mg_villages.all_villages[ village_id ] )
+	  or not( target_plot_nr )
+	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ target_plot_nr ])
+	  or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ target_plot_nr ].road_nr)) then
 		return {};
 	end
 	local bpos_list = mg_villages.all_villages[ village_id ].to_add_data.bpos;
 
+	-- find out which road is the one next to pos
 	local standing_on_road = nil;
 	local roads = mg_villages.get_road_list( village_id );
 	for i,road in ipairs( roads ) do
 		local r = bpos_list[ road ]; -- road data
 		-- if this is really a road, and if a parent road exists (or is 0)
-		if( r --and r.btype == "road" and r.parent_road
+		if( r and r.btype == "road" and r.parent_road_plot
 		-- ..and pos is in the area of the road or next to it
 		    and pos.x >= r.x-1 and pos.x <= r.x + r.bsizex + 1
 		    and pos.z >= r.z-1 and pos.z <= r.z + r.bsizez + 1
@@ -21,10 +25,42 @@ mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_n
 	end
 	-- nothing found
 	if( not( standing_on_road )) then
-minetest.chat_send_player("singleplayer",":-( no road found for "..minetest.pos_to_string( pos ).."\nroads: "..minetest.serialize( roads ));
 		return;
 	end
-minetest.chat_send_player("singleplayer","ROAD: "..minetest.serialize( bpos_list[ roads[standing_on_road ]]));
+
+	-- walk from pos up to the main road
+	local start_to_main_road = {};
+	local next_road_plot = roads[ standing_on_road ];
+	while( next_road_plot and bpos_list[ next_road_plot ] and bpos_list[ next_road_plot ].btype=="road" ) do
+		table.insert( start_to_main_road, next_road_plot );
+		next_road_plot = bpos_list[ next_road_plot ].parent_road_plot;
+	end
+
+	-- walk from the target road up to the main road - until we find a road that is
+	-- already part of the path from pos to the main road
+	local target_to_main_road = {};
+	local next_road_plot = roads[ bpos_list[ target_plot_nr ].road_nr ];
+	local match_found = -1;
+	while( next_road_plot and bpos_list[ next_road_plot ] and bpos_list[ next_road_plot ].btype=="road" and match_found==-1) do
+		-- it may not be necessary to go all the way back to the main road
+		for i,r in ipairs( start_to_main_road ) do
+			if( r == next_road_plot ) then
+				match_found = i;
+			end
+		end
+		if( match_found == -1) then
+			table.insert( target_to_main_road, next_road_plot );
+		end
+		next_road_plot = bpos_list[ next_road_plot ].parent_road_plot;
+	end
+
+	-- combine the full walk through the tree-like road structure into one list of roads
+	for i,r in ipairs( target_to_main_road ) do
+		table.insert( start_to_main_road, r );
+	end
+
+	-- translate the roads into positions
+minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_main_road));
 end
 
 -- try to reconstruct the tree-like road network structure (the data was
