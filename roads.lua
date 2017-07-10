@@ -73,31 +73,40 @@ mg_villages.get_path_from_pos_to_plot = function( village_id, pos, target_plot_n
 		next_road_plot = bpos_list[ next_road_plot ].parent_road_plot;
 	end
 
+	if( match_found == -1 ) then
+		match_found = #start_to_main_road;
+	end
+	-- we may have gone too far up and can take a turn much earlier
+	local start_to_target = {};
+	for i=1,match_found do
+		table.insert( start_to_target, start_to_main_road[i] );
+	end
+
 	-- combine the full walk through the tree-like road structure into one list of roads
 	for i=#target_to_main_road,1,-1 do
-		table.insert( start_to_main_road, target_to_main_road[i] );
+		table.insert( start_to_target, target_to_main_road[i] );
 	end
 
 	-- generate a path for travelling on these roads
 	local path = {};
 
 	-- let the mob take the first step onto the road
-	local first_road = bpos_list[ start_to_main_road[1] ];
+	local first_road = bpos_list[ start_to_target[1] ];
 	local p = {x=pos.x, y=first_road.y+1, z=pos.z};
 	p = mg_villages.next_step_on_road_path( p, not(first_road.xdir), first_road );
 	table.insert( path, {x=p.x, y=p.y, z=p.z} );
 
 	-- travel using all the given roads
-	for i=1,#start_to_main_road-1 do
-		local this_road      = bpos_list[ start_to_main_road[i] ];
-		local following_road = bpos_list[ start_to_main_road[i+1]];
+	for i=1,#start_to_target-1 do
+		local this_road      = bpos_list[ start_to_target[i] ];
+		local following_road = bpos_list[ start_to_target[i+1]];
 		-- walk on the inside in curves instead of taking longer paths
 		p = mg_villages.next_step_on_road_path( p, this_road.xdir, following_road );
 		table.insert( path, {x=p.x, y=p.y, z=p.z} );
 	end
 
 	-- walk on the last road to the target plot
-	local last_road = bpos_list[ start_to_main_road[ #start_to_main_road ] ];
+	local last_road = bpos_list[ start_to_target[ #start_to_target ] ];
 	local target = {x=bpos_list[ target_plot_nr ].x + math.floor(bpos_list[ target_plot_nr ].bsizex/2),
 			y = p.y,
 			z=bpos_list[ target_plot_nr ].z + math.floor(bpos_list[ target_plot_nr ].bsizez/2),
@@ -116,7 +125,7 @@ str = str.." path: ";
 str = str.." "..minetest.pos_to_string( p );
 	end
 
-minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_main_road)..str);
+minetest.chat_send_player("singleplayer","roads to walk on: "..minetest.serialize( start_to_target)..str);
 end
 
 -- try to reconstruct the tree-like road network structure (the data was
