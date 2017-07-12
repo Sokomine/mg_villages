@@ -154,7 +154,7 @@ minetest.register_node("mg_villages:mob_spawner", {
 		end
 
 		local res = mg_villages.get_plot_and_building_data( village_id, plot_nr );
-		if( not( res ) or not( res.bpos ) or not( mob_info.mob_id ) or not( mob )) then
+		if( not( res ) or not( res.bpos ) or not( mob_info.mob_id ) or not( mob ) or not( mob_world_interaction) or not( movement)) then
 			minetest.chat_send_player( clicker:get_player_name(), str.."Mob data: "..minetest.serialize(mob_info));
 			return;
 		end
@@ -175,6 +175,10 @@ minetest.register_node("mg_villages:mob_spawner", {
 			-- go to bed and sleep
 			path = mg_villages.get_path_from_outside_to_bed( village_id, plot_nr, bed_nr, 1 );
 			str = str.." The mob plans to go to his bed and start sleeping.\n";
+
+--			local target_plot_nr = 9; -- just for testing..
+--			path = mg_villages.get_path_from_pos_to_plot_via_roads( village_id, pos, target_plot_nr );
+--			str = str.." The mob plans to go to plot nr. "..tostring(target_plot_nr).."\n";
 		end
 		local move_obj = movement.getControl(mob);
 		move_obj:walk_path( path, 1, {find_path == true});
