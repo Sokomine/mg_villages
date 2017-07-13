@@ -1,4 +1,8 @@
 
+-- fountains and lakes have river water, not salt water
+handle_schematics.global_replacement_table[ 'default:water_source' ] = 'default:river_water_source';
+handle_schematics.global_replacement_table[ 'default:water_flowing' ] = 'default:river_water_flowing';
+
 -- ethereal comes with some intresting trees
 if( minetest.get_modpath( 'ethereal' )) then
 	mg_villages.ethereal_trees = {'acacia','willow','redwood','frost','mushroom','yellow','palm','banana'};
