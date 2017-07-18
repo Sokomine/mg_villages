@@ -18,7 +18,7 @@ local buildings = {
 	{yoff= 0, scm="house_1_0",                          typ='house',    weight={nore=1,   single=2   }, inh=4},
 	{yoff= 0, scm="wheat_field",                        typ='field',    weight={nore=1   }, inh=-1},
 	{yoff= 0, scm="cotton_field",                       typ='field',    weight={nore=1   }, inh=-1},
-	{yoff= 1, scm="lamp", no_rotate=true,               typ='deco',     weight={nore=1/5 }},
+	{yoff= 1, scm="lamp", no_rotate=true,               typ='lamp',     weight={nore=1/5 }},
 	{yoff=-5, scm="well", no_rotate=true, pervillage=1, typ='well',     weight={nore=1   }},
 	{yoff= 0, scm="fountain", pervillage=3,             typ='fountain', weight={nore=1/4 },             axis=1},
 	{yoff= 0, scm="small_house_1_0",                    typ='house',    weight={nore=1,   single=2   }, inh=2},
@@ -134,7 +134,7 @@ local buildings = {
 	{scm="shed_9",          yoff= 0, orients={0,1,2}, farming_plus=0, avoid='', typ='shed',  weight={medieval=1/10}},
 	{scm="shed_10",         yoff= 0, orients={0,1,2}, farming_plus=0, avoid='', typ='shed',  weight={medieval=1/10}},
 	{scm="shed_11",         yoff= 0, orients={0,1,2}, farming_plus=0, avoid='', typ='shed',  weight={medieval=1/10}},
-	{scm="shed_12",         yoff= 0, orients={0,1,2}, farming_plus=0, avoid='', typ='shed',  weight={medieval=1/10}},
+	{scm="shed_12",         yoff= 0, orients={0,1,2}, farming_plus=0, avoid='', typ='stable',  weight={medieval=1/10}},
 
 	{scm="weide_1",         yoff= 0, orients={0,1,2,3}, farming_plus=0, avoid='pasture', typ='pasture',  weight={medieval=1/6}, pervillage=8},
 	{scm="weide_2",         yoff= 0, orients={0,1,2,3}, farming_plus=0, avoid='pasture', typ='pasture',  weight={medieval=1/6}, pervillage=8},
@@ -188,8 +188,8 @@ local buildings = {
 	{scm="trader_clay_5",   yoff= 1, orients={1}, avoid='', typ='trader',     weight={claytrader=3, single=3}, axis=1, inh=2},
 
 	{scm="clay_pit_1",      yoff=-3, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
-	{scm="clay_pit_2",      yoff=-2, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
-	{scm="clay_pit_3",      yoff=-7, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
+	{scm="clay_pit_2",      yoff=-1, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
+	{scm="clay_pit_3",      yoff=-6, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
 	{scm="clay_pit_4",      yoff= 0, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
 	{scm="clay_pit_5",      yoff= 1, orients={0,1,2,3}, avoid='', typ='pit',        weight={claytrader=1}},
 
@@ -203,7 +203,7 @@ local buildings = {
 	{scm="default_town_house_tiny_1",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1,   single=1},   axis=1, inh=3},
 	{scm="default_town_house_tiny_2",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1,   single=1},   axis=1, inh=3},
 	{scm="default_town_house_tiny_3",  yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='house',  weight={taoki=1,   single=1},   axis=1, inh=2},
-	{scm="default_town_park",          yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='deco',   weight={taoki=1            },   axis=1},
+	{scm="default_town_park",          yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='park',   weight={taoki=1            },   axis=1},
 	{scm="default_town_tower",         yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='tower',  weight={taoki=1/6, single=1}, axis=1, inh=-1},
 	{scm="default_town_well",          yoff= -6, orients={1}, farming_plus=0, avoid='',     typ='well',   weight={taoki=1/4          }, axis=1},
 	{scm="default_town_fountain",      yoff=  1, orients={1}, farming_plus=0, avoid='',     typ='fountain',weight={taoki=1/4          }, axis=1},
@@ -212,14 +212,14 @@ local buildings = {
 
 	{scm="tent_tiny_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
 	{scm="tent_tiny_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=1},
-	{scm="tent_big_1",                 yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1}},           -- no sleeping place
+	{scm="tent_big_1",                 yoff=0, orients={1}, farming_plus=0, avoid='',        typ='shop',    weight={tent=1,   single=1}},           -- no sleeping place
 	{scm="tent_big_2",                 yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1,   single=1},   inh=2},
 	{scm="tent_medium_1",              yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
-	{scm="tent_medium_2",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
+	{scm="tent_medium_2",              yoff=0, orients={3}, farming_plus=0, avoid='',        typ='shed',    weight={tent=1/2, single=1}, inh=3},
 	{scm="tent_medium_3",              yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
 	{scm="tent_medium_4",              yoff=0, orients={1}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/2, single=1}, inh=3},
-	{scm="tent_open_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
-	{scm="tent_open_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='tent',    weight={tent=1/5}},
+	{scm="tent_open_1",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='pub',    weight={tent=1/5}},
+	{scm="tent_open_2",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='shed',    weight={tent=1/5}},
 	{scm="tent_open_3",                yoff=0, orients={3}, farming_plus=0, avoid='',        typ='shop',    weight={tent=1/5}},
 	{scm="tent_open_big_1",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='pub',     weight={tent=1/5}},
 	{scm="tent_open_big_2",            yoff=0, orients={3}, farming_plus=0, avoid='',        typ='church',  weight={tent=1/5}},
@@ -249,7 +249,7 @@ local buildings = {
 			weight={nore=1,taoki=1,medieval=1,charachoal=1,lumberjack=1,claytrader=1,logcabin=1,canadian=1,grasshut=1,tent=1}},
 
 	{scm="house_medieval_fancy_1_90", yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4, single=1  }, inh=6},
-	{scm="cow_shed_1_270",            yoff= 0, orients={0}, farming_plus=0, avoid='', typ='shed',      weight={medieval=1/4, single=1  }, inh=-1},
+	{scm="cow_shed_1_270",            yoff= 0, orients={0}, farming_plus=0, avoid='', typ='stable',      weight={medieval=1/4, single=1  }, inh=-1},
 	{scm="shed_with_forge_v2_1_0",    yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=1,single=1/2}, inh=1},
 
 	{scm="empty_16x32_2_90", typ='empty', inh=1, pervillage=4,
@@ -362,13 +362,14 @@ mg_villages.add_building = function( building_data )
 			building_data.is_mts = 0;
 		end
 
+		local short_file_name = string.sub(file_name, mg_villages.file_name_offset, 256);
+		building_data.short_file_name = short_file_name;
+
 		-- identify front doors and paths to them from the beds
 		-- TODO: provide a more general list with beds, work places etc.
 		if( building_data.bed_list
 		  and #building_data.bed_list > 0
 		  and minetest.get_modpath( "mob_world_interaction" )) then
-			local short_file_name = string.sub(file_name, mg_villages.file_name_offset, 256);
-			building_data.short_file_name = short_file_name;
 			if(not( mg_villages.path_info[ short_file_name ])) then
 				print("BEDS in "..tostring( short_file_name )..":");
 				mg_villages.path_info[ short_file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
@@ -377,9 +378,98 @@ mg_villages.add_building = function( building_data )
 			building_data.all_entrances = {};
 			for i,e in ipairs( mg_villages.path_info[ short_file_name ] ) do
 				-- the last entry in the list for the first bed is what we are looking for
-				table.insert( building_data.all_entrances, e[1][ #e[1] ]);
+				-- (provided there actually is a path)
+				if( e[1] and #e[1]>0 ) then
+					table.insert( building_data.all_entrances, e[1][ #e[1] ]);
+				end
 			end
 		end
+
+
+		-- some buildings (i.e. a tavern, school, shop, church, ...) contain places where a mob working
+		-- there will most likely be standing, awaiting his guests/doing his job. Such places can be
+		-- manually marked by placing mg_villages:mob_workplace_marker
+		local workplace_list = {};
+		-- find out if the building contains any workplace markers at all
+		local found = -1;
+		for i,n in ipairs( res.nodenames ) do
+			if( n == "mg_villages:mob_workplace_marker" ) then
+				found = i;
+			end
+		end
+		-- this is diffrent information from the normal bed list
+		local store_as = short_file_name.."|WORKPLACE";
+		if( found>0
+		  and minetest.get_modpath( "mob_world_interaction" )
+		  and not( mg_villages.path_info[ store_as ] )) then
+			for z = 1, res.size.z do
+			for y = 1, res.size.y do
+			for x = 1, res.size.x do
+				if(  res.scm_data_cache[y]
+				 and res.scm_data_cache[y][x]
+			         and res.scm_data_cache[y][x][z]
+				 and res.scm_data_cache[y][x][z][1] == found ) then
+					table.insert( workplace_list, {x=x, y=y, z=z, p2=res.scm_data_cache[y][x][z][2]});
+				end
+			end
+			end
+			end
+			-- store it for later use
+			building_data.workplace_list = workplace_list;
+
+			print("WORKPLACE: "..tostring( building_data.short_file_name )..": "..minetest.serialize( workplace_list ));
+			mg_villages.path_info[ store_as ] = mob_world_interaction.find_all_front_doors( building_data, workplace_list );
+
+			-- if no entrances are known yet, then store them now; the entrances associated with
+			-- beds are considered to be more important. This here is only a fallback if no beds
+			-- exist in the house.
+			if( not( building_data.all_entrances )) then
+				-- we are looking for the places in front of the front doors; not the front doors themshelves
+				building_data.all_entrances = {};
+				for i,e in ipairs( mg_villages.path_info[ store_as ] ) do
+					-- might just be the place outside the house instead of a door
+					if( e[1] and #e[1]>0 ) then
+						table.insert( building_data.all_entrances, e[1][ #e[1] ]);
+					end
+				end
+			end
+--		else
+--			print("NO workplace found in "..tostring(building_data.short_file_name ));
+		end
+
+		-- some debug information
+		local str2 = " in "..short_file_name.." ["..building_data.typ.."]";
+		if(   not( mg_villages.path_info[ short_file_name ] )
+		  and not( mg_villages.path_info[ store_as ] )) then
+			str2 = "nothing of intrest (no bed, no workplace)"..str2;
+		elseif( mg_villages.path_info[ short_file_name ]
+		   and (#mg_villages.path_info[ short_file_name ]<1
+		     or #mg_villages.path_info[ short_file_name ][1]<1
+		     or #mg_villages.path_info[ short_file_name ][1][1]<1 )) then
+			str2 = "BROKEN paths for beds"..str2;
+		elseif( mg_villages.path_info[ store_as        ]
+		   and (#mg_villages.path_info[ store_as        ]<1
+		     or #mg_villages.path_info[ store_as        ][1]<1
+		     or #mg_villages.path_info[ store_as        ][1][1]<1 )) then
+			str2 = "BROKEN paths for workplaces"..str2;
+		else
+			if( mg_villages.path_info[ store_as ] ) then
+				str2 = tostring( #mg_villages.path_info[ store_as ][1]-1 )..
+					" workplaces"..str2;
+			else
+				str2 = "no workplaces"..str2;
+			end
+			if( mg_villages.path_info[ short_file_name ] ) then
+				str2 = tostring( #mg_villages.path_info[ short_file_name ][1]-1 )..
+					" beds and "..str2;
+			else
+				str2 = "no beds and "..str2;
+			end
+		end
+		print( str2 );
+
+
+
 
 	-- missing data regarding building size - do not use this building for anything
 	elseif( not( building_data.sizex )    or not( building_data.sizez )

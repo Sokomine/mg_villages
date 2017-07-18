@@ -42,6 +42,23 @@ minetest.register_node("mg_villages:desert_sand_soil", {
 	sounds = default.node_sound_sand_defaults(),
 })
 
+-- place this node where a mob that works in your building ought to stand
+minetest.register_node("mg_villages:mob_workplace_marker", {
+	description = "Place where a mob ought to work",
+	drawtype = "nodebox",
+	tiles = {"character.png"},
+	paramtype = "light",
+	paramtype2 = "facedir",
+	walkable = false,
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.5,  0.5, -0.5+1/16, 0.5},
+		},
+	},
+	groups = {crumbly=3},
+})
+
 
 if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 	-- This torch is not hot. It will not melt snow and cause no floodings in villages.
