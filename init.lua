@@ -71,6 +71,8 @@ dofile(mg_villages.modpath.."/extras_for_development.lua");
 dofile(mg_villages.modpath.."/chat_commands.lua")
 -- protect villages from griefing
 dofile(mg_villages.modpath.."/protection.lua")
+-- allows to buy/sell/restore/.. plots and their buildings
+dofile(mg_villages.modpath.."/plotmarker_formspec.lua")
 -- create and show a map of the world
 dofile(mg_villages.modpath.."/map_of_world.lua")
 
