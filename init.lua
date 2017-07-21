@@ -64,6 +64,9 @@ dofile(mg_villages.modpath.."/villages.lua")
 -- determine type of work, name, age, bed position etc. for villagers (none included!)
 dofile(mg_villages.modpath.."/inhabitants.lua")
 
+-- provides some extra functionality for development of mob mods etc.;
+-- contains some deprecated functions
+dofile(mg_villages.modpath.."/extras_for_development.lua");
 -- adds a command that allows to teleport to a known village
 dofile(mg_villages.modpath.."/chat_commands.lua")
 -- protect villages from griefing
