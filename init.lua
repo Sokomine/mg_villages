@@ -45,6 +45,9 @@ dofile(mg_villages.modpath.."/mg_villages_path_info.data");
 --   allows other mods to add new village types.
 dofile(mg_villages.modpath.."/village_types.lua")
 
+-- calls path calculation and stores front doors etc.; only called in mg_villages.add_building
+dofile(mg_villages.modpath.."/analyze_building_for_mobs.lua")
+
 -- Note: the "buildings" talbe is not in the mg_villages.* namespace
 -- The function mg_villages.add_building( building_data ) allows other mods to add buildings.
 dofile(mg_villages.modpath.."/buildings.lua")
