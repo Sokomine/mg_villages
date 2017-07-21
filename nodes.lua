@@ -1,4 +1,5 @@
 
+-- slightly lower than a normal nodes for better look
 minetest.register_node("mg_villages:road", {
 	description = "village road",
 	tiles = {"default_gravel.png", "default_dirt.png"},
@@ -24,6 +25,7 @@ if( moresnow ) then
 end
 
 
+-- special soil that does not need abms/lbms or water
 minetest.register_node("mg_villages:soil", {
 	description = "Soil found on a field",
 	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt.png"},
@@ -42,24 +44,8 @@ minetest.register_node("mg_villages:desert_sand_soil", {
 	sounds = default.node_sound_sand_defaults(),
 })
 
--- place this node where a mob that works in your building ought to stand
-minetest.register_node("mg_villages:mob_workplace_marker", {
-	description = "Place where a mob ought to work",
-	drawtype = "nodebox",
-	tiles = {"character.png"},
-	paramtype = "light",
-	paramtype2 = "facedir",
-	walkable = false,
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{-0.5, -0.5, -0.5,  0.5, -0.5+1/16, 0.5},
-		},
-	},
-	groups = {crumbly=3},
-})
 
-
+-- this non-snow-melting-torch is only needed if you use the old snow mod
 if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 	-- This torch is not hot. It will not melt snow and cause no floodings in villages.
 	minetest.register_node("mg_villages:torch", {
@@ -93,6 +79,7 @@ if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 end
 
 
+-- get information about a plot, the building, its inhabitants; allow to buy the plot etc.
 minetest.register_node("mg_villages:plotmarker", {
 	description = "Plot marker",
 	drawtype = "nodebox",
@@ -126,6 +113,24 @@ minetest.register_node("mg_villages:plotmarker", {
 })
 
 
+-- place this node where a mob that works in your building ought to stand
+minetest.register_node("mg_villages:mob_workplace_marker", {
+	description = "Place where a mob ought to work",
+	drawtype = "nodebox",
+	tiles = {"character.png"},
+	paramtype = "light",
+	paramtype2 = "facedir",
+	walkable = false,
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.5,  0.5, -0.5+1/16, 0.5},
+		},
+	},
+	groups = {crumbly=3},
+})
+
+-- helper node for villager/mob mods that want to spawn npc
 minetest.register_node("mg_villages:mob_spawner", {
 	description = "Mob spawner",
 	tiles = {"wool_cyan.png^beds_bed_fancy.png","wool_blue.png^doors_door_wood.png"},
@@ -205,7 +210,7 @@ minetest.register_node("mg_villages:mob_spawner", {
 })
 
 
--- default to safe lava
+-- default to safe lava - prevent fire
 if( not( mg_villages.use_normal_unsafe_lava )) then
 	local lava = minetest.registered_nodes[ "default:lava_source"];
 	if( lava ) then
