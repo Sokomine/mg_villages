@@ -1234,14 +1234,16 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for _, village in ipairs(villages) do
 		local village_id = tostring( village.vx )..':'..tostring( village.vz );
 		for building_nr_in_bpos,pos in ipairs( village.to_add_data.bpos ) do
-			for workplace_nr, wp in ipairs( pos.workplaces ) do
-				-- store where to find information about the mob this workplace is responsible for
-				local meta = minetest.get_meta( wp );
-				meta:set_string('village_id', village_id );
-				meta:set_int(   'plot_nr',    building_nr_in_bpos);
-				meta:set_int(   'workplace_nr', workplace_nr );
+			if( pos.workplaces and #pos.workplaces>0) then
+				for workplace_nr, wp in ipairs( pos.workplaces ) do
+					-- store where to find information about the mob this workplace is responsible for
+					local meta = minetest.get_meta( wp );
+					meta:set_string('village_id', village_id );
+					meta:set_int(   'plot_nr',    building_nr_in_bpos);
+					meta:set_int(   'workplace_nr', workplace_nr );
 -- TODO: that infotext might be irritating for players; it is mostly useful just for debugging
 meta:set_string('infotext',   'WORKPLACE nr '..tostring(workplace_nr)..' on plot nr '..tostring( building_nr_in_bpos )..' in village '..tostring( village_id ));
+				end
 			end
 
 		end
