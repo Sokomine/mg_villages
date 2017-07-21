@@ -105,7 +105,7 @@ mg_villages.check_if_ground = function( ci )
                         'ethereal:bush', 'default:grass', 'default:grass_1','default:grass_2','default:grass_3','default:grass_4','default:grass_5',
 			'farming_plus:banana_leaves', 'farming_plus:banana',
 			'farming_plus:cocoa_sapling', 'farming_plus:cocoa_leaves', 'farming_plus:cocoa',
-			'farming_plus:melon',
+			'farming_plus:melon', 'farming_plus:corn', 'farming_plus:cornb',
 			'farming_plus:lemonb', 'farming_plus:orangeb', 'farming_plus:peachb',
 			'farming_plus:lemon',  'farming_plus:orange',  'farming_plus:peach',
 			'farming_plus:peach_4b', 'farming_plus:peach_5b', 'farming_plus:walnut',

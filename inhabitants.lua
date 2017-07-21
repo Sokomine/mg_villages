@@ -119,6 +119,9 @@ mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
 	if( worker_data and worker_data.title and worker_data.title ~= "" ) then
 		if( data.title and data.title == 'guest' ) then
 			str = str..", a guest staying at "..worker_data.title.." "..worker_data.first_name.."'s house";
+		elseif( data.title and (data.title == "servant" or data.title=="housemaid" or data.title=="guard" or data.title=="soldier")) then
+			str = str..", a "..data.title;
+
 		elseif( data.generation==2 and data.gender=="m" and data.title and data.uniq>1) then
 			str = str..", a "..data.title; --", one of "..tostring( worker_data.uniq ).." "..worker_data.title.."s";
 		-- if there is a job:   , the blacksmith
@@ -289,6 +292,16 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			end
 		end
 
+	-- the castle-type buildings contain guards without family
+	elseif( building_data.typ == "castle" ) then
+
+		for i,v in ipairs( bpos.beds ) do
+			v = mg_villages.inhabitants.get_new_inhabitant( v, "m", 2, worker_names_with_same_profession, nil, village );
+			v.works_at = house_nr; -- they work in their castle
+			v.title = "soldier";
+			v.uniq  = 99; -- one of many guards here
+		end
+
 	-- normal house containing a family
 	else
 		-- the first inhabitant will be the male worker
@@ -323,19 +336,31 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		end
 		-- a child of 18 with a parent of 19 would be...usually impossible unless adopted
 		local oldest_child = 0;
-
 		-- the third and subsequent inhabitants will ether be children or grandparents
 		for i,v in ipairs( bpos.beds ) do
 			if(     v and v.first_name and v.generation == 3 and v.gender=="f" ) then
 				grandmother_bed_id = i;
 			elseif( v and v.first_name and v.generation == 3 and v.gender=="m" ) then
 				grandfather_bed_id = i;
-
 			-- at max 7 npc per house (taverns may have more beds than that)
 			elseif( v and not( v.first_name )) then
 				if( i>guest_id ) then
-					v = mg_villages.inhabitants.get_new_inhabitant( v, "r", math.random(3), name_exclude, nil, village ); -- get a random guest
-					v.title = 'guest';
+					-- a chateau has servants instead of guests like a hotel
+					if( building_data.typ == "chateau" ) then
+						-- working generation (neither children nor grandparents)
+						v = mg_villages.inhabitants.get_new_inhabitant( v, "r", 2, name_exclude, nil, village );
+						if( v.gender == "m" ) then
+							v.title = "servant";
+						else
+							v.title = "housemaid";
+						end
+						v.works_at = house_nr;
+						v.uniq  = 99; -- one of many servants/housemaids here
+					-- guest in a hotel
+					else
+						v = mg_villages.inhabitants.get_new_inhabitant( v, "r", math.random(3), name_exclude, nil, village ); -- get a random guest
+						v.title = 'guest';
+					end
 				elseif( i==grandmother_bed_id ) then
 					v = mg_villages.inhabitants.get_new_inhabitant( v, "f", 3, name_exclude, bpos.beds[1].age+18, village ); -- get the grandmother
 				elseif( i==grandfather_bed_id ) then
@@ -360,7 +385,6 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			bpos.beds[2].age = oldest_child + 18 + math.random( 10 );
 		end
 	end
-
 	return bpos;
 end
 
@@ -404,10 +428,14 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, nil, nil, village_id, house_nr );
 		for i,v in ipairs( bpos.beds ) do
 			if( v and v.first_name ) then
-				str = str.."  "..mg_villages.inhabitants.mob_get_full_name( v, bpos.beds[1] );
-				if( i==1 and bpos.beds[1] and bpos.beds[1].works_at and bpos.beds[1].works_at==house_nr ) then
+				local worker_data = bpos.beds[1]; -- the father has the job
+				if( v and v.works_at ) then
+					worker_data = v;
+				end
+				str = str.."  "..mg_villages.inhabitants.mob_get_full_name( v, worker_data );
+				if(v and v.works_at and v.works_at==house_nr ) then
 					str = str.." who lives and works here\n";
-				elseif( i==1 ) then
+				elseif( v and v.works_at ) then
 					local works_at = bpos.beds[1].works_at;
 					local btype2 = mg_villages.BUILDINGS[ village_to_add_data_bpos[ works_at ].btype];
 					str = str.." who works at the "..tostring( btype2.typ ).." on plot "..tostring(works_at).."\n";
@@ -456,7 +484,7 @@ mg_villages.inhabitants.jobs_in_buildings[ 'shop'       ] = {'shopkeeper',
 		{'shopkeeper', 'shopkeeper', 'shopkeeper', 'seed seller', 'flower seller', 'ore seller', 'fruit trader', 'wood trader'}};
 mg_villages.inhabitants.jobs_in_buildings[ 'charachoal' ] = {'charachoal burner'};
 mg_villages.inhabitants.jobs_in_buildings[ 'trader'     ] = {'trader'}; -- TODO: currently only used for clay traders
-mg_villages.inhabitants.jobs_in_buildings[ 'chateau'    ] = {'servant'};
+mg_villages.inhabitants.jobs_in_buildings[ 'chateau'    ] = {'landlord'};
 mg_villages.inhabitants.jobs_in_buildings[ 'sawmill'    ] = {'sawmill owner'};
 mg_villages.inhabitants.jobs_in_buildings[ 'forrest'    ] = {'lumberjack'}; -- TODO: we don't have forrests yet
 mg_villages.inhabitants.jobs_in_buildings['village_square']={'major'};

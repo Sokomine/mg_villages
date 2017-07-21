@@ -9,6 +9,7 @@
 --  price               Stack that has to be paid in order to become owner of the plot the building stands on and the building;
 --                      overrides mg_villages.prices[ building_typ ].
 --  guests		Negative value, i.e. -2: 2 of the beds will belong to the family working here; the rest will be guests.
+--                      For building type "chateau", guest names the number of servants/housemaids instead of guests.
 
 mg_villages.all_buildings_list = {}
 
@@ -230,7 +231,7 @@ local buildings = {
 	{scm="hochsitz_3",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
 	{scm="hochsitz_4",                 yoff=0, orients={0,1,2,3}, farming_plus=0, avoid='', typ='tower',    weight={tower=1, single=1/3}, nomirror=1},
 
-	{scm="chateau_without_garden",     yoff=-1,orients={0,1,2,3}, farming_plus=0, avoid='', typ='chateau',  weight={chateau=1,single=8}, pervillage=1, inh=8},
+	{scm="chateau_without_garden",     yoff=-1,orients={0,1,2,3}, farming_plus=0, avoid='', typ='chateau',  weight={chateau=1,single=8}, pervillage=1, inh=8, guests=-6}, -- 6 family members of the landlord's family; rest are servants
 
 	{scm="baking_house_1",             yoff=0, orients={0}, farming_plus=0, avoid='', typ='bakery', weight={medieval=1/4}, pervillage=1, inh=-1},
 	{scm="baking_house_2",             yoff=0, orients={0}, farming_plus=0, avoid='', typ='bakery', weight={medieval=1/4}, pervillage=1, inh=-1},
