@@ -85,3 +85,76 @@ mg_villages.plotmarker_list_traders = function( plot, formspec )
 	return formspec;
 end
 
+
+-- provide debug information about mobs, let mobf_traders work around to some degree etc
+mg_villages.mob_spanwer_on_rightclick = function( pos, node, clicker, itemstack, pointed_thing)
+	if( not( clicker )) then
+		return;
+	end
+	local meta = minetest.get_meta( pos );
+	if( not( meta )) then
+		return;
+	end
+	local village_id = meta:get_string( "village_id" );
+	local plot_nr    = meta:get_int(    "plot_nr" );
+	local bed_nr     = meta:get_int(    "bed_nr" );
+	-- direction for the mob to look at
+	local yaw        = meta:get_int(    "yaw" );
+
+	local mob_info = mg_villages.inhabitants.get_mob_data( village_id, plot_nr, bed_nr );
+
+	local str = "Found: ";
+	local mob_pos = nil;
+	local mob = nil;
+	if( mob_info.mob_id and mob_basics) then
+		mob = mob_basics.find_mob_by_id( mob_info.mob_id, "trader" );
+		if( mob ) then
+			mob_pos = mob.object:getpos();
+			if( mob_pos and mob_pos.x == pos.x and mob_pos.z == pos.z ) then
+				str = str.." yes, waiting right here. ";
+				mob.trader_does = "stand";
+			-- TODO: detect "in his bed"
+			elseif( mob.trader_does == "sleep" and mob.trader_uses and mob.trader_uses.x ) then
+				str = str.." yes, sleeping in bed at "..minetest.pos_to_string( mob.trader_uses )..". ";
+			else
+				str = str.." yes, at "..minetest.pos_to_string( mob_pos)..". Teleporting here.";
+				mob.trader_does = "stand";
+				mob_world_interaction.stand_at( mob, pos, yaw );
+			end
+		else
+			str = str.." - not found -. ";
+		end
+	end
+
+	local res = mg_villages.get_plot_and_building_data( village_id, plot_nr );
+	if( not( res ) or not( res.bpos ) or not( mob_info.mob_id ) or not( mob ) or not( mob_world_interaction) or not( movement)) then
+		minetest.chat_send_player( clicker:get_player_name(), str.."Mob data: "..minetest.serialize(mob_info));
+		return;
+	end
+	-- use door_nr 1;
+	local path = nil;
+	if( mob and mob.trader_does == "sleep" ) then
+		path = mg_villages.get_path_from_bed_to_outside( village_id, plot_nr, bed_nr, 1 );
+		-- get out of the bed, walk to the middle of the front of the house
+		if( path and #path>0 ) then
+			mob_world_interaction.stand_at( mob, path[1], yaw );
+			-- last step: go back to the mob spawner that belongs to the mob
+			table.insert( path, pos );
+			str = str.." The mob plans to get up from his bed and stand in front of his house.\n";
+		else
+			str = str.." FAILED to get a path from bed to outside.\n";
+		end
+	else
+		-- go to bed and sleep
+		path = mg_villages.get_path_from_outside_to_bed( village_id, plot_nr, bed_nr, 1 );
+		str = str.." The mob plans to go to his bed and start sleeping.\n";
+
+--			local target_plot_nr = 9; -- just for testing..
+--			path = mg_villages.get_path_from_pos_to_plot_via_roads( village_id, pos, target_plot_nr );
+--			str = str.." The mob plans to go to plot nr. "..tostring(target_plot_nr).."\n";
+	end
+	local move_obj = movement.getControl(mob);
+	move_obj:walk_path( path, 1, {find_path == true});
+
+	minetest.chat_send_player( clicker:get_player_name(), str.."Mob data: "..minetest.serialize(mob_info));
+end
