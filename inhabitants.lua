@@ -95,6 +95,8 @@ mg_villages.inhabitants.get_family_function_str = function( data )
 	end
 end
 
+-- worker_data contains data about the father of the mob or about the mob him/herself
+-- (needed for determining family relationship)
 mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
 	if( not( data ) or not( data.first_name )) then
 		return;
@@ -271,6 +273,24 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 	   or not( bpos.beds ) or table.getn( bpos.beds ) < 1) then
 		return bpos;
 	end
+
+	-- the bed list for any actual building may be ordered diffrently than the
+	-- bed list in BUILDINGS[..] due to rotation
+
+	-- transform all bed positions to the current position
+	local transformed = {};
+	for i,p in ipairs( building_data.bed_list ) do
+		transformed[ i ] = mg_villages.transform_coordinates( {p.x,p.y,p.z}, bpos );
+	end
+	-- find out which bed in the building data bed list corresponds to which bed in our list here
+	for i,v in ipairs( bpos.beds ) do
+		for nr,p in ipairs( transformed ) do
+			if( p and p.x==v.x and p.y==v.y and p.z==v.z ) then
+				bpos.beds[i].bnr = nr; -- bed number in list
+			end
+		end
+	end
+
 
 	-- lumberjack home
 	if( building_data.typ == "lumberjack" ) then
