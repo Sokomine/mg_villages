@@ -832,10 +832,6 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	-- these extra nodes are used in order to avoid abms on the huge fields around the villages
 	cid.c_soil_wet        = minetest.get_content_id( 'mg_villages:soil' ); --'farming:soil_wet' );
 	cid.c_soil_sand       = minetest.get_content_id( 'mg_villages:desert_sand_soil'); --'farming:desert_sand_soil_wet' );
-	-- desert sand soil is only available in minetest_next
-	if( not( cid.c_soil_sand )) then
-		cid.c_soil_sand = cid.c_soil_wet;
-	end
 	local c_feldweg         = minetest.get_content_id( 'cottages:feldweg');
 	if( not( c_feldweg )) then
 		c_feldweg = cid.c_dirt_with_grass;
@@ -942,7 +938,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				end
 
 				-- place a water source now and then so that the fake soil can later be turned into real soil if needed
-				if( on_soil and x%3==0 and z%3==0 and h>minp.y) then
+				if( mg_villages.PLACE_WATER_FOR_FARMING and on_soil and x%3==0 and z%3==0 and h>minp.y) then
 					data[a:index( x, h-1, z)] = cid.c_water;
 				end
 			end

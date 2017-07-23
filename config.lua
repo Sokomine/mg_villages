@@ -40,6 +40,11 @@ mg_villages.MAX_HEIGHT_TREATED = 200;
 -- choose the debug level you want
 mg_villages.DEBUG_LEVEL = mg_villages.DEBUG_LEVEL_NORMAL
 
+-- if set to true, a water source will be added all 2-3 blocks on a field for farming;
+-- as long as you do not plan to dig up all fields, hoe them and use them manually,
+-- better keep this to "false" as that is much faster
+mg_villages.PLACE_WATER_FOR_FARMING = false
+
 -- if set to true (or anything else but nil or false), highlandpools by paramat (see
 -- https://forum.minetest.net/viewtopic.php?t=8400) will be created
 mg_villages.CREATE_HIGHLANDPOOLS = true

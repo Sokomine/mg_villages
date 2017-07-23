@@ -31,7 +31,7 @@ minetest.register_node("mg_villages:soil", {
 	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt.png"},
 	drop = "default:dirt",
 	is_ground_content = true,
-	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1},
+	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1, soil=3, wet=1},
 	sounds = default.node_sound_dirt_defaults(),
 })
 
@@ -40,7 +40,7 @@ minetest.register_node("mg_villages:desert_sand_soil", {
 	tiles = {"default_desert_sand.png^farming_soil_wet.png", "default_desert_sand.png"},
 	is_ground_content = true,
 	drop   = "default:desert_sand",
-	groups = {crumbly=3, not_in_creative_inventory = 1, sand=1, desert = 1},
+	groups = {crumbly=3, not_in_creative_inventory = 1, sand=1, desert = 1, soil=3, wet=1},
 	sounds = default.node_sound_sand_defaults(),
 })
 
