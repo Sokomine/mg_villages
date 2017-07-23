@@ -48,51 +48,11 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 					      + (village.vh - pos.y ) * (village.vh - pos.y )
 					      + (village.vz - pos.z ) * (village.vz - pos.z ) ));
 
+	-- show a list of who lives (or works) here at this plot
 	if( fields and fields.inhabitants ) then
 		minetest.show_formspec( pname, "mg_villages:plot_mob_list",
 			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
-		if( true ) then return; end
-
-		minetest.chat_send_player( player:get_player_name(), mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
-
-		if( not( minetest.get_modpath( "mob_world_interaction"))) then
-			return;
-		end
-		-- TODO: only for testing
-		local bpos = village.to_add_data.bpos[ plot_nr ];
-		if( bpos and bpos.beds ) then
-			for i,bed in ipairs( bpos.beds ) do
-				-- find a place next to the bed where the mob can stand
-				local p_next_to_bed = mob_world_interaction.find_place_next_to( bed, 0, {x=0,y=0,z=0});
-				if( not( p_next_to_bed ) or p_next_to_bed.iteration==99 ) then
-					minetest.chat_send_player("singleplayer", "Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a place to stand.");
-				else
-					-- position in front of the building, with the building stretching equally to the right and left
-					-- get a diffrent one for each mob
-					local p_in_front = handle_schematics.get_pos_in_front_of_house( bpos, i );
-					local path = mob_world_interaction.find_path( p_next_to_bed, p_in_front, { collisionbox = {1,0,3,4,2}});
-					local str = "";
-					if( path ) then
-						str = str.."Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..", standing at "..minetest.pos_to_string( p_next_to_bed )..": "..tostring( table.getn( path )).." Steps to outside.";
-						local front_door_pos = nil;
-						for j,p in ipairs( path ) do
-							local n = minetest.get_node( p );
-							if( n and n.name and mob_world_interaction.door_type[ n.name ]=="door_a_b") then
-								front_door_pos = p;
-							end
-						end
-						if( front_door_pos ) then
-							str = str.." Front door found at: "..minetest.pos_to_string( front_door_pos );
-						end
-					else
-						str = str.." FAILED to find a path from bed "..minetest.pos_to_string(bed )..", standing at "..minetest.pos_to_string( p_next_to_bed )..", to front of house.";
-					end
-					minetest.chat_send_player("singleplayer", str );
-				end
-			end
-		end
-
-
+		--mg_villages.debug_inhabitants( village, plot_nr);
 		return;
 	end
 

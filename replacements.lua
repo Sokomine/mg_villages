@@ -2,6 +2,11 @@
 -- fountains and lakes have river water, not salt water
 handle_schematics.global_replacement_table[ 'default:water_source' ] = 'default:river_water_source';
 handle_schematics.global_replacement_table[ 'default:water_flowing' ] = 'default:river_water_flowing';
+-- always use the cheaper simulated soil that has no problem with water beeing 4 nodes away
+handle_schematics.global_replacement_table[ 'farming:soil_wet'             ] = 'mg_villages:soil';
+handle_schematics.global_replacement_table[ 'farming:soil'                 ] = 'mg_villages:soil';
+handle_schematics.global_replacement_table[ 'farming:desert_sand_soil_wet' ] = 'mg_villages:desert_sand_soil';
+handle_schematics.global_replacement_table[ 'farming:desert_sand_soil'     ] = 'mg_villages:desert_sand_soil';
 
 -- ethereal comes with some intresting trees
 if( minetest.get_modpath( 'ethereal' )) then
