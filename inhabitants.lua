@@ -102,11 +102,11 @@ mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
 		return;
 	end
 	local str = data.first_name;
-	if( data.mob_id ) then
-	   str = "["..data.mob_id.."] "..minetest.pos_to_string( data ).." "..data.first_name;
-	else
-	   str = " -no mob assigned - "..minetest.pos_to_string( data ).." "..data.first_name;
-	end
+--	if( data.mob_id ) then
+--	   str = "["..data.mob_id.."] "..minetest.pos_to_string( data ).." "..data.first_name;
+--	else
+--	   str = " -no mob assigned - "..minetest.pos_to_string( data ).." "..data.first_name;
+--	end
 
 	if( data.middle_name ) then
 		str = str.." "..data.middle_name..".";
@@ -419,31 +419,43 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		building_data = { typ = bpos.btype };
 	end
 	local str = "Plot Nr. "..tostring( house_nr ).." ["..tostring( building_data.typ or "-?-").."] ";
+	local people_str = "";
+	local add_str = "";
 	if( bpos.btype == "road" ) then
-		str = str.."is a road.\n";
+		str = str.."is a road.";
 
 	-- wagon, shed, field and pasture
 	elseif( bpos.belongs_to and village_to_add_data_bpos[ bpos.belongs_to ].beds) then
 		local owner = village_to_add_data_bpos[ bpos.belongs_to ].beds[1];
 		if( not( owner ) or not( owner.first_name )) then
-			str = str.."WARNING: NO ONE owns this plot.\n";
+			str = str.."WARNING: NO ONE owns this plot.";
 		else
-			str = str.."belongs to: "..mg_villages.inhabitants.mob_get_full_name( owner, owner ).."\n";
+			str = str.."belongs to:";
+			people_str = minetest.formspec_escape( mg_villages.inhabitants.mob_get_full_name( owner, owner ).." owns this plot");
 		end
 
 	elseif( not( bpos.beds ) or #bpos.beds<1 and bpos.worker and bpos.worker.title) then
 		if( not( bpos.worker.lives_at)) then
-			str = str.."WARNING: NO WORKER assigned to this plot.\n";
+			str = str.."WARNING: NO WORKER assigned to this plot.";
 		else
 			local worker = village_to_add_data_bpos[ bpos.worker.lives_at ].beds[1];
-			str = str..mg_villages.inhabitants.mob_get_full_name( worker, worker ).." works here.\n";
+			str = str.."provides work:";
+			local btype2 = mg_villages.BUILDINGS[ village_to_add_data_bpos[ bpos.worker.lives_at ].btype];
+			people_str = minetest.formspec_escape( mg_villages.inhabitants.mob_get_full_name( worker, worker ).." who lives at the "..tostring( btype2.typ ).." on plot "..tostring( bpos.worker.lives_at )..", works here");
 		end
 
 	elseif( not( bpos.beds ) or not( bpos.beds[1])) then
-		str = str.."provides neither work nor housing.\n";
+		str = str.."provides neither work nor housing.";
 
 	else
-		str = str.."is inhabitated by:\n";
+		str = str.."is inhabitated by ";
+		if( #bpos.beds == 1 ) then
+			str = str.."only one person:";
+		elseif( #bpos.beds > 1 ) then
+			str = str..tostring( #bpos.beds ).." people:";
+		else
+			str = str.."nobody:";
+		end
 		-- make sure all mobs living here are spawned
 		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, nil, nil, village_id, house_nr );
 		for i,v in ipairs( bpos.beds ) do
@@ -452,32 +464,43 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 				if( v and v.works_at ) then
 					worker_data = v;
 				end
-				str = str.."  "..mg_villages.inhabitants.mob_get_full_name( v, worker_data );
+				people_str = people_str..
+					tostring( i )..". "..
+					minetest.formspec_escape( mg_villages.inhabitants.mob_get_full_name( v, worker_data ));
 				if(v and v.works_at and v.works_at==house_nr ) then
-					str = str.." who lives and works here\n";
+					people_str = people_str.." who lives and works here,";
 				elseif( v and v.works_at ) then
 					local works_at = bpos.beds[1].works_at;
 					local btype2 = mg_villages.BUILDINGS[ village_to_add_data_bpos[ works_at ].btype];
-					str = str.." who works at the "..tostring( btype2.typ ).." on plot "..tostring(works_at).."\n";
-				else
-					str = str.."\n";
+					people_str = people_str.." who works at the "..tostring( btype2.typ ).." on plot "..tostring(works_at)..",";
+				elseif( i ~= #bpos.beds ) then
+					people_str = people_str..",";
 				end
 			end
 		end
 		-- other plots owned
 		if( bpos.beds and bpos.beds[1] and bpos.beds[1].owns ) then
-			str = str.."The family also owns the plot(s) ";
+			add_str = "The family also owns the plot(s) ";
 			for i,v in ipairs( bpos.beds[1].owns ) do
 				if( i>1 ) then
-					str = str..", ";
+					add_str = add_str..", ";
 				end
 				local building_data = mg_villages.BUILDINGS[ village_to_add_data_bpos[v].btype ];
-				str = str.."Nr. "..tostring( v ).." ("..building_data.typ..")";
+				add_str = add_str.."Nr. "..tostring( v ).." ("..building_data.typ..")";
 			end
-			str = str.."\n";
+			add_str = add_str..".";
 		end
 	end
-	return str;
+	if( people_str == "" ) then
+		people_str = "- nobody lives or works here permanently -";
+	end
+	return 'size[12,4.5]'..
+		'button_exit[9.5,0;2,0.5;back;Back]'..
+		'label[0.5,0.5;'..minetest.formspec_escape(str)..']'..
+		'label[0.5,4.1;'..minetest.formspec_escape(add_str)..']'..
+		'tablecolumns[' ..
+		'text,align=left]'..   -- name and description of inhabitant
+		'table[0.1,1.0;11.4,3.0;mg:plot_mob_list;'..people_str..']';
 end
 
 

@@ -49,6 +49,10 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 					      + (village.vz - pos.z ) * (village.vz - pos.z ) ));
 
 	if( fields and fields.inhabitants ) then
+		minetest.show_formspec( pname, "mg_villages:plot_mob_list",
+			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
+		if( true ) then return; end
+
 		minetest.chat_send_player( player:get_player_name(), mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
 
 		if( not( minetest.get_modpath( "mob_world_interaction"))) then
