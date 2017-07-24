@@ -30,7 +30,7 @@ mg_villages.get_path_from_pos_to_plot_via_roads = function( village_id, pos, tar
 
 	-- find out which road is the one next to pos
 	local standing_on_road = nil;
-	local roads = mg_villages.get_road_list( village_id );
+	local roads = mg_villages.get_road_list( village_id, false );
 	for i,road in ipairs( roads ) do
 		local r = bpos_list[ road ]; -- road data
 		-- if this is really a road, and if a parent road exists (or is 0)
@@ -142,7 +142,7 @@ end
 
 -- try to reconstruct the tree-like road network structure (the data was
 -- not saved completely from the beginning)
-mg_villages.get_road_list = function( village_id )
+mg_villages.get_road_list = function( village_id, force_check )
 	if( not( mg_villages.all_villages[ village_id ] )) then
 		return {};
 	end
@@ -165,7 +165,7 @@ mg_villages.get_road_list = function( village_id )
 		return {};
 	end
 	-- the parent roads have already been identified
-	if( bpos_list[ roads[ 1 ]].parent_road_plot == 0 ) then
+	if( not( force_check ) and bpos_list[ roads[ 1 ]].parent_road_plot == 0 ) then
 		return roads;
 	end
 

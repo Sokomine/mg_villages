@@ -14,7 +14,7 @@ mg_villages.list_plots_formspec = function( player, formname, fields )
 	local pname = player:get_player_name();
 
 	-- analyze the road network (this has not been done from the beginning..)
-	mg_villages.get_road_list( fields.village_id );
+	mg_villages.get_road_list( fields.village_id, false );
 
 	local formspec = 'size[12,12]'..
 			'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( fields.village_id ).."]"..

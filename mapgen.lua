@@ -1225,10 +1225,11 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	t1 = time_elapsed( t1, 'do fill chests' );
 	-- TODO: extra_calls.signs
 
-	
 	-- set up workplace markers so that they know for which mob they are responsible
 	for _, village in ipairs(villages) do
 		local village_id = tostring( village.vx )..':'..tostring( village.vz );
+		-- this is a good time to analyze the road network as well
+		mg_villages.get_road_list( village_id, true );
 		for building_nr_in_bpos,pos in ipairs( village.to_add_data.bpos ) do
 			if( pos.workplaces and #pos.workplaces>0) then
 				for workplace_nr, wp in ipairs( pos.workplaces ) do
