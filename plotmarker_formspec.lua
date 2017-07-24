@@ -357,9 +357,49 @@ mg_villages.form_input_handler = function( player, formname, fields)
 	if( not( mg_villages.ENABLE_PROTECTION )) then
 		return false;
 	end
+
+	-- provide information about the inhabitants of a particular plot
+	if(   fields['mg_villages:list_plots']
+	  and fields['mg_villages:list_plots']~=""
+	  and fields['village_id']) then
+		local selection = minetest.explode_table_event( fields['mg_villages:list_plots'] );
+		local pname = player:get_player_name();
+		if( mg_villages.all_villages[ fields.village_id ]
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ selection.row-1 ]) then
+
+			local village = mg_villages.all_villages[ fields.village_id ];
+			local plot_nr = selection.row-1;
+			minetest.show_formspec( pname, "mg_villages:plot_mob_list",
+				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
+			return true;
+		end
+	end
+
+	-- the player has selected a village in the village list
+	if( fields['mg_villages:village_list'] and fields['mg_villages:village_list']~="") then
+		local selection = minetest.explode_table_event( fields['mg_villages:village_list'] );
+		local pname = player:get_player_name();
+		if(   selection and selection.row
+		  and mg_villages.tmp_player_village_list[ pname ]
+		  and mg_villages.tmp_player_village_list[ pname ][ selection.row-1 ]) then
+
+			-- this is the village the player is intrested in
+			fields.village_id = mg_villages.tmp_player_village_list[ pname ][ selection.row-1 ];
+			-- show the player a list of plots of the selected village
+			mg_villages.list_plots_formspec( player, 'mg_villages:list_plots', fields );
+			return true;
+		end
+	end
+
 	if( (formname == "mg_villages:plotmarker") and fields.pos2str and not( fields.abort )) then
 		local pos = minetest.string_to_pos( fields.pos2str );
 		mg_villages.plotmarker_formspec( pos, formname, fields, player );
+		return true;
+
+	elseif( (formname == "mg_villages:list_plots" ) and fields.village_id and not( fields.abort )) then
+		mg_villages.list_villages_formspec( player, formname, fields );
 		return true;
 	end
 	return false;

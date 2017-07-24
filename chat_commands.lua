@@ -1,7 +1,105 @@
 
 minetest.register_privilege("mg_villages", { description = "Allows to teleport to villages via /vist <nr>", give_to_singleplayer = false});
 
--- this function is only used for the chat command currently
+-- store per player which list of villages was offered
+mg_villages.tmp_player_village_list = {};
+
+-- list all plots of a village:
+--   plot_nr, type of building, #inhabitants, occupation, name
+mg_villages.list_plots_formspec = function( player, formname, fields )
+
+	if( not( player ) or fields.quit or not( fields.village_id) or not( mg_villages.all_villages[ fields.village_id ])) then
+		return
+	end
+	local pname = player:get_player_name();
+
+	-- analyze the road network (this has not been done from the beginning..)
+	mg_villages.get_road_list( fields.village_id );
+
+	local formspec = 'size[12,12]'..
+			'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( fields.village_id ).."]"..
+			'button_exit[4.0,1.0;2,0.5;quit;Quit]'..
+			'tablecolumns[' ..
+			'text,align=right;'..	-- plot nr
+			'text,align=center;'..	-- type of building
+			'text,align=center;'..	-- amount of inhabitants
+			'text,align=center;'..  -- occupation of first inhabitant
+			'text,align=center;'..  -- name of first inhabitat
+			'text,align=center]'..	-- comment
+                        'table[0.1,2.0;11.4,8.8;'..formname..';'..
+			'PlotNr,Type of building,'..minetest.formspec_escape('#Inhab.')..
+				',Job,Owner,Comment,';
+
+	local bpos_list = mg_villages.all_villages[ fields.village_id ].to_add_data.bpos;
+	for plot_nr,bpos in ipairs( bpos_list ) do
+
+		formspec = formspec..plot_nr..',';
+		if( bpos.btype and bpos.btype ~= "road" and mg_villages.BUILDINGS[ bpos.btype ]) then
+			formspec = formspec..mg_villages.BUILDINGS[ bpos.btype ].typ..',';
+		else
+			formspec = formspec..tostring( bpos.btype )..',';
+		end
+		if( not( bpos.beds ) or #bpos.beds<1 ) then
+			if( bpos.worker and bpos.worker.lives_at and bpos_list[ bpos.worker.lives_at ] ) then
+				local btype2 = mg_villages.BUILDINGS[ bpos_list[ bpos.worker.lives_at ].btype];
+				local worker_plot = bpos_list[ bpos.worker.lives_at ];
+				formspec = formspec..'-,'..
+					( worker_plot.beds[1].title or '-')..','..
+					( worker_plot.beds[1].first_name or '-')..','..
+					"lives in the "..tostring( btype2.typ ).." on plot "..tostring( bpos.worker.lives_at )..',';
+			elseif( bpos.belongs_to and bpos_list[ bpos.belongs_to ]) then
+				formspec = formspec..'-,-,-,';
+				local owner_plot = bpos_list[ bpos.belongs_to ];
+				if( owner_plot and owner_plot.beds and owner_plot.beds[1] ) then
+					formspec = formspec.."owned by "..
+							( owner_plot.beds[1].title or '?')..' '..
+							( owner_plot.beds[1].first_name or '?')..
+							minetest.formspec_escape(" [plot "..tostring( bpos.belongs_to )..']')..',';
+				else
+					formspec = formspec.."owned by "..minetest.formspec_escape(" [plot "..tostring( bpos.belongs_to )..']')..',';
+				end
+			elseif( bpos.btype == "road" ) then
+print("ROAD on plot "..tostring( plot_nr )..": "..minetest.serialize( bpos ));
+				if( not( bpos.parent_road_plot )) then
+					formspec = formspec..'-,-,-,road stump,';
+				elseif( bpos.parent_road_plot==0 ) then
+					formspec = formspec..'-,-,-,main road,';
+				else
+					formspec = formspec..'-,-,-,road nr. '..tostring( bpos.road_nr)..
+						minetest.formspec_escape(', sideroad of ');
+					if( bpos_list[ bpos.parent_road_plot ].parent_road_plot == 0 ) then
+						formspec = formspec..'the main road,';
+					else
+						formspec = formspec..'road nr. '..
+							tostring( bpos_list[ bpos.parent_road_plot ].road_nr)..',';
+					end
+				end
+			else
+				formspec = formspec..'-,-,-,-,';
+			end
+		else
+			formspec = formspec..tostring( #bpos.beds )..','..
+				( bpos.beds[1].title or '-')..','..
+				( bpos.beds[1].first_name or '-')..',';
+			if( bpos.beds[1].works_at
+			  and bpos.beds[1].works_at ~= plot_nr
+			  and bpos_list[ bpos.beds[1].works_at ]) then
+				local btype2 = mg_villages.BUILDINGS[ bpos_list[ bpos.beds[1].works_at].btype];
+				formspec = formspec.."works at the "..tostring( btype2.typ ).." on plot "..tostring(bpos.beds[1].works_at)..",";
+			else
+				formspec = formspec.."-,";
+			end
+		end
+	end
+	formspec = formspec..';1]';
+	minetest.show_formspec( pname, formname, formspec );
+end
+
+
+-- list all villages withhin a certain range of the player's position:
+--   village_nr, distance from player, name of village, population,
+--   type (i.e. "medieval"), x, y, z, diameter, #buildings, village/single house
+-- this function is only used for the chat command "/villages" currently
 mg_villages.list_villages_formspec = function( player, formname, fields )
 
 	if( not( player ) or fields.quit) then
@@ -9,7 +107,6 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 	end
 	local pname = player:get_player_name();
 	local ppos  = player:getpos();
-
 
 	local radius = 1000000;
 	-- without the special priv, players can only obtain informatoin about villages which are very close by
@@ -34,6 +131,7 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
                         'table[0.1,2.0;11.4,8.8;'..formname..';'..
 			'Nr,Dist,Name of village,Population,Type of village,_X_,_H_,_Z_,Size,'..minetest.formspec_escape('#Buildings')..',,';
 
+	mg_villages.tmp_player_village_list[ pname ] = {};
 	for k,v in pairs( mg_villages.all_villages ) do
 
 		local dx = math.abs( v.vx - ppos.x );
@@ -70,6 +168,9 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 				tostring( v.vs )..','..
 				tostring( v.anz_buildings )..','..
 				tostring( is_full_village )..',';
+
+			-- store which list we have shown to this particular player
+			table.insert( mg_villages.tmp_player_village_list[ pname ], k );
 		end
 	end
 	formspec = formspec..';1]';
@@ -83,7 +184,7 @@ minetest.register_chatcommand( 'villages', {
 	description = "Shows a list of all known villages.",
 	privs = {},
 	func = function(name, param)
-		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg:village_list", {});
+		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg_villages:village_list", {});
         end
 });
 
