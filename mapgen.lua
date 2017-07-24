@@ -118,6 +118,7 @@ mg_villages.check_if_ground = function( ci )
 				replacements_group.node_is_ground[ minetest.get_content_id( name )] = false;
 			end
 		end
+		replacements_group.node_is_ground[ minetest.get_content_id( 'air' )] = false;
 		local ground_nodes = {'ethereal:dry_dirt', 'default:dirt_with_dry_grass','default:stone','default:sandstone','default:desertstone',
                         'ethereal:grey_dirt', 'default:dirt_with_snow', 'default:dirt_with_grass', 'ethereal:grove_dirt', 'ethereal:green_dirt',
 			'ethereal:grove_dirt','ethereal:jungle_dirt'};
@@ -145,6 +146,15 @@ mg_villages.check_if_ground = function( ci )
 		replacements_group.node_is_ground[ ci ] = false;
 	elseif( def.groups and def.groups.tree ) then
 		replacements_group.node_is_ground[ ci ] = false;
+	elseif( def.groups and (def.groups.plant or def.groups.growing)) then
+		replacements_group.node_is_ground[ ci ] = false;
+	elseif( def.drawtype and (def.drawtype=="flowingliquid" or def.drawtype=="torchlike"
+	   or def.drawtype=="signlike"  or def.drawtype=="airlike"  or def.drawtype=="liquid"
+	   or def.drawtype=="plantlike" or def.drawtype=="firelike" or def.drawtype=="fencelike"
+	   or def.drawtype=="raillike"  or def.drawtype=="nodebox"  or def.drawtype=="mesh"
+	   or def.drawtype=="plantlike_rooted")) then
+		replacements_group.node_is_ground[ ci ] = false;
+
 	elseif(	def.drop   and def.drop == 'default:dirt') then
 		replacements_group.node_is_ground[ ci ] = true;
 	elseif( def.walkable == true and def.is_ground_content == true and not(def.node_box)) then
