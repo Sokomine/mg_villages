@@ -18,19 +18,21 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 	end
 
 	local formspec = 'size[12,12]'..
-			'button_exit[4.0,1.5;2,0.5;quit;Quit]'..
+			'button_exit[4.0,1.0;2,0.5;quit;Quit]'..
 			'tablecolumns[' ..
 			'text,align=right;'..	-- village number
 			'text,align=right;'..	-- distance from player
 			'text,align=center;'..	-- name of village
+			'text,align=center;'..  -- inhabitants
 			'text,align=center;'..	-- typ of village
 			'text,align=right;'..	-- x
 			'text,align=right;'..	-- y
 			'text,align=right;'..	-- z
 			'text,align=right;'..	-- size
-			'text,align=right;'..	-- #houses where inhabitants may live or work
+			'text,align=center;'..	-- #houses where inhabitants may live or work
 			'text,align=right]'..
-                        'table[0.1,2.7;11.4,8.8;'..formname..';';
+                        'table[0.1,2.0;11.4,8.8;'..formname..';'..
+			'Nr,Dist,Name of village,Population,Type of village,_X_,_H_,_Z_,Size,'..minetest.formspec_escape('#Buildings')..',,';
 
 	for k,v in pairs( mg_villages.all_villages ) do
 
@@ -43,10 +45,24 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 			if( v.is_single_house ) then
 				is_full_village = '';
 			end
+			-- count the inhabitants
+			if( not( v.population )) then
+				v.population = 0;
+				for _,pos in ipairs( v.to_add_data.bpos ) do
+					if( pos and pos.beds ) then
+						v.population = v.population + #pos.beds;
+					end
+				end
+			end
+			local show_population = v.population;
+			if( show_population == 0 ) then
+				show_population = "-";
+			end
 			formspec = formspec..
 				v.nr..','..
 				tostring( math.floor( dist ))..','..
 				tostring( v.name or 'unknown' )..','..
+				show_population..','..
 				v.village_type..','..
 				tostring( v.vx )..','..
 				tostring( v.vh )..','..
@@ -56,9 +72,8 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 				tostring( is_full_village )..',';
 		end
 	end
-
- 	formspec = formspec..';]'..
-			'tabheader[0.1,2.2;spalte;Nr,Dist,Name of village,Type of village,_X_,_H_,_Z_,Size,Buildings;;true;true]';
+	formspec = formspec..';1]';
+--		'tabheader[0.1,2.6;spalte;Nr,Dist,Name of village,Population,Type of village,_X_,_H_,_Z_,Size,'..minetest.formspec_escape('#Buildings')..';;true;true]';
 
 	minetest.show_formspec( pname, formname, formspec );
 end
