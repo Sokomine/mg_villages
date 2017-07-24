@@ -495,7 +495,10 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		people_str = "- nobody lives or works here permanently -";
 	end
 	return 'size[12,4.5]'..
-		'button_exit[9.5,0;2,0.5;back;Back]'..
+		'button_exit[4.0,0;2,0.5;quit;Exit]'..
+		'button[9.5,0;2,0.5;back_to_plotlist;Back to plotlist]'..
+		-- the back button needs to know which village we are in
+		'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( village_id ).."]"..
 		'label[0.5,0.5;'..minetest.formspec_escape(str)..']'..
 		'label[0.5,4.1;'..minetest.formspec_escape(add_str)..']'..
 		'tablecolumns[' ..

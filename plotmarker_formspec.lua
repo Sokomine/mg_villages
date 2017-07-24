@@ -51,7 +51,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	-- show a list of who lives (or works) here at this plot
 	if( fields and fields.inhabitants ) then
 		minetest.show_formspec( pname, "mg_villages:plot_mob_list",
-			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
+			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, village_id ));
 		--mg_villages.debug_inhabitants( village, plot_nr);
 		return;
 	end
@@ -359,7 +359,8 @@ mg_villages.form_input_handler = function( player, formname, fields)
 	end
 
 	-- provide information about the inhabitants of a particular plot
-	if(   fields['mg_villages:list_plots']
+	if( not( fields['back_to_plotlist'])
+	  and fields['mg_villages:list_plots']
 	  and fields['mg_villages:list_plots']~=""
 	  and fields['village_id']) then
 		local selection = minetest.explode_table_event( fields['mg_villages:list_plots'] );
@@ -372,13 +373,24 @@ mg_villages.form_input_handler = function( player, formname, fields)
 			local village = mg_villages.all_villages[ fields.village_id ];
 			local plot_nr = selection.row-1;
 			minetest.show_formspec( pname, "mg_villages:plot_mob_list",
-				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr ));
+				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id ));
 			return true;
 		end
 	end
 
+	-- back from the list of inhabitants of a plot to the list of plots of a village
+	if(   fields['back_to_plotlist']
+	  and fields.village_id
+	  and mg_villages.all_villages[ fields.village_id ]) then
+		-- show the player a list of plots of the selected village
+		mg_villages.list_plots_formspec( player, 'mg_villages:list_plots', fields );
+		return true;
+	end
+
 	-- the player has selected a village in the village list
-	if( fields['mg_villages:village_list'] and fields['mg_villages:village_list']~="") then
+	if( not( fields['back_to_villagelist'])
+	  and fields['mg_villages:village_list']
+	  and fields['mg_villages:village_list']~="") then
 		local selection = minetest.explode_table_event( fields['mg_villages:village_list'] );
 		local pname = player:get_player_name();
 		if(   selection and selection.row
@@ -391,6 +403,13 @@ mg_villages.form_input_handler = function( player, formname, fields)
 			mg_villages.list_plots_formspec( player, 'mg_villages:list_plots', fields );
 			return true;
 		end
+	end
+
+	-- back from plotlist of a village to the list of nearby villages
+	if( fields['back_to_villagelist']) then
+		mg_villages.list_villages_formspec( player, "mg_villages:village_list", {});
+
+		return true;
 	end
 
 	if( (formname == "mg_villages:plotmarker") and fields.pos2str and not( fields.abort )) then

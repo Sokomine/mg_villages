@@ -18,7 +18,8 @@ mg_villages.list_plots_formspec = function( player, formname, fields )
 
 	local formspec = 'size[12,12]'..
 			'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( fields.village_id ).."]"..
-			'button_exit[4.0,1.0;2,0.5;quit;Quit]'..
+			'button_exit[4.0,1.0;2,0.5;quit;Exit]'..
+			'button[9.5,1.0;3,0.5;back_to_villagelist;Back to village list]'..
 			'tablecolumns[' ..
 			'text,align=right;'..	-- plot nr
 			'text,align=center;'..	-- type of building
@@ -59,7 +60,6 @@ mg_villages.list_plots_formspec = function( player, formname, fields )
 					formspec = formspec.."owned by "..minetest.formspec_escape(" [plot "..tostring( bpos.belongs_to )..']')..',';
 				end
 			elseif( bpos.btype == "road" ) then
-print("ROAD on plot "..tostring( plot_nr )..": "..minetest.serialize( bpos ));
 				if( not( bpos.parent_road_plot )) then
 					formspec = formspec..'-,-,-,road stump,';
 				elseif( bpos.parent_road_plot==0 ) then
