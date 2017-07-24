@@ -410,7 +410,7 @@ end
 
 
 -- print information about which mobs "live" in a house
-mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, house_nr, village_id )
+mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, house_nr, village_id, pname )
 
 	local bpos = village_to_add_data_bpos[ house_nr ];
 	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
@@ -421,6 +421,9 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 	local str = "Plot Nr. "..tostring( house_nr ).." ["..tostring( building_data.typ or "-?-").."] ";
 	local people_str = "";
 	local add_str = "";
+	if( bpos.road_nr ) then
+		str = str.." at road nr. "..tostring( bpos.road_nr ).." ";
+	end
 	if( bpos.btype == "road" ) then
 		str = str.."is a road.";
 
@@ -494,11 +497,22 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 	if( people_str == "" ) then
 		people_str = "- nobody lives or works here permanently -";
 	end
+	local link_teleport = "";
+	if( pname and minetest.check_player_privs( pname, {teleport=true})) then
+		-- teleport to the plotmarker and not somewhere where part of the house may stand
+		link_teleport = 'button[8.0,0;1,0.5;teleport_to;Visit]'..
+			"field[21,21;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string(
+				handle_schematics.get_pos_in_front_of_house( bpos, 0 )).."]";
+	end
 	return 'size[12,4.5]'..
 		'button_exit[4.0,0;2,0.5;quit;Exit]'..
 		'button[9.5,0;2,0.5;back_to_plotlist;Back to plotlist]'..
 		-- the back button needs to know which village we are in
 		'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( village_id ).."]"..
+		-- show where the plot is located
+		'label[0.5,0;Location: '..minetest.formspec_escape( minetest.pos_to_string( bpos ))..']'..
+		-- allow to teleport there (if the player has the teleport priv)
+		link_teleport..
 		'label[0.5,0.5;'..minetest.formspec_escape(str)..']'..
 		'label[0.5,4.1;'..minetest.formspec_escape(add_str)..']'..
 		'tablecolumns[' ..
@@ -904,7 +918,7 @@ mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp,
 end
 
 
-
+--[[ deprecated
 -- command for debugging all inhabitants of a village (useful for debugging only)
 minetest.register_chatcommand( 'inhabitants', {
 	description = "Prints out a list of inhabitants of a village plus their professions.",
@@ -926,7 +940,7 @@ minetest.register_chatcommand( 'inhabitants', {
 				minetest.chat_send_player( name, "Printing information about inhabitants of village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown')).." to console.");
 				-- actually print it
 				for house_nr = 1,#v.to_add_data.bpos do
-					minetest.chat_send_player( name, mg_villages.inhabitants.print_house_info( v.to_add_data.bpos, house_nr, v.nr ));
+					minetest.chat_send_player( name, mg_villages.inhabitants.print_house_info( v.to_add_data.bpos, house_nr, v.nr, name ));
 				end
 				return;
 			end
@@ -936,3 +950,4 @@ minetest.register_chatcommand( 'inhabitants', {
 	end
 });
 
+--]]

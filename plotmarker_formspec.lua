@@ -51,7 +51,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	-- show a list of who lives (or works) here at this plot
 	if( fields and fields.inhabitants ) then
 		minetest.show_formspec( pname, "mg_villages:plot_mob_list",
-			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, village_id ));
+			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, village_id, pname ));
 		--mg_villages.debug_inhabitants( village, plot_nr);
 		return;
 	end
@@ -358,6 +358,21 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		return false;
 	end
 
+	-- teleport to a plot or mob
+	if( fields[ 'teleport_to' ]
+	  and fields[ 'pos2str' ]
+	  and player ) then
+		local pname = player:get_player_name();
+		if( minetest.check_player_privs( pname, {teleport=true})) then
+			local pos = minetest.string_to_pos( fields.pos2str );
+			-- teleport the player to the target position
+			player:moveto( { x=pos.x, y=(pos.y+1), z=pos.z }, false);
+		else
+			minetest.chat_sned_player( pname, "Sorry. You do not have the teleport privilege.");
+		end
+		-- do not abort; continue with showing the formspec
+	end
+
 	-- provide information about the inhabitants of a particular plot
 	if( not( fields['back_to_plotlist'])
 	  and fields['mg_villages:formspec_list_plots']
@@ -373,7 +388,7 @@ mg_villages.form_input_handler = function( player, formname, fields)
 			local village = mg_villages.all_villages[ fields.village_id ];
 			local plot_nr = selection.row-1;
 			minetest.show_formspec( pname, "mg_villages:plot_mob_list",
-				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id ));
+				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id, pname ));
 			return true;
 		end
 	end
