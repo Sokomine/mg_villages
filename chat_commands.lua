@@ -41,7 +41,9 @@ mg_villages.list_plots_formspec = function( player, formname, fields )
 			formspec = formspec..tostring( bpos.btype )..',';
 		end
 		if( not( bpos.beds ) or #bpos.beds<1 ) then
-			if( bpos.worker and bpos.worker.lives_at and bpos_list[ bpos.worker.lives_at ] ) then
+			if( bpos.worker and bpos.worker.lives_at and bpos_list[ bpos.worker.lives_at ]
+			  and bpos_list[ bpos.worker.lives_at ].beds
+			  and bpos_list[ bpos.worker.lives_at ].beds[1]) then
 				local btype2 = mg_villages.BUILDINGS[ bpos_list[ bpos.worker.lives_at ].btype];
 				local worker_plot = bpos_list[ bpos.worker.lives_at ];
 				formspec = formspec..'-,'..

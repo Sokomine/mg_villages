@@ -99,7 +99,7 @@ end
 -- (needed for determining family relationship)
 mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
 	if( not( data ) or not( data.first_name )) then
-		return;
+		return "- unkown -";
 	end
 	local str = data.first_name;
 --	if( data.mob_id ) then
