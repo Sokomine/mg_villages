@@ -503,7 +503,7 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		'label[0.5,4.1;'..minetest.formspec_escape(add_str)..']'..
 		'tablecolumns[' ..
 		'text,align=left]'..   -- name and description of inhabitant
-		'table[0.1,1.0;11.4,3.0;mg:plot_mob_list;'..people_str..']';
+		'table[0.1,1.0;11.4,3.0;mg_villages:formspec_list_inhabitants;'..people_str..']';
 end
 
 

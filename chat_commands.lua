@@ -115,7 +115,7 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 	end
 
 	local formspec = 'size[12,12]'..
-			'button_exit[4.0,1.0;2,0.5;quit;Quit]'..
+			'button_exit[4.0,1.0;2,0.5;quit;Exit]'..
 			'tablecolumns[' ..
 			'text,align=right;'..	-- village number
 			'text,align=right;'..	-- distance from player
@@ -184,7 +184,7 @@ minetest.register_chatcommand( 'villages', {
 	description = "Shows a list of all known villages.",
 	privs = {},
 	func = function(name, param)
-		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg_villages:village_list", {});
+		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg_villages:formspec_village_list", {});
         end
 });
 

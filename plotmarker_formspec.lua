@@ -110,7 +110,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	elseif(  (fields.set_wood    and fields.set_wood     ~= "")
 	      or (fields.set_farming and fields.set_farming ~= "" )
 	      or (fields.set_roof    and fields.set_roof    ~= "" )) then
-		minetest.show_formspec( pname, "mg_villages:plotmarker",
+		minetest.show_formspec( pname, "mg_villages:formspec_plotmarker",
 				handle_schematics.get_formspec_group_replacement( pos, fields, formspec ));
 		return;
 	end
@@ -123,10 +123,10 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		formspec = formspec.."button[9.9,0.4;2,0.5;info;Back]";
 		if( not( minetest.check_player_privs( pname, {protection_bypass=true}))) then
 			-- do not allow any changes; just show the materials and their replacements
-			minetest.show_formspec( pname, "mg_villages:plotmarker",
+			minetest.show_formspec( pname, "mg_villages:formspec_plotmarker",
 				formspec..build_chest.replacements_get_list_formspec( pos, nil, 0, meta, village_id, building_name, replace_row ));
 		else
-			minetest.show_formspec( pname, "mg_villages:plotmarker",
+			minetest.show_formspec( pname, "mg_villages:formspec_plotmarker",
 				formspec..build_chest.replacements_get_list_formspec( pos, nil, 1, nil,  village_id, building_name, replace_row ));
 		end
 		return;
@@ -138,7 +138,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		formspec = formspec.."button[9.9,0.4;2,0.5;back;Back]";
 
 		if( not( minetest.check_player_privs( pname, {protection_bypass=true}))) then
-			minetest.show_formspec( pname, "mg_villages:plotmarker", formspec..
+			minetest.show_formspec( pname, "mg_villages:formspec_plotmarker", formspec..
 				"label[3,3;You need the protection_bypass priv in order to use this functin.]" );
 			return;
 		end
@@ -175,7 +175,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 				formspec = formspec..'label[4,3;Error: '..tostring( fields.error_msg ).."]";
 	                end
 		end
-		minetest.show_formspec( pname, "mg_villages:plotmarker", formspec );
+		minetest.show_formspec( pname, "mg_villages:formspec_plotmarker", formspec );
 		return;
 
 	elseif( fields.info and fields.info ~= "" ) then
@@ -184,7 +184,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			show_material_text = "Show materials used";
 		end
 
-		minetest.show_formspec( pname, "mg_villages:plotmarker",
+		minetest.show_formspec( pname, "mg_villages:formspec_plotmarker",
 			formspec..
 				"button[9.9,0.4;2,0.5;back;Back]"..
 				"button[3,3;5,0.5;create_backup;Create backup of current stage]"..
@@ -347,7 +347,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 					"button_exit[3,2.5;1.5,0.5;abort;Exit]";
 	end
 
-	minetest.show_formspec( pname, "mg_villages:plotmarker", formspec );
+	minetest.show_formspec( pname, "mg_villages:formspec_plotmarker", formspec );
 end
 
 
@@ -360,10 +360,10 @@ mg_villages.form_input_handler = function( player, formname, fields)
 
 	-- provide information about the inhabitants of a particular plot
 	if( not( fields['back_to_plotlist'])
-	  and fields['mg_villages:list_plots']
-	  and fields['mg_villages:list_plots']~=""
+	  and fields['mg_villages:formspec_list_plots']
+	  and fields['mg_villages:formspec_list_plots']~=""
 	  and fields['village_id']) then
-		local selection = minetest.explode_table_event( fields['mg_villages:list_plots'] );
+		local selection = minetest.explode_table_event( fields['mg_villages:formspec_list_plots'] );
 		local pname = player:get_player_name();
 		if( mg_villages.all_villages[ fields.village_id ]
 		  and mg_villages.all_villages[ fields.village_id ].to_add_data
@@ -383,15 +383,15 @@ mg_villages.form_input_handler = function( player, formname, fields)
 	  and fields.village_id
 	  and mg_villages.all_villages[ fields.village_id ]) then
 		-- show the player a list of plots of the selected village
-		mg_villages.list_plots_formspec( player, 'mg_villages:list_plots', fields );
+		mg_villages.list_plots_formspec( player, 'mg_villages:formspec_list_plots', fields );
 		return true;
 	end
 
 	-- the player has selected a village in the village list
 	if( not( fields['back_to_villagelist'])
-	  and fields['mg_villages:village_list']
-	  and fields['mg_villages:village_list']~="") then
-		local selection = minetest.explode_table_event( fields['mg_villages:village_list'] );
+	  and fields['mg_villages:formspec_village_list']
+	  and fields['mg_villages:formspec_village_list']~="") then
+		local selection = minetest.explode_table_event( fields['mg_villages:formspec_village_list'] );
 		local pname = player:get_player_name();
 		if(   selection and selection.row
 		  and mg_villages.tmp_player_village_list[ pname ]
@@ -400,24 +400,25 @@ mg_villages.form_input_handler = function( player, formname, fields)
 			-- this is the village the player is intrested in
 			fields.village_id = mg_villages.tmp_player_village_list[ pname ][ selection.row-1 ];
 			-- show the player a list of plots of the selected village
-			mg_villages.list_plots_formspec( player, 'mg_villages:list_plots', fields );
+			mg_villages.list_plots_formspec( player, 'mg_villages:formspec_list_plots', fields );
 			return true;
 		end
 	end
 
 	-- back from plotlist of a village to the list of nearby villages
+	--   mg_villages.list_villages_formspec can be found in chat_commands.lua
 	if( fields['back_to_villagelist']) then
-		mg_villages.list_villages_formspec( player, "mg_villages:village_list", {});
+		mg_villages.list_villages_formspec( player, "mg_villages:formspec_village_list", {});
 
 		return true;
 	end
 
-	if( (formname == "mg_villages:plotmarker") and fields.pos2str and not( fields.abort )) then
+	if( (formname == "mg_villages:formspec_plotmarker") and fields.pos2str and not( fields.abort )) then
 		local pos = minetest.string_to_pos( fields.pos2str );
 		mg_villages.plotmarker_formspec( pos, formname, fields, player );
 		return true;
 
-	elseif( (formname == "mg_villages:list_plots" ) and fields.village_id and not( fields.abort )) then
+	elseif( (formname == "mg_villages:formspec_list_plots" ) and fields.village_id and not( fields.abort )) then
 		mg_villages.list_villages_formspec( player, formname, fields );
 		return true;
 	end
