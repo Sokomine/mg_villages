@@ -160,6 +160,10 @@ mg_villages.get_road_list = function( village_id )
 			end
 		end
 	end
+	-- a village without roads (i.e. a single house)
+	if( not( roads[1])) then
+		return {};
+	end
 	-- the parent roads have already been identified
 	if( bpos_list[ roads[ 1 ]].parent_road_plot == 0 ) then
 		return roads;
