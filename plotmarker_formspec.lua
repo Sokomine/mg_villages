@@ -373,6 +373,44 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		-- do not abort; continue with showing the formspec
 	end
 
+	-- back from the list of details of a mob to the list of inhabitants of the plot where it lives
+	if(   fields['back_to_houselist']
+	  and fields.village_id
+	  and fields.plot_nr
+	  and mg_villages.all_villages[ fields.village_id ]
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ tonumber(fields.plot_nr) ]) then
+		-- show the player a list of all inhabitants of the selected plot
+		local pname = player:get_player_name();
+		local village = mg_villages.all_villages[ fields.village_id ];
+		local plot_nr = tonumber( fields.plot_nr );
+		minetest.show_formspec( pname, "mg_villages:formspec_list_inhabitants",
+				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id, pname ));
+		return true;
+	end
+
+	-- provide information about a particular mob
+	if( not( fields['back_to_houselist'])
+	  and fields['mg_villages:formspec_list_inhabitants']
+	  and fields['mg_villages:formspec_list_inhabitants']~=""
+	  and fields['village_id']
+	  and fields['plot_nr']) then
+		local selection = minetest.explode_table_event( fields['mg_villages:formspec_list_inhabitants'] );
+		fields.plot_nr = tonumber( fields.plot_nr );
+		local pname = player:get_player_name();
+		if( mg_villages.all_villages[ fields.village_id ]
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ]
+		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds[ selection.row]) then
+			local village = mg_villages.all_villages[ fields.village_id ];
+			minetest.show_formspec( pname, "mg_villages:formspec_list_one_mob",
+				mg_villages.inhabitants.print_mob_info( village.to_add_data.bpos, fields.plot_nr, fields.village_id, selection.row, pname ));
+			return true;
+		end
+	end
+
 	-- provide information about the inhabitants of a particular plot
 	if( not( fields['back_to_plotlist'])
 	  and fields['mg_villages:formspec_list_plots']
@@ -387,7 +425,7 @@ mg_villages.form_input_handler = function( player, formname, fields)
 
 			local village = mg_villages.all_villages[ fields.village_id ];
 			local plot_nr = selection.row-1;
-			minetest.show_formspec( pname, "mg_villages:plot_mob_list",
+			minetest.show_formspec( pname, "mg_villages:formspec_list_inhabitants",
 				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id, pname ));
 			return true;
 		end

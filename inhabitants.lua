@@ -25,6 +25,8 @@
                 aside from their main job; this includes sheds, meadows, pastures
                 and wagons
    owns         array containing the ids of plots which belong_to this plot here
+ other:
+   bnr          index of this mob's bed in mg_villages.BUILDINGS[ this_building_type ].bed_list
             
 
  Apart from the beds array, there may also be a worker array. It contains information
@@ -409,6 +411,23 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 end
 
 
+-- helper function for listing the plots a mob/house owns (sheds, wagons, fields, ..)
+mg_villages.inhabitants.print_plot_list = function(village_to_add_data_bpos, plotlist)
+	local str = "";
+	if( not( plotlist )) then
+		return "";
+	end
+	for i,v in ipairs( plotlist ) do
+		if( i>1 ) then
+			str = str..", ";
+		end
+		local building_data = mg_villages.BUILDINGS[ village_to_add_data_bpos[v].btype ];
+		str = str.."Nr. "..tostring( v ).." ("..building_data.typ..")";
+	end
+	-- the , in the list would disrupt formspecs
+	return minetest.formspec_escape(str);
+end
+
 -- print information about which mobs "live" in a house
 mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, house_nr, village_id, pname )
 
@@ -483,15 +502,8 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		end
 		-- other plots owned
 		if( bpos.beds and bpos.beds[1] and bpos.beds[1].owns ) then
-			add_str = "The family also owns the plot(s) ";
-			for i,v in ipairs( bpos.beds[1].owns ) do
-				if( i>1 ) then
-					add_str = add_str..", ";
-				end
-				local building_data = mg_villages.BUILDINGS[ village_to_add_data_bpos[v].btype ];
-				add_str = add_str.."Nr. "..tostring( v ).." ("..building_data.typ..")";
-			end
-			add_str = add_str..".";
+			add_str = "The family also owns the plot(s) "..
+				mg_villages.inhabitants.print_plot_list(village_to_add_data_bpos, bpos.beds[1].owns)..".";
 		end
 	end
 	if( people_str == "" ) then
@@ -509,6 +521,8 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		'button[9.5,0;2,0.5;back_to_plotlist;Back to plotlist]'..
 		-- the back button needs to know which village we are in
 		'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( village_id ).."]"..
+		-- when a mob is selected we need to provide the plot nr of this plot
+		'field[22,22;0.1,0.1;plot_nr;HouseNr;'..house_nr..']'..
 		-- show where the plot is located
 		'label[0.5,0;Location: '..minetest.formspec_escape( minetest.pos_to_string( bpos ))..']'..
 		-- allow to teleport there (if the player has the teleport priv)
@@ -520,6 +534,99 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		'table[0.1,1.0;11.4,3.0;mg_villages:formspec_list_inhabitants;'..people_str..']';
 end
 
+
+-- print information about a particular mob
+mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, house_nr, village_id, bed_nr, pname )
+
+	local bpos = village_to_add_data_bpos[ house_nr ];
+	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
+
+	if( not( building_data ) or not( building_data.typ )) then
+		building_data = { typ = bpos.btype };
+	end
+
+	local this_mob_data = village_to_add_data_bpos[ house_nr ].beds[ bed_nr ];
+	local gender = "male";
+	if( this_mob_data.gender == "f" ) then
+		gender = "female";
+	end
+-- TODO: show family relationships (father, mother, grandfather, grandmother, children)
+	local generation = "adult";
+	if(     this_mob_data.generation == 1 ) then
+		generation = "child";
+	elseif( this_mob_data.generation == 3 ) then
+		generation = "senior";
+	end
+	local lives_in = minetest.formspec_escape( building_data.typ.." on plot "..house_nr.." at "..
+			minetest.pos_to_string( handle_schematics.get_pos_in_front_of_house( bpos, 0 )));
+	local profession = "- none -";
+	if( this_mob_data.title ) then
+		profession = this_mob_data.title;
+		if( not( this_mob_data.uniq ) or this_mob_data.uniq<1 ) then
+			profession = profession..",,(the only one in this village)";
+		else
+			profession = profession..",,(one amongst several in this village)";
+		end
+	end
+	local works_at = "-";
+	if( this_mob_data.works_at ) then
+		local bpos_work = village_to_add_data_bpos[ this_mob_data.works_at ];
+		local building_data_work = mg_villages.BUILDINGS[ bpos_work.btype ];
+		works_at = minetest.formspec_escape( building_data_work.typ.." on plot "..this_mob_data.works_at..
+			" at "..minetest.pos_to_string( handle_schematics.get_pos_in_front_of_house( bpos_work,0)));
+	end
+	local text =
+		 "First name:,"..(this_mob_data.first_name or '- ? -')..
+		",Middle initial:,"..(this_mob_data.middle_name or '- ? -').."."..
+		",Gender:,"..gender..
+		",Age:,"..(this_mob_data.age or '- ? -')..
+		",Generation:,"..generation..
+		",Lives in:,"..lives_in..
+		",Sleeps in bed at:,"..minetest.formspec_escape( minetest.pos_to_string( this_mob_data )..
+						", "..this_mob_data.p2.." ["..this_mob_data.bnr.."]")..
+		",Profession:,"..profession..
+		",Works at:,"..works_at;
+
+	if( this_mob_data.owns ) then
+		text = text..",Is owner of:,"..
+			mg_villages.inhabitants.print_plot_list(village_to_add_data_bpos, this_mob_data.owns)..".";
+	end
+
+	for k,v in pairs( this_mob_data ) do
+		if(   k~="first_name" and k~="middle_name" and k~="gender" and k~="age" and k~="generation"
+		  and k~="x" and k~="y" and k~="z" and k~="p2" and k~="bnr"
+		  and k~="title" and k~="works_at" and k~="owns") then
+			-- add those entries that have not been covered yet
+			text = text..","..k..":,"..tostring(v);
+		end
+	end
+
+
+	local link_teleport = "";
+-- TODO: this ought to be a teleport-to-the-mob-button
+	if( pname and minetest.check_player_privs( pname, {teleport=true})) then
+		-- teleport to the plotmarker and not somewhere where part of the house may stand
+		link_teleport = 'button[6.4,0;1,0.5;teleport_to;Visit]'..
+			"field[21,21;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string(
+				handle_schematics.get_pos_in_front_of_house( bpos, 0 )).."]";
+	end
+	return 'size[12,6.5]'..
+		'button_exit[4.0,0;2,0.5;quit;Exit]'..
+		'button[7.5,0;5,0.5;back_to_houselist;Back to all inhabitants of house]'..
+		-- the back button needs to know which village we are in
+		'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( village_id ).."]"..
+		-- it also needs to know the plot number we might want to go back to
+		'field[22,22;0.1,0.1;plot_nr;HouseNr;'..house_nr..']'..
+		-- show where the plot is located
+		'label[0.5,0;Location: '..minetest.formspec_escape( minetest.pos_to_string( bpos ))..']'..
+		-- allow to teleport there (if the player has the teleport priv)
+		link_teleport..
+		'label[0.5,0.5;'..minetest.formspec_escape("BLA")..']'.. -- TODO
+		'tablecolumns[' ..
+		'text,align=left;'..
+		'text,align=left]'..   -- name and description of inhabitant
+		'table[0.1,1.0;11.4,5.0;mg_villages:formspec_list_one_mob;'..text..']';
+end
 
 
 -- some building types will determine the name of the job
