@@ -608,12 +608,12 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 			end
 		end
 	elseif( this_mob_data.generation == 2 ) then
-		if( this_mob_data.gender=="m" ) then
+		if( this_mob_data.gender=="m" and bed_nr == 1) then
 			generation = generation..
 				",Father:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[grandfather] )..
 				",Mother:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[grandmother] )..
 				",Father of:,"..list_of_children;
-		else
+		elseif( bed_nr == 2) then
 			-- the grandparents belong to the man's side
 			generation = generation..
 				",Mother of:,"..list_of_children;
@@ -688,24 +688,38 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 			"field[21,21;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string(
 				handle_schematics.get_pos_in_front_of_house( bpos, 0 )).."]";
 	end
-	return 'size[12,6.5]'..
+
+	-- allow to click through the inhabitants
+	-- (a second back button doesn't hurt)
+	local prev_next_button = "button[8.5,7.2;1,0.5;back_to_houselist;Back]";
+	if( bed_nr > 1 ) then
+		prev_next_button = prev_next_button..'button[9.5,7.2;1,0.5;prev;Prev]';
+	end
+	if( bed_nr < #bpos.beds ) then
+		prev_next_button = prev_next_button..'button[10.5,7.2;1,0.5;next;Next]';
+	end
+	return 'size[12,7.5]'..
 		'button_exit[4.0,0;2,0.5;quit;Exit]'..
 		'button[7.5,0;5,0.5;back_to_houselist;Back to all inhabitants of house]'..
 		-- the back button needs to know which village we are in
 		'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( village_id ).."]"..
 		-- it also needs to know the plot number we might want to go back to
 		'field[22,22;0.1,0.1;plot_nr;HouseNr;'..house_nr..']'..
+		-- the prev/next buttons need information about the mob nr
+		'field[23,23;0.1,0.1;bed_nr;BedNr;'..bed_nr..']'..
 		-- show where the plot is located
 		'label[0.5,0;Location: '..minetest.formspec_escape( minetest.pos_to_string( bpos ))..']'..
 		-- allow to teleport there (if the player has the teleport priv)
 		link_teleport..
+		-- add prev/next buttons
+		prev_next_button..
 		'label[0.5,0.5;'..minetest.formspec_escape("Information about "..
 				mg_villages.inhabitants.mob_get_short_name( this_mob_data )..
-				" ("..( this_mob_data.title or "- no title -").."):")..']'..
+				" ("..( this_mob_data.title or "- no profession -").."):")..']'..
 		'tablecolumns[' ..
 		'text,align=left;'..
 		'text,align=left]'..   -- name and description of inhabitant
-		'table[0.1,1.0;11.4,5.0;mg_villages:formspec_list_one_mob;'..text..']';
+		'table[0.1,1.0;11.4,6.0;mg_villages:formspec_list_one_mob;'..text..']';
 end
 
 

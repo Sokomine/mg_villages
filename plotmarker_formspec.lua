@@ -358,6 +358,7 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		return false;
 	end
 
+minetest.chat_send_player("singleplayer","formname: "..tostring(formname).."\nfields: "..minetest.serialize(fields));
 	-- teleport to a plot or mob
 	if( fields[ 'teleport_to' ]
 	  and fields[ 'pos2str' ]
@@ -390,25 +391,41 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		return true;
 	end
 
-	-- provide information about a particular mob
-	if( not( fields['back_to_houselist'])
+	-- are we supposed to show information about a particular mob?
+	local mob_selected = nil;
+	-- show previous mob that lives on the plot
+	if(     formname=="mg_villages:formspec_list_one_mob" and fields["prev"] and fields["bed_nr"]) then
+		mob_selected = tonumber(fields.bed_nr) - 1;
+	-- show next mob that lives on the mob
+	elseif( formname=="mg_villages:formspec_list_one_mob" and fields["next"] and fields["bed_nr"]) then
+		mob_selected = tonumber(fields.bed_nr) + 1;
+	-- show informaton about mob selected from list of inhabitants
+	elseif( not( fields['back_to_houselist'])
 	  and fields['mg_villages:formspec_list_inhabitants']
 	  and fields['mg_villages:formspec_list_inhabitants']~=""
 	  and fields['village_id']
 	  and fields['plot_nr']) then
 		local selection = minetest.explode_table_event( fields['mg_villages:formspec_list_inhabitants'] );
-		fields.plot_nr = tonumber( fields.plot_nr );
-		local pname = player:get_player_name();
-		if( mg_villages.all_villages[ fields.village_id ]
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ]
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds[ selection.row]) then
-			local village = mg_villages.all_villages[ fields.village_id ];
-			minetest.show_formspec( pname, "mg_villages:formspec_list_one_mob",
-				mg_villages.inhabitants.print_mob_info( village.to_add_data.bpos, fields.plot_nr, fields.village_id, selection.row, pname ));
-			return true;
-		end
+		mob_selected = selection.row;
+	end
+
+	-- this index has to be a number and not a string
+	fields.plot_nr = tonumber( fields.plot_nr or "0");
+	local pname = player:get_player_name();
+
+	-- provide information about a particular mob
+	if( mob_selected
+	  and fields.village_id
+	  and fields.plot_nr
+	  and mg_villages.all_villages[ fields.village_id ]
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ]
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds[mob_selected]) then
+		local village = mg_villages.all_villages[ fields.village_id ];
+		minetest.show_formspec( pname, "mg_villages:formspec_list_one_mob",
+			mg_villages.inhabitants.print_mob_info( village.to_add_data.bpos, fields.plot_nr, fields.village_id, mob_selected, pname ));
+		return true;
 	end
 
 	-- provide information about the inhabitants of a particular plot
