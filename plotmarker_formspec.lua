@@ -358,7 +358,6 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		return false;
 	end
 
-minetest.chat_send_player("singleplayer","formname: "..tostring(formname).."\nfields: "..minetest.serialize(fields));
 	-- teleport to a plot or mob
 	if( fields[ 'teleport_to' ]
 	  and fields[ 'pos2str' ]
@@ -428,24 +427,35 @@ minetest.chat_send_player("singleplayer","formname: "..tostring(formname).."\nfi
 		return true;
 	end
 
-	-- provide information about the inhabitants of a particular plot
-	if( not( fields['back_to_plotlist'])
+	-- are we supposed to show information about a particular plot?
+	local plot_selected = nil;
+	-- show previous plot of that village
+	if(     formname=="mg_villages:formspec_list_inhabitants" and fields["prev"] and fields["plot_nr"]) then
+		plot_selected = fields.plot_nr - 1;
+	-- show next plot of that village
+	elseif( formname=="mg_villages:formspec_list_inhabitants" and fields["next"] and fields["plot_nr"]) then
+		plot_selected = fields.plot_nr + 1;
+	-- show informaton about plot selected from list of plots in a village
+	elseif( not( fields['back_to_plotlist'])
 	  and fields['mg_villages:formspec_list_plots']
 	  and fields['mg_villages:formspec_list_plots']~=""
 	  and fields['village_id']) then
 		local selection = minetest.explode_table_event( fields['mg_villages:formspec_list_plots'] );
-		local pname = player:get_player_name();
-		if( mg_villages.all_villages[ fields.village_id ]
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
-		  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ selection.row-1 ]) then
+		plot_selected = selection.row-1;
+	end
 
-			local village = mg_villages.all_villages[ fields.village_id ];
-			local plot_nr = selection.row-1;
-			minetest.show_formspec( pname, "mg_villages:formspec_list_inhabitants",
-				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id, pname ));
-			return true;
-		end
+	-- provide information about the inhabitants of a particular plot
+	if( plot_selected
+	  and fields.village_id
+	  and mg_villages.all_villages[ fields.village_id ]
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ plot_selected ]) then
+
+		local village = mg_villages.all_villages[ fields.village_id ];
+		minetest.show_formspec( pname, "mg_villages:formspec_list_inhabitants",
+			mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_selected, fields.village_id, pname ));
+		return true;
 	end
 
 	-- back from the list of inhabitants of a plot to the list of plots of a village

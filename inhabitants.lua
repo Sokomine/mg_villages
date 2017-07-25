@@ -532,7 +532,17 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 			"field[21,21;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string(
 				handle_schematics.get_pos_in_front_of_house( bpos, 0 )).."]";
 	end
-	return 'size[12,4.5]'..
+
+	-- allow to click through the diffrent plots
+	-- (a second back button doesn't hurt)
+	local prev_next_button = "button[8.5,4.7;1,0.5;back_to_plotlist;Back]";
+	if( house_nr > 1 ) then
+		prev_next_button = prev_next_button..'button[9.5,4.7;1,0.5;prev;Prev]';
+	end
+	if( house_nr < #village_to_add_data_bpos ) then
+		prev_next_button = prev_next_button..'button[10.5,4.7;1,0.5;next;Next]';
+	end
+	return 'size[12,5.0]'..
 		'button_exit[4.0,0;2,0.5;quit;Exit]'..
 		'button[9.5,0;2,0.5;back_to_plotlist;Back to plotlist]'..
 		-- the back button needs to know which village we are in
@@ -543,6 +553,8 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		'label[0.5,0;Location: '..minetest.formspec_escape( minetest.pos_to_string( bpos ))..']'..
 		-- allow to teleport there (if the player has the teleport priv)
 		link_teleport..
+		-- allow to click through the plots
+		prev_next_button..
 		'label[0.5,0.5;'..minetest.formspec_escape(str)..']'..
 		'label[0.5,4.1;'..minetest.formspec_escape(add_str)..']'..
 		'tablecolumns[' ..
