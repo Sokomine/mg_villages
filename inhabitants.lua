@@ -97,6 +97,22 @@ mg_villages.inhabitants.get_family_function_str = function( data )
 	end
 end
 
+-- in most cases this will be something like "John D.", "Martha A." etc.
+mg_villages.inhabitants.mob_get_short_name = function( data )
+	if( not( data ) or not( data.first_name )) then
+		return "- unkown -";
+	end
+	local str = data.first_name;
+	if( data.middle_name ) then
+		str = str.." "..data.middle_name..".";
+	end
+	if( data.last_name ) then
+		str = str.." "..data.last_name;
+	end
+	return str;
+end
+
+
 -- worker_data contains data about the father of the mob or about the mob him/herself
 -- (needed for determining family relationship)
 mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
@@ -550,13 +566,74 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 	if( this_mob_data.gender == "f" ) then
 		gender = "female";
 	end
--- TODO: show family relationships (father, mother, grandfather, grandmother, children)
+
+	-- identify grandparents and children
+	local list_of_children = "";
+	local grandfather = -1;
+	local grandmother = -1;
+	for i,v in ipairs( bpos.beds ) do
+		if(     not(v.title) and v.generation==3 and v.gender=="m") then
+			grandfather = i;
+		elseif( not(v.title) and v.generation==3 and v.gender=="f") then
+			grandmother = i;
+		elseif( not(v.title) and v.generation==1 ) then
+			list_of_children = list_of_children..mg_villages.inhabitants.mob_get_short_name( v )..", ";
+		end
+	end
+	-- contains commata
+	list_of_children = minetest.formspec_escape( string.sub( list_of_children, 1, -3));
+
+	-- show family relationships (father, mother, grandfather, grandmother, children)
 	local generation = "adult";
 	if(     this_mob_data.generation == 1 ) then
 		generation = "child";
+		if( not( this_mob_data.title )) then -- no guest, servant, soldier, ...
+			generation = generation..
+				",Father:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[1] )..
+				",Mother:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[2] )..
+				",Grandfather:,"..mg_villages.inhabitants.mob_get_short_name(bpos.beds[grandfather])..
+				",Grandmother:,"..mg_villages.inhabitants.mob_get_short_name(bpos.beds[grandmother]);
+		end
 	elseif( this_mob_data.generation == 3 ) then
 		generation = "senior";
+		if( not( this_mob_data.title )) then -- no guest, servant, soldier, ...
+			if( this_mob_data.gender=="m" ) then
+				generation = generation..
+					",Father of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[1] )..
+					",Grandfather of:,"..list_of_children;
+			else
+				generation = generation..
+					",Mother of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[1] )..
+					",Grandmother of:,"..list_of_children;
+			end
+		end
+	elseif( this_mob_data.generation == 2 ) then
+		if( this_mob_data.gender=="m" ) then
+			generation = generation..
+				",Father:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[grandfather] )..
+				",Mother:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[grandmother] )..
+				",Father of:,"..list_of_children;
+		else
+			-- the grandparents belong to the man's side
+			generation = generation..
+				",Mother of:,"..list_of_children;
+		end
 	end
+	-- the mob may have a wife or husband
+	if(     this_mob_data.generation == 2 and this_mob_data.gender == "m" ) then
+		generation = generation..
+			",Husband of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[2] );
+	elseif( this_mob_data.generation == 2 and this_mob_data.gender == "f" and not(this_mob_data.title)) then
+		generation = generation..
+			",Wife of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[1] );
+	elseif( this_mob_data.generation == 3 and this_mob_data.gender == "m" and not(this_mob_data.title)) then
+		generation = generation..
+			",Husband of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[grandmother] );
+	elseif( this_mob_data.generation == 3 and this_mob_data.gender == "f" and not(this_mob_data.title)) then
+		generation = generation..
+			",Wife of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[grandfather] );
+	end
+
 	local lives_in = minetest.formspec_escape( building_data.typ.." on plot "..house_nr.." at "..
 			minetest.pos_to_string( handle_schematics.get_pos_in_front_of_house( bpos, 0 )));
 	local profession = "- none -";
@@ -595,7 +672,8 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 	for k,v in pairs( this_mob_data ) do
 		if(   k~="first_name" and k~="middle_name" and k~="gender" and k~="age" and k~="generation"
 		  and k~="x" and k~="y" and k~="z" and k~="p2" and k~="bnr"
-		  and k~="title" and k~="works_at" and k~="owns") then
+		  and k~="title" and k~="works_at" and k~="owns" and k~="uniq"
+		  and k~="typ" ) then -- typ: content_id of bed head node
 			-- add those entries that have not been covered yet
 			text = text..","..k..":,"..tostring(v);
 		end
@@ -621,7 +699,9 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		'label[0.5,0;Location: '..minetest.formspec_escape( minetest.pos_to_string( bpos ))..']'..
 		-- allow to teleport there (if the player has the teleport priv)
 		link_teleport..
-		'label[0.5,0.5;'..minetest.formspec_escape("BLA")..']'.. -- TODO
+		'label[0.5,0.5;'..minetest.formspec_escape("Information about "..
+				mg_villages.inhabitants.mob_get_short_name( this_mob_data )..
+				" ("..( this_mob_data.title or "- no title -").."):")..']'..
 		'tablecolumns[' ..
 		'text,align=left;'..
 		'text,align=left]'..   -- name and description of inhabitant
