@@ -403,12 +403,37 @@ mg_villages.form_input_handler = function( player, formname, fields)
 	  and mg_villages.all_villages[ fields.village_id ]
 	  and mg_villages.all_villages[ fields.village_id ].to_add_data
 	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
-	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ]
-	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds[mob_selected]) then
-		local village = mg_villages.all_villages[ fields.village_id ];
-		minetest.show_formspec( pname, "mg_villages:formspec_list_one_mob",
-			mg_villages.inhabitants.print_mob_info( village.to_add_data.bpos, fields.plot_nr, fields.village_id, mob_selected, pname ));
-		return true;
+	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ])then
+--	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds[mob_selected]) then
+		if( not( mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds)
+		 or not( mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ fields.plot_nr ].beds[ mob_selected] )) then
+			-- allow to click at the worker
+			local bpos = mg_villages.all_villages[ fields.village_id ].to_add_data.bpos;
+			if(   bpos[ fields.plot_nr ].worker
+			  and bpos[ fields.plot_nr ].worker.lives_at
+			  and bpos[ bpos[ fields.plot_nr ].worker.lives_at ]
+			  and bpos[ bpos[ fields.plot_nr ].worker.lives_at ].beds
+			  and bpos[ bpos[ fields.plot_nr ].worker.lives_at ].beds[1] ) then
+				fields.plot_nr = tonumber(bpos[ fields.plot_nr ].worker.lives_at);
+				mob_selected = 1;
+			-- allow to click at the owner
+			elseif( bpos[ fields.plot_nr ].belongs_to
+			  and bpos[ bpos[ fields.plot_nr ].belongs_to ]
+			  and bpos[ bpos[ fields.plot_nr ].belongs_to ].beds
+			  and bpos[ bpos[ fields.plot_nr ].belongs_to ].beds[1] ) then
+				fields.plot_nr = tonumber(bpos[ fields.plot_nr ].belongs_to);
+				mob_selected = 1;
+			-- this is not a mob
+			else
+				mob_selected = nil;
+			end
+		end
+		if( mob_selected ) then
+			local village = mg_villages.all_villages[ fields.village_id ];
+			minetest.show_formspec( pname, "mg_villages:formspec_list_one_mob",
+				mg_villages.inhabitants.print_mob_info( village.to_add_data.bpos, fields.plot_nr, fields.village_id, mob_selected, pname ));
+			return true;
+		end
 	end
 
 

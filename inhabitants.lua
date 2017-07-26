@@ -556,7 +556,7 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		-- allow to click through the plots
 		prev_next_button..
 		'label[0.5,0.5;'..minetest.formspec_escape(str)..']'..
-		'label[0.5,4.1;'..minetest.formspec_escape(add_str)..']'..
+		'label[0.5,4.1;'..add_str..']'..
 		'tablecolumns[' ..
 		'text,align=left]'..   -- name and description of inhabitant
 		'table[0.1,1.0;11.4,3.0;mg_villages:formspec_list_inhabitants;'..people_str..']';
