@@ -366,6 +366,46 @@ mg_villages.add_building = function( building_data )
 		-- identify front doors, calculate paths from beds/workplaces to front of house
 		building_data = mg_villages.analyze_building_for_mobs( file_name, building_data, res );
 
+		-- building_data.bed_list and building_data.workspace_list are calculated withhin
+		-- the above function - provided they are not part of path_info yet;
+		-- the information stored in path_info is the relevant one for mob movement/pathfinding
+
+		-- gain the list of beds from path_info data
+		building_data.bed_list = {};
+		-- mobs are seldom able to stand directly on or even next to the bed when getting up
+		building_data.stand_next_to_bed_list = {};
+		-- have any beds been found?
+		if( building_data.short_file_name
+		 and mg_villages.path_info[ building_data.short_file_name ] ) then
+			local paths = mg_villages.path_info[ building_data.short_file_name];
+			if( paths and paths[1] ) then
+				for i,p in ipairs( paths[1] ) do
+					if( p and p[1]) then
+						building_data.bed_list[i] = p[1];
+						-- also store where the mob may stand
+						if( p[2] ) then
+							building_data.stand_next_to_bed_list[i] = p[2];
+						end
+					end
+				end
+			end
+		end
+
+		-- gain the list of workplaces from the path_info data
+		building_data.workplace_list = {};
+		-- have any workplaces been found?
+		if( building_data.short_file_name
+		 and mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE" ] ) then
+			local paths = mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE"];
+			if( paths and paths[1] ) then
+				for i,p in ipairs( paths[1] ) do
+					if( p and p[1]) then
+						building_data.workplace_list[i] = p[1];
+					end
+				end
+			end
+		end
+
 
 	-- missing data regarding building size - do not use this building for anything
 	elseif( not( building_data.sizex )    or not( building_data.sizez )
