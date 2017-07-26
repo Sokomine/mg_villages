@@ -666,6 +666,20 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		end
 		works_at = minetest.formspec_escape( building_data_work.typ.." on plot "..this_mob_data.works_at..
 			" at "..minetest.pos_to_string( handle_schematics.get_pos_in_front_of_house( bpos_work,0)));
+		-- does this mob have a fixed workspace?
+		-- TODO: there are some slightly more complex setups...
+		if( building_data_work.short_file_name ) then
+			local work_paths = mg_villages.path_info[ building_data_work.short_file_name.."|WORKPLACE"];
+			if( work_paths and #work_paths and work_paths[1] and work_paths[1][1] and work_paths[1][1][1] and bed_nr==1) then
+				works_at = works_at..",Preferred workplace:,"..
+					minetest.formspec_escape(
+						minetest.pos_to_string(
+							mg_villages.transform_coordinates(
+								work_paths[1][1][1], bpos_work )));
+			else
+				works_at = works_at..",Preferred workplace:,no specific one";
+			end
+		end
 	end
 	local text =
 		 "First name:,"..(this_mob_data.first_name or '- ? -')..
@@ -674,8 +688,13 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		",Age:,"..(this_mob_data.age or '- ? -')..
 		",Generation:,"..generation..
 		",Lives in:,"..lives_in..
+		-- TODO: the bed position might be calculated (and be diffrent from this x,y,z here)
+		-- TODO: the position next to the bed for getting up can be calculated as well
 		",Sleeps in bed at:,"..minetest.formspec_escape( minetest.pos_to_string( this_mob_data )..
-						", "..this_mob_data.p2.." ["..(this_mob_data.bnr or "-?-").."]")..
+					", "..this_mob_data.p2.." ["..(this_mob_data.bnr or "-?-").."]")..
+		-- position of the mob's mob spawner
+		",Has a spawner at:,"..minetest.formspec_escape( minetest.pos_to_string(
+					handle_schematics.get_pos_in_front_of_house( bpos, bed_nr)))..
 		",Profession:,"..profession..
 		",Works at:,"..works_at;
 

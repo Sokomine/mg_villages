@@ -39,6 +39,13 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		end
 	end
 
+	-- missing data
+	if( not( plot.btype ) or not( mg_villages.BUILDINGS[ plot.btype ] )
+	  or not( mg_villages.BUILDINGS[ plot.btype ].mts_path )
+	  or not( mg_villages.BUILDINGS[ plot.btype ].scm )) then
+		minetest.chat_send_player( pname, 'Error. Unkown building.');
+		return;
+	end
 	local building_name = mg_villages.BUILDINGS[ plot.btype ].mts_path..mg_villages.BUILDINGS[ plot.btype ].scm;
 
 	-- show coordinates of the village center to the player
