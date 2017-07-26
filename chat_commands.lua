@@ -16,10 +16,21 @@ mg_villages.list_plots_formspec = function( player, formname, fields )
 	-- analyze the road network (this has not been done from the beginning..)
 	mg_villages.get_road_list( fields.village_id, false );
 
+	-- allow to click through the villages using prev/next buttons
+	local liste = mg_villages.tmp_player_village_list[ pname ];
+	local prev_next_button = "button[8.5,11.6;1,0.5;back_to_villagelist;Back]";
+	if(   liste and #liste>1 and liste[1]~=fields.village_id ) then
+		prev_next_button = prev_next_button..'button[9.5,11.6;1,0.5;prev;Prev]';
+	end
+	if(   liste and #liste>1 and liste[#liste]~=fields.village_id ) then
+		prev_next_button = prev_next_button..'button[10.5,11.6;1,0.5;next;Next]';
+	end
+
 	local formspec = 'size[12,12]'..
 			'field[20,20;0.1,0.1;village_id;VillageID;'..minetest.formspec_escape( fields.village_id ).."]"..
 			'button_exit[4.0,1.0;2,0.5;quit;Exit]'..
 			'button[9.5,1.0;3,0.5;back_to_villagelist;Back to village list]'..
+			prev_next_button..
 			'tablecolumns[' ..
 			'text,align=right;'..	-- plot nr
 			'text,align=center;'..	-- type of building
@@ -186,7 +197,7 @@ minetest.register_chatcommand( 'villages', {
 	description = "Shows a list of all known villages.",
 	privs = {},
 	func = function(name, param)
-		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg_villages:formspec_village_list", {});
+		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg_villages:formspec_list_villages", {});
         end
 });
 

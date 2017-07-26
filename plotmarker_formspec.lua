@@ -373,22 +373,6 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		-- do not abort; continue with showing the formspec
 	end
 
-	-- back from the list of details of a mob to the list of inhabitants of the plot where it lives
-	if(   fields['back_to_houselist']
-	  and fields.village_id
-	  and fields.plot_nr
-	  and mg_villages.all_villages[ fields.village_id ]
-	  and mg_villages.all_villages[ fields.village_id ].to_add_data
-	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos
-	  and mg_villages.all_villages[ fields.village_id ].to_add_data.bpos[ tonumber(fields.plot_nr) ]) then
-		-- show the player a list of all inhabitants of the selected plot
-		local pname = player:get_player_name();
-		local village = mg_villages.all_villages[ fields.village_id ];
-		local plot_nr = tonumber( fields.plot_nr );
-		minetest.show_formspec( pname, "mg_villages:formspec_list_inhabitants",
-				mg_villages.inhabitants.print_house_info( village.to_add_data.bpos, plot_nr, fields.village_id, pname ));
-		return true;
-	end
 
 	-- are we supposed to show information about a particular mob?
 	local mob_selected = nil;
@@ -427,6 +411,7 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		return true;
 	end
 
+
 	-- are we supposed to show information about a particular plot?
 	local plot_selected = nil;
 	-- show previous plot of that village
@@ -435,6 +420,9 @@ mg_villages.form_input_handler = function( player, formname, fields)
 	-- show next plot of that village
 	elseif( formname=="mg_villages:formspec_list_inhabitants" and fields["next"] and fields["plot_nr"]) then
 		plot_selected = fields.plot_nr + 1;
+	-- back from the list of details of a mob to the list of inhabitants of the plot where it lives
+	elseif( fields['back_to_houselist'] ) then
+		plot_selected = fields.plot_nr;
 	-- show informaton about plot selected from list of plots in a village
 	elseif( not( fields['back_to_plotlist'])
 	  and fields['mg_villages:formspec_list_plots']
@@ -458,37 +446,53 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		return true;
 	end
 
-	-- back from the list of inhabitants of a plot to the list of plots of a village
-	if(   fields['back_to_plotlist']
-	  and fields.village_id
-	  and mg_villages.all_villages[ fields.village_id ]) then
+
+	-- are we supposed to show the plots contained in a particular village?
+	local village_selected = nil;
+	-- where are we currently in the list of villages as shown to that particular player?
+	local liste = mg_villages.tmp_player_village_list[ pname ];
+	local curr_list_pos = -1;
+	if( liste ) then
+		for i,v in ipairs( liste ) do
+			if( fields.village_id and v==fields.village_id ) then
+				curr_list_pos = i;
+			end
+		end
+	end
+	-- show previous village in list
+	if(     formname=="mg_villages:formspec_list_plots" and fields["prev"] and curr_list_pos>1) then
+		village_selected = liste[ curr_list_pos - 1 ];
+	-- show next village
+	elseif( formname=="mg_villages:formspec_list_plots" and fields["next"] and curr_list_pos<#liste) then
+		village_selected = liste[ curr_list_pos + 1 ];
+	-- back from the list of inhabitants to the list of plots of a village
+	elseif( fields['back_to_plotlist'] and fields.village_id) then
+		village_selected = fields.village_id;
+	-- show informaton about all plots in the selected village
+	elseif( not( fields['back_to_villagelist'])
+	  and fields['mg_villages:formspec_list_villages']
+	  and fields['mg_villages:formspec_list_villages']~="" ) then
+		local selection = minetest.explode_table_event( fields['mg_villages:formspec_list_villages'] );
+		-- this is the village the player is intrested in
+		village_selected = mg_villages.tmp_player_village_list[ pname ][ selection.row-1 ];
+	end
+
+	-- the player has selected a village in the village list
+	if( village_selected
+	  and mg_villages.all_villages[ village_selected ]
+	  and mg_villages.all_villages[ village_selected ].to_add_data
+	  and mg_villages.all_villages[ village_selected ].to_add_data.bpos ) then
+
+		fields.village_id = village_selected;
 		-- show the player a list of plots of the selected village
 		mg_villages.list_plots_formspec( player, 'mg_villages:formspec_list_plots', fields );
 		return true;
 	end
 
-	-- the player has selected a village in the village list
-	if( not( fields['back_to_villagelist'])
-	  and fields['mg_villages:formspec_village_list']
-	  and fields['mg_villages:formspec_village_list']~="") then
-		local selection = minetest.explode_table_event( fields['mg_villages:formspec_village_list'] );
-		local pname = player:get_player_name();
-		if(   selection and selection.row
-		  and mg_villages.tmp_player_village_list[ pname ]
-		  and mg_villages.tmp_player_village_list[ pname ][ selection.row-1 ]) then
-
-			-- this is the village the player is intrested in
-			fields.village_id = mg_villages.tmp_player_village_list[ pname ][ selection.row-1 ];
-			-- show the player a list of plots of the selected village
-			mg_villages.list_plots_formspec( player, 'mg_villages:formspec_list_plots', fields );
-			return true;
-		end
-	end
-
 	-- back from plotlist of a village to the list of nearby villages
 	--   mg_villages.list_villages_formspec can be found in chat_commands.lua
 	if( fields['back_to_villagelist']) then
-		mg_villages.list_villages_formspec( player, "mg_villages:formspec_village_list", {});
+		mg_villages.list_villages_formspec( player, "mg_villages:formspec_list_villages", {});
 
 		return true;
 	end
@@ -496,10 +500,6 @@ mg_villages.form_input_handler = function( player, formname, fields)
 	if( (formname == "mg_villages:formspec_plotmarker") and fields.pos2str and not( fields.abort )) then
 		local pos = minetest.string_to_pos( fields.pos2str );
 		mg_villages.plotmarker_formspec( pos, formname, fields, player );
-		return true;
-
-	elseif( (formname == "mg_villages:formspec_list_plots" ) and fields.village_id and not( fields.abort )) then
-		mg_villages.list_villages_formspec( player, formname, fields );
 		return true;
 	end
 	return false;

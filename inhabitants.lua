@@ -632,7 +632,7 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		end
 	end
 	-- the mob may have a wife or husband
-	if(     this_mob_data.generation == 2 and this_mob_data.gender == "m" ) then
+	if(     this_mob_data.generation == 2 and this_mob_data.gender == "m" and bpos.beds[2] and not(bpos.beds[2].title)) then
 		generation = generation..
 			",Husband of:,"..mg_villages.inhabitants.mob_get_short_name( bpos.beds[2] );
 	elseif( this_mob_data.generation == 2 and this_mob_data.gender == "f" and not(this_mob_data.title)) then
@@ -661,6 +661,9 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 	if( this_mob_data.works_at ) then
 		local bpos_work = village_to_add_data_bpos[ this_mob_data.works_at ];
 		local building_data_work = mg_villages.BUILDINGS[ bpos_work.btype ];
+		if( not( building_data_work )) then
+			building_data_work = { typ = "unkown" };
+		end
 		works_at = minetest.formspec_escape( building_data_work.typ.." on plot "..this_mob_data.works_at..
 			" at "..minetest.pos_to_string( handle_schematics.get_pos_in_front_of_house( bpos_work,0)));
 	end
@@ -672,7 +675,7 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		",Generation:,"..generation..
 		",Lives in:,"..lives_in..
 		",Sleeps in bed at:,"..minetest.formspec_escape( minetest.pos_to_string( this_mob_data )..
-						", "..this_mob_data.p2.." ["..this_mob_data.bnr.."]")..
+						", "..this_mob_data.p2.." ["..(this_mob_data.bnr or "-?-").."]")..
 		",Profession:,"..profession..
 		",Works at:,"..works_at;
 
@@ -725,7 +728,8 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		link_teleport..
 		-- add prev/next buttons
 		prev_next_button..
-		'label[0.5,0.5;'..minetest.formspec_escape("Information about "..
+		'label[0.5,0.5;'..minetest.formspec_escape("Information about inhabitant nr. "..
+				tostring( bed_nr )..": "..
 				mg_villages.inhabitants.mob_get_short_name( this_mob_data )..
 				" ("..( this_mob_data.title or "- no profession -").."):")..']'..
 		'tablecolumns[' ..
