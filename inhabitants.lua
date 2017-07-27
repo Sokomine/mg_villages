@@ -797,6 +797,7 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 	local found_farm_full  = {};	-- farmers (they like to work on fields and pastures)
 	local found_hut        = {};	-- workers best fit for working in other buildings
 	local found_house      = {};	-- workers which may either take a random job or work elsewhere
+	local found_any_home   = {};    -- farm_full, hut or house (anything with beds in)
 	local suggests_worker  = {};	-- sheds and wagons can support workers with a random job
 	local suggests_farmer  = {};	-- fields and pastures are ideal for farmers
 	-- find out which jobs need to get taken
@@ -843,6 +844,7 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 			else
 				table.insert( found_house,     house_id );
 			end
+			table.insert( found_any_home, house_id );
 
 		-- sheds and wagons are useful for random jobs but do not really require a worker
 		elseif( building_data.typ == 'shed'
@@ -861,16 +863,10 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 	-- these are only additional; they do not require a worker as such
 	-- assign sheds and wagons randomly to suitable houses
 	for i,v in ipairs( suggests_worker ) do
-		-- order: found_house, found_hut, found_farm_full
-		if(     #found_house>0 ) then
-			local nr = math.random( #found_house );
-			village_to_add_data_bpos[ v ].belongs_to = found_house[ nr ];
-		elseif( #found_hut  >0 ) then
-			local nr = math.random( #found_hut   );
-			village_to_add_data_bpos[ v ].belongs_to = found_hut[ nr ];
-		elseif( #found_farm_full>0 ) then
-			local nr = math.random( #found_farm_full );
-			village_to_add_data_bpos[ v ].belongs_to = found_farm_full[ nr ];
+		-- distribute sheds, wagons etc. equally on all places with beds
+		if(     #found_any_home>0 ) then
+			local nr = math.random( #found_any_home );
+			village_to_add_data_bpos[ v ].belongs_to = found_any_home[ nr ];
 		else
 		-- print("NOT ASSIGNING work PLOT Nr. "..tostring(v).." to anything (nothing suitable found)");
 		end
@@ -947,6 +943,16 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 		village_to_add_data_bpos[ v ].worker.lives_at = v; -- house number
 	end
 
+	-- even though it should not happen there are still sometimes workers that work on
+	-- another plot and wrongly get a random worker job in their house assigned as well;
+	-- check for those and eliminiate them
+	for house_nr,bpos in ipairs( village_to_add_data_bpos ) do
+		if( bpos and bpos.worker and bpos.worker.lives_at and bpos.worker_lives_at ~= house_nr ) then
+			-- make sure the worker gets no other job or title from his house
+			village_to_add_data_bpos[ house_nr ].worker = nil;
+		end
+	end
+
 	-- find out if there are any duplicate professions
 	local professions = {};
 	for house_nr,bpos in ipairs( village_to_add_data_bpos ) do
@@ -969,7 +975,11 @@ end
 
 
 -- apply bpos.pos as offset and apply rotation
+-- TODO: rotate param2 as well
 mg_villages.transform_coordinates = function( pos, bpos )
+	if( not( pos ) or not(pos[1]) or not(pos[2]) or not(pos[3])) then
+		return nil;
+	end
 	-- start with the start position as stored in bpos
 	local p = {x=bpos.x, y=bpos.y, z=bpos.z};
 

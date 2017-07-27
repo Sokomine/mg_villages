@@ -390,6 +390,8 @@ mg_villages.add_building = function( building_data )
 				end
 			end
 		end
+		-- make sure this refers to the same data as building_data.bed_list
+		building_data.bed_count = #building_data.bed_list;
 
 		-- gain the list of workplaces from the path_info data
 		building_data.workplace_list = {};
