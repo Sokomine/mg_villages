@@ -297,7 +297,6 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		bpos.beds[i].x = p.x;
 		bpos.beds[i].y = p.y;
 		bpos.beds[i].z = p.z;
-		-- TODO: let transform_coordinates rotate param2 correctly
 		bpos.beds[i].p2 = bed[4];
 	end
 	-- lumberjack home
@@ -1039,6 +1038,31 @@ mg_villages.transform_coordinates = function( pos, bpos )
 		p.x = p.x + sx - rel.z; -- bsizex and bsizez are swapped
 		p.z = p.z + rel.x;
 	end
+
+	-- param2 is rotated the same way as in handle_schematics.generate_building_what_to_place_here_and_how
+	if( p[4] ) then -- param2
+		local mirror_x = false;
+		local mirror_z = false;
+		if( bpos.mirror ) then
+			if( building_data.axis and building_data.axis == 1 ) then
+				mirror_x = true;
+				mirror_z = false;
+			-- used for "restore original landscape"
+			elseif( building_data.axis and building_data.axis == 3 ) then
+				mirror_z = true;
+				mirror_x = true;
+			else
+				mirror_x = false;
+				mirror_z = true;
+			end
+		end
+		if(     mirror_x ) then
+			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 2 ];
+		elseif( mirror_z ) then
+			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 3 ];
+		else
+			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 1 ];
+		end
 
 	return p;
 end
