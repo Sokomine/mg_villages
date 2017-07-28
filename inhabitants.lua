@@ -1160,8 +1160,30 @@ mg_villages.inhabitants.spawn_mobs_for_one_house = function( bpos, minp, maxp, v
 end
 
 
--- spawn mobs in villages
-mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp, data, param2_data, a, cid )
+-- calculate which mob works and lives where
+mg_villages.inhabitants.assign_mobs = function( village, village_id, force_repopulate )
+	-- make sure mobs get assigned only once (no point in doing this every time
+	-- when part of a village spawned)
+	if( village.mob_data_version and not(force_repopulate)) then
+		return;
+	end
+
+	-- if force_repopulate is true: recalculate road network, discard all worker- and
+	-- bed data and create new mobs
+	if( force_repopulate ) then
+		for plot_nr,bpos in ipairs(village.to_add_data.bpos) do
+			-- delete information about who works here
+			bpos.worker = nil;
+			-- delete information about who lives here
+			bpos.beds = nil;
+			-- delete information about the interconnection of the road network
+			bpos.xdir = nil;
+			bpos.parent_road_plot = nil;
+		end
+	end
+
+	-- analyze the road network
+	mg_villages.get_road_list( village_id, true );
 
 	-- some types of buildings require special workers
 	village.to_add_data.bpos = mg_villages.inhabitants.assign_jobs_to_houses( village.to_add_data.bpos );
@@ -1171,7 +1193,16 @@ mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp,
 
 		-- each bed gets a mob assigned
 		bpos = mg_villages.inhabitants.assign_mobs_to_beds( bpos, plot_nr, village.to_add_data.bpos, village );
+	end
+	-- later versions may become incompatible
+	village.mob_data_version = 1;
+end
 
+
+-- spawn mobs in villages
+mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp, data, param2_data, a, cid )
+	-- for each building in the village
+	for plot_nr,bpos in ipairs(village.to_add_data.bpos) do
 		-- actually spawn the mobs
 		local village_id = tostring( village.vx )..':'..tostring( village.vz );
 		mg_villages.inhabitants.spawn_mobs_for_one_house( bpos, minp, maxp, village_id, plot_nr );

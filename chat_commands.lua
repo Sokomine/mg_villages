@@ -234,3 +234,43 @@ minetest.register_chatcommand( 'visit', {
 		minetest.chat_send_player( name, "There is no village with the number "..tostring( param ).." (yet?).");
         end
 });
+
+minetest.register_chatcommand( 'village_mob_repopulate', {
+        description = "Discards old mob data and assigns beds and workplaces anew. Mobs get new names.",
+	params = "<village number>",
+        privs = {},
+        func = function(name, param)
+
+
+		if( not( minetest.check_player_privs( name, {protection_bypass=true}))) then
+			minetest.chat_send_player( name, "You need the 'protection_bypass' priv in order to delete all the old mob data of a village and to recalculate it anew.");
+			return;
+		end
+
+		if( not( param ) or param == "" ) then
+			minetest.chat_send_player( name, "Which village do you want to repopulate? Please provide the village number!");
+			return;
+		end
+
+		local nr = tonumber( param );
+		for id, v in pairs( mg_villages.all_villages ) do
+			-- we have found the village
+			if( v and v.nr == nr ) then
+
+				minetest.chat_send_player( name, "Deleting information about workplaces and beds. Recalculating. Assigning new data for village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown'))..".");
+				-- move the player to the center of the village he just changed
+				local player =  minetest.get_player_by_name( name );
+				player:moveto( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
+
+				local village_id = tostring( v.vx )..':'..tostring( v.vz );
+				-- actually do the reassigning
+				mg_villages.inhabitants.assign_mobs( v, village_id, true);
+				-- save the modified data
+				save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
+				return;
+			end
+		end
+		-- no village found
+		minetest.chat_send_player( name, "There is no village with the number "..tostring( param ).." (yet?).");
+        end
+});
