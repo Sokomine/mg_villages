@@ -142,13 +142,13 @@ mg_villages.inhabitants.mob_get_full_name = function( data, worker_data )
 		elseif( data.title and (data.title == "servant" or data.title=="housemaid" or data.title=="guard" or data.title=="soldier")) then
 			str = str..", a "..data.title;
 
-		elseif( data.generation==2 and data.gender=="m" and data.title and data.uniq>1) then
+		elseif( data.generation==2 and data.gender=="m" and data.title and data.uniq and data.uniq>1) then
 			str = str..", a "..data.title; --", one of "..tostring( worker_data.uniq ).." "..worker_data.title.."s";
 		-- if there is a job:   , the blacksmith
 		elseif( data.generation==2 and data.gender=="m" and data.title) then
 			str = str..", the "..data.title;
 			-- if there is a job:   , blacksmith Fred's son   etc.
-		elseif( worker_data.uniq>1 ) then
+		elseif( worker_data.uniq and worker_data.uniq>1 ) then
 			str = str..", "..worker_data.title.." "..worker_data.first_name.."'s "..mg_villages.inhabitants.get_family_function_str( data );
 		else
 			str = str..", the "..worker_data.title.."'s "..mg_villages.inhabitants.get_family_function_str( data );
@@ -227,29 +227,31 @@ end
 
 
 -- assign inhabitants to bed positions; create families;
--- bpos needs to contain at least { beds = {list_of_bed_positions}, btype = building_type}
+-- bpos needs to contain at least { btype = building_type }
 -- bpos is the building position data of one building each
+-- Important: This function assigns a mob to each bed that was identified using path_info.
+--            The real positions of the beds have to be calculated using
+--               mg_villages.transform_coordinates( {p.x,p.y,p.z}, bpos )
+--            with p beeing the corresponding entry from mg_villages.BUILDINGS[ bpos.btype ].bed_list
 mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_to_add_data_bpos, village )
 
-	if( not( bpos ) or not( bpos.btype ) or not( bpos.beds)) then
+	if( not( bpos ) or not( bpos.btype )) then
 		return bpos;
 	end
 
-	-- make sure no duplicates exist
-	local check_duplicates = {};
-	local new_table = {};
-	for i,v in ipairs( bpos.beds ) do
-		local str = minetest.pos_to_string( v );
-		if( not(check_duplicates[ str ])) then
-			table.insert( new_table, v );
-		end
-		check_duplicates[ str ] = 1;
+	-- get data about the building
+	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
+	-- the building type determines which kind of mob will live there
+	if( not( building_data ) or not( building_data.typ )
+	   -- are there beds where the mob can sleep?
+	   or not( building_data.bed_list ) or #building_data.bed_list < 1) then
+		return bpos;
 	end
-	bpos.beds = new_table;
 
 	-- workplaces got assigned earlier on
 	local works_at = nil;
 	local title    = nil;
+	local uniq     = nil;
 	local not_uniq = 0;
 	-- any other plots (sheds, wagons, fields, pastures) the worker here may own
 	local owns = {};
@@ -258,6 +260,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		if( v and v.worker and v.worker.lives_at and v.worker.lives_at == house_nr ) then
 			works_at = nr;
 			title    = v.worker.title;
+			uniq     = v.worker.uniq;
 			if( v.worker.uniq ) then
 				not_uniq = v.worker.uniq;
 			end
@@ -273,43 +276,30 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 	if( not_uniq > 1 ) then
 		for nr, v in ipairs( village_to_add_data_bpos ) do
 			if( v and v.worker and v.worker.lives_at
+			  and v.worker.title == title -- same profession
 			  and village_to_add_data_bpos[ v.worker.lives_at ]
 			  and village_to_add_data_bpos[ v.worker.lives_at ].beds
 			  and village_to_add_data_bpos[ v.worker.lives_at ].beds[1]
 			  and village_to_add_data_bpos[ v.worker.lives_at ].beds[1].first_name ) then
-				table.insert( worker_names_with_same_profession, village_to_add_data_bpos[ v.worker.lives_at ].beds[1].first_name );
+				worker_names_with_same_profession[ village_to_add_data_bpos[ v.worker.lives_at ].beds[1].first_name ] = 1;
 			end
 		end
 	end
 
 
-	-- get data about the building
-	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
-	-- the building type determines which kind of mob will live there
-	if( not( building_data ) or not( building_data.typ )
-	   -- are there beds where the mob can sleep?
-	   or not( bpos.beds ) or table.getn( bpos.beds ) < 1) then
-		return bpos;
+	bpos.beds = {};
+	-- make sure each bed is defined in the bpos.beds data structure, even if empty
+	for i,bed in ipairs( building_data.bed_list ) do
+		bpos.beds[i] = {};
+		-- store the index for faster lookup
+		bpos.beds[i].bnr = i;
+		local p = mg_villages.transform_coordinates( {bed[1],bed[2],bed[3]}, bpos )
+		bpos.beds[i].x = p.x;
+		bpos.beds[i].y = p.y;
+		bpos.beds[i].z = p.z;
+		-- TODO: let transform_coordinates rotate param2 correctly
+		bpos.beds[i].p2 = bed[4];
 	end
-
-	-- the bed list for any actual building may be ordered diffrently than the
-	-- bed list in BUILDINGS[..] due to rotation
-
-	-- transform all bed positions to the current position
-	local transformed = {};
-	for i,p in ipairs( building_data.bed_list ) do
-		transformed[ i ] = mg_villages.transform_coordinates( {p.x,p.y,p.z}, bpos );
-	end
-	-- find out which bed in the building data bed list corresponds to which bed in our list here
-	for i,v in ipairs( bpos.beds ) do
-		for nr,p in ipairs( transformed ) do
-			if( p and p.x==v.x and p.y==v.y and p.z==v.z ) then
-				bpos.beds[i].bnr = nr; -- bed number in list
-			end
-		end
-	end
-
-
 	-- lumberjack home
 	if( building_data.typ == "lumberjack" ) then
 
@@ -320,14 +310,16 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			if( works_at and i==1) then
 				v.works_at = works_at;
 				v.title    = title;
-				v.uniq     = not_uniq;
+				v.uniq     = uniq;
 			else
 				v.title    = 'lumberjack';
+				v.works_at = house_nr; -- works at home for now; TODO: ought to have a forrest
 				v.uniq     = 99; -- one of many lumberjacks here
 			end
 			if( owns and #owns>0 ) then
 				v.owns     = owns;
 			end
+			worker_names_with_same_profession[ v.first_name ] = 1;
 		end
 
 	-- the castle-type buildings contain guards without family
@@ -338,6 +330,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			v.works_at = house_nr; -- they work in their castle
 			v.title = "soldier";
 			v.uniq  = 99; -- one of many guards here
+			worker_names_with_same_profession[ v.first_name ] = 1;
 		end
 
 	-- normal house containing a family
@@ -348,7 +341,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			if( works_at ) then
 				bpos.beds[1].works_at = works_at;
 				bpos.beds[1].title    = title;
-				bpos.beds[1].uniq     = not_uniq;
+				bpos.beds[1].uniq     = uniq;
 			end
 			if( owns and #owns>0 ) then
 				bpos.beds[1].owns     = owns;
@@ -361,6 +354,7 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			bpos.beds[2] = mg_villages.inhabitants.get_new_inhabitant( bpos.beds[2], "f", 2, {}, nil, village ); -- female of parent generation
 			-- first names ought to be uniq withhin a family
 			name_exclude[ bpos.beds[2].first_name ] = 1;
+			-- no work or title assigned to the wife
 		end
 
 		-- not all houses will have grandparents
@@ -422,6 +416,16 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		if( bpos.beds[2] and oldest_child + 18 > bpos.beds[2].age ) then
 			bpos.beds[2].age = oldest_child + 18 + math.random( 10 );
 		end
+		-- the grandfather (father's side) has to be old enough
+		if( bpos.beds[1] and bpos.beds[grandfather_bed_id] and bpos.beds[grandfather_bed_id].first_name
+		  and bpos.beds[1].age+18 > bpos.beds[grandfather_bed_id].age) then
+			bpos.beds[grandfather_bed_id].age = bpos.beds[1].age+18;
+		end
+		-- ..and also the grandmother (father's side as well)
+		if( bpos.beds[1] and bpos.beds[grandmother_bed_id] and bpos.beds[grandmother_bed_id].first_name
+		  and bpos.beds[1].age+18 > bpos.beds[grandmother_bed_id].age) then
+			bpos.beds[grandmother_bed_id].age = bpos.beds[1].age+18;
+		end
 	end
 	return bpos;
 end
@@ -479,7 +483,11 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 			local worker = village_to_add_data_bpos[ bpos.worker.lives_at ].beds[1];
 			str = str.."provides work:";
 			local btype2 = mg_villages.BUILDINGS[ village_to_add_data_bpos[ bpos.worker.lives_at ].btype];
-			people_str = minetest.formspec_escape( mg_villages.inhabitants.mob_get_full_name( worker, worker ).." who lives at the "..tostring( btype2.typ ).." on plot "..tostring( bpos.worker.lives_at )..", works here");
+			if( btype2 and btype2.typ ) then
+				people_str = minetest.formspec_escape( mg_villages.inhabitants.mob_get_full_name( worker, worker ).." who lives at the "..tostring( btype2.typ ).." on plot "..tostring( bpos.worker.lives_at )..", works here");
+			else
+				people_str = "- unkown -";
+			end
 		end
 
 	elseif( not( bpos.beds ) or not( bpos.beds[1])) then
@@ -592,6 +600,9 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 			list_of_children = list_of_children..mg_villages.inhabitants.mob_get_short_name( v )..", ";
 		end
 	end
+	if( list_of_children == "" ) then
+		list_of_children = "- none -";
+	end
 	-- contains commata
 	list_of_children = minetest.formspec_escape( string.sub( list_of_children, 1, -3));
 
@@ -651,7 +662,9 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 	local profession = "- none -";
 	if( this_mob_data.title ) then
 		profession = this_mob_data.title;
-		if( not( this_mob_data.uniq ) or this_mob_data.uniq<1 ) then
+		if( this_mob_data and this_mob_data.title == "guest" ) then
+			profession = profession..",,(just visiting)";
+		elseif( not( this_mob_data.uniq ) or this_mob_data.uniq<1 ) then
 			profession = profession..",,(the only one in this village)";
 		else
 			profession = profession..",,(one amongst several in this village)";
@@ -947,9 +960,11 @@ mg_villages.inhabitants.assign_jobs_to_houses = function( village_to_add_data_bp
 	-- another plot and wrongly get a random worker job in their house assigned as well;
 	-- check for those and eliminiate them
 	for house_nr,bpos in ipairs( village_to_add_data_bpos ) do
-		if( bpos and bpos.worker and bpos.worker.lives_at and bpos.worker_lives_at ~= house_nr ) then
+		if( bpos and bpos.worker and bpos.worker.lives_at and bpos.worker.lives_at ~= house_nr
+			and village_to_add_data_bpos[ bpos.worker.lives_at ]
+			and village_to_add_data_bpos[ bpos.worker.lives_at ].worker) then
 			-- make sure the worker gets no other job or title from his house
-			village_to_add_data_bpos[ house_nr ].worker = nil;
+			village_to_add_data_bpos[ bpos.worker.lives_at ].worker = nil;
 		end
 	end
 
