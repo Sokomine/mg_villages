@@ -248,6 +248,11 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		return bpos;
 	end
 
+	-- does the mob have a preferred spot where he likes to stand to receive customers/work?
+	-- i.e. teacher, shop owner, priest,...
+	-- this is the index of the mob's workplace in the building_data.workplace_list
+	local workplace_index = 1;
+
 	-- workplaces got assigned earlier on
 	local works_at = nil;
 	local title    = nil;
@@ -286,7 +291,6 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		end
 	end
 
-
 	bpos.beds = {};
 	-- make sure each bed is defined in the bpos.beds data structure, even if empty
 	for i,bed in ipairs( building_data.bed_list ) do
@@ -310,10 +314,18 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 				v.works_at = works_at;
 				v.title    = title;
 				v.uniq     = uniq;
+				v.workplace= 1; -- gets the first available workplace there
+				-- if he works at home, the first workplace there is taken
+				if( works_at == house_nr ) then
+					workplace_index = 2;
+				end
 			else
 				v.title    = 'lumberjack';
 				v.works_at = house_nr; -- works at home for now; TODO: ought to have a forrest
 				v.uniq     = 99; -- one of many lumberjacks here
+				-- give the next free workplace to the mob
+				v.workplace= workplace_index;
+				workplace_index = workplace_index+1;
 			end
 			if( owns and #owns>0 ) then
 				v.owns     = owns;
@@ -330,6 +342,9 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 			v.title = "soldier";
 			v.uniq  = 99; -- one of many guards here
 			worker_names_with_same_profession[ v.first_name ] = 1;
+			-- each soldier gets a workplace (provided one is available)
+			v.workplace = workplace_index;
+			workplace_index = workplace_index + 1;
 		end
 
 	-- normal house containing a family
@@ -341,6 +356,11 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 				bpos.beds[1].works_at = works_at;
 				bpos.beds[1].title    = title;
 				bpos.beds[1].uniq     = uniq;
+				bpos.beds[1].workplace= 1;
+				-- if he works at home, the first workplace there is taken
+				if( works_at == house_nr ) then
+					workplace_index = 2;
+				end
 			end
 			if( owns and #owns>0 ) then
 				bpos.beds[1].owns     = owns;
@@ -387,6 +407,9 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 						end
 						v.works_at = house_nr;
 						v.uniq  = 99; -- one of many servants/housemaids here
+						-- give the next free workplace to the mob
+						v.workplace = workplace_index;
+						workplace_index = workplace_index + 1;
 					-- guest in a hotel
 					else
 						v = mg_villages.inhabitants.get_new_inhabitant( v, "r", math.random(3), name_exclude, nil, village ); -- get a random guest
@@ -670,6 +693,7 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		end
 	end
 	local works_at = "-";
+	local pref_workspace = "";
 	if( this_mob_data.works_at ) then
 		local bpos_work = village_to_add_data_bpos[ this_mob_data.works_at ];
 		local building_data_work = mg_villages.BUILDINGS[ bpos_work.btype ];
@@ -679,17 +703,17 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		works_at = minetest.formspec_escape( building_data_work.typ.." on plot "..this_mob_data.works_at..
 			" at "..minetest.pos_to_string( handle_schematics.get_pos_in_front_of_house( bpos_work,0)));
 		-- does this mob have a fixed workspace?
-		-- TODO: there are some slightly more complex setups...
-		if( building_data_work.short_file_name ) then
-			local work_paths = mg_villages.path_info[ building_data_work.short_file_name.."|WORKPLACE"];
-			if( work_paths and #work_paths and work_paths[1] and work_paths[1][1] and work_paths[1][1][1] and bed_nr==1) then
-				works_at = works_at..",Preferred workplace:,"..
+		if( building_data_work.workplace_list and this_mob_data.workplace) then
+			if( building_data_work.workplace_list[ this_mob_data.workplace ] ) then
+				pref_workspace = ",Preferred workplace:,"..
 					minetest.formspec_escape(
 						minetest.pos_to_string(
 							mg_villages.transform_coordinates(
-								work_paths[1][1][1], bpos_work )));
+								building_data_work.workplace_list[ this_mob_data.workplace], bpos_work ))..
+						" ["..tostring( this_mob_data.workplace ).."/"..
+						tostring( #building_data_work.workplace_list ).."]");
 			else
-				works_at = works_at..",Preferred workplace:,no specific one";
+				pref_workspace = ",Preferred workplace:,no specific one";
 			end
 		end
 	end
@@ -703,10 +727,12 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		-- TODO: the bed position might be calculated (and be diffrent from this x,y,z here)
 		-- TODO: the position next to the bed for getting up can be calculated as well
 		",Sleeps in bed at:,"..minetest.formspec_escape( minetest.pos_to_string( this_mob_data )..
-					", "..this_mob_data.p2.." ["..(this_mob_data.bnr or "-?-").."]")..
+					", "..this_mob_data.p2.." ["..(this_mob_data.bnr or "-?-").."/"..
+					(#building_data.bed_list or "-?-").."]")..
 		-- position of the mob's mob spawner
 		",Has a spawner at:,"..minetest.formspec_escape( minetest.pos_to_string(
 					handle_schematics.get_pos_in_front_of_house( bpos, bed_nr)))..
+		pref_workspace..
 		",Profession:,"..profession..
 		",Works at:,"..works_at;
 
@@ -718,7 +744,7 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 	for k,v in pairs( this_mob_data ) do
 		if(   k~="first_name" and k~="middle_name" and k~="gender" and k~="age" and k~="generation"
 		  and k~="x" and k~="y" and k~="z" and k~="p2" and k~="bnr"
-		  and k~="title" and k~="works_at" and k~="owns" and k~="uniq"
+		  and k~="title" and k~="works_at" and k~="owns" and k~="uniq" and k~="workplace"
 		  and k~="typ" ) then -- typ: content_id of bed head node
 			-- add those entries that have not been covered yet
 			text = text..","..k..":,"..tostring(v);
@@ -1063,6 +1089,7 @@ mg_villages.transform_coordinates = function( pos, bpos )
 		else
 			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 1 ];
 		end
+	end
 
 	return p;
 end
