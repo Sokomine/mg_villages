@@ -8,6 +8,12 @@ handle_schematics.global_replacement_table[ 'farming:soil'                 ] = '
 handle_schematics.global_replacement_table[ 'farming:desert_sand_soil_wet' ] = 'mg_villages:desert_sand_soil';
 handle_schematics.global_replacement_table[ 'farming:desert_sand_soil'     ] = 'mg_villages:desert_sand_soil';
 
+-- if cottages is not installed, place "normal" beds in the chateau and wherever else needed
+if( not( minetest.get_modpath( 'cottages' ))) then
+	handle_schematics.global_replacement_table[ 'cottages:bed_head' ] = 'beds:fancy_bed_top';
+	handle_schematics.global_replacement_table[ 'cottages:bed_foot' ] = 'beds:fancy_bed_bottom';
+end
+
 -- ethereal comes with some intresting trees
 if( minetest.get_modpath( 'ethereal' )) then
 	mg_villages.ethereal_trees = {'acacia','willow','redwood','frost','mushroom','yellow','palm','banana'};
