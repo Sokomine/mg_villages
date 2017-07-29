@@ -267,6 +267,9 @@ minetest.register_chatcommand( 'village_mob_repopulate', {
 				mg_villages.inhabitants.assign_mobs( v, village_id, true);
 				-- save the modified data
 				save_restore.save_data( 'mg_all_villages.data', mg_villages.all_villages );
+
+				-- adjust beds and workplaces
+				mg_villages.inhabitants.prepare_metadata( v, village_id, nil, nil );
 				return;
 			end
 		end

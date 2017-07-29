@@ -1250,6 +1250,59 @@ mg_villages.inhabitants.assign_mobs = function( village, village_id, force_repop
 end
 
 
+-- set metadata and/or infotexts for beds and workplace markers
+mg_villages.inhabitants.prepare_metadata = function( village, village_id, minp, maxp )
+	local bpos_list = village.to_add_data.bpos;
+	for plot_nr,bpos in ipairs(bpos_list) do
+		-- put labels on beds
+		if( bpos.beds ) then
+			for bed_nr, bed in ipairs( bpos.beds ) do
+				-- if the bed is located withhin the given area OR no area is given
+				-- (for manual calls later on, outside of mapgen)
+				if( not( minp ) or not( maxp )
+				  or (  minp.x <= bed.x and maxp.x >= bed.x
+				    and minp.y <= bed.y and maxp.y >= bed.y
+				    and minp.z <= bed.z and maxp.z >= bed.z)) then
+					local meta = minetest.get_meta( bed );
+					meta:set_string('infotext', 'Bed of '..
+						mg_villages.inhabitants.mob_get_full_name( bed, bpos.beds[1] ));
+					meta:set_string('village_id', village_id );
+					meta:set_int(   'plot_nr',    plot_nr);
+					meta:set_int(   'bed_nr',     bed_nr);
+				end
+				-- there might be a workplace belonging to the bed/mob
+				if( bed.works_at and bed.workplace
+				  and bed.workplace>0
+				  and bpos_list[ bed.works_at ]
+				  and bpos_list[ bed.works_at ].btype
+				  and mg_villages.BUILDINGS[ bpos_list[ bed.works_at ].btype ]
+				  and mg_villages.BUILDINGS[ bpos_list[ bed.works_at ].btype ].workplace_list
+				  and #mg_villages.BUILDINGS[ bpos_list[ bed.works_at ].btype ].workplace_list >= bed.workplace ) then
+					local p = mg_villages.BUILDINGS[ bpos_list[ bed.works_at ].btype ].workplace_list[ bed.workplace ];
+					local bpos_work = bpos_list[ bed.works_at ];
+					local p_akt = mg_villages.transform_coordinates( {p[1],p[2],p[3]}, bpos_work);
+					if( not( minp ) or not( maxp )
+					  or (  minp.x <= p_akt.x and maxp.x >= bed.x
+					    and minp.y <= p_akt.y and maxp.y >= p_akt.y
+					    and minp.z <= p_akt.z and maxp.z >= p_akt.z)) then
+						local meta = minetest.get_meta( p_akt );
+						meta:set_string('infotext', 'Workplace of '..
+							mg_villages.inhabitants.mob_get_full_name( bed, bed ));
+						meta:set_string('village_id', village_id );
+						-- data about the workplace itshelf
+						meta:set_int(   'plot_nr',      bed.works_at );
+						meta:set_int(   'workplace_nr', bed.workplace );
+						-- the data of the *mob* might be more relevant for spawning
+						meta:set_int(   'lives_at',     plot_nr );
+						meta:set_int(   'bed_nr',       bed_nr );
+					end
+				end
+			end
+		end
+	end
+end
+
+
 -- spawn mobs in villages
 mg_villages.inhabitants.part_of_village_spawned = function( village, minp, maxp, data, param2_data, a, cid )
 	-- for each building in the village

@@ -402,7 +402,7 @@ mg_villages.add_building = function( building_data )
 			local paths = mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE"];
 			if( paths and paths[1] ) then
 				for i,p in ipairs( paths[1] ) do
-					if( p and p[1]) then
+					if( p and p[1] and i<#paths[1]) then
 						building_data.workplace_list[i] = p[1];
 					end
 				end
