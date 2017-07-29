@@ -552,6 +552,16 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 				mg_villages.inhabitants.print_plot_list(village_to_add_data_bpos, bpos.beds[1].owns)..".";
 		end
 	end
+	-- which entrances/front doors does the building have?
+	local front_doors = mg_villages.inhabitants.get_front_doors(bpos);
+	local door_str = "Entrances: ";
+	for i,p in ipairs( front_doors ) do
+		door_str = door_str..minetest.pos_to_string( p ).." ";
+	end
+	if( not( front_doors ) or #front_doors<1) then
+		door_str = door_str.."- unknown -";
+	end
+
 	if( people_str == "" ) then
 		people_str = "- nobody lives or works here permanently -";
 	end
@@ -587,6 +597,7 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 		prev_next_button..
 		'label[0.5,0.5;'..minetest.formspec_escape(str)..']'..
 		'label[0.5,4.1;'..add_str..']'..
+		'label[0.5,4.6;'..minetest.formspec_escape(door_str)..']'..
 		'tablecolumns[' ..
 		'text,align=left]'..   -- name and description of inhabitant
 		'table[0.1,1.0;11.4,3.0;mg_villages:formspec_list_inhabitants;'..people_str..']';
@@ -1326,6 +1337,23 @@ mg_villages.inhabitants.prepare_metadata = function( village, village_id, minp, 
 			end
 		end
 	end
+end
+
+
+-- determine positions of front doors from stored pathinfo data and building_data.front_door_list
+mg_villages.inhabitants.get_front_doors = function( bpos )
+	if( not( bpos ) or not( bpos.btype ) or not( mg_villages.BUILDINGS[ bpos.btype ] )) then
+		return {};
+	end
+	local building_data = mg_villages.BUILDINGS[ bpos.btype ];
+	if( not( building_data ) or not( building_data.front_door_list )) then
+		return {};
+	end
+	local door_list = {};
+	for i,d in ipairs( building_data.front_door_list ) do
+		door_list[i] = mg_villages.transform_coordinates( {d[1],d[2],d[3]}, bpos);
+	end
+	return door_list;
 end
 
 

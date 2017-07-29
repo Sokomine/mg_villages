@@ -370,6 +370,8 @@ mg_villages.add_building = function( building_data )
 		-- the above function - provided they are not part of path_info yet;
 		-- the information stored in path_info is the relevant one for mob movement/pathfinding
 
+		-- store the front doors in extra list
+		building_data.front_door_list = {};
 		-- gain the list of beds from path_info data
 		building_data.bed_list = {};
 		-- mobs are seldom able to stand directly on or even next to the bed when getting up
@@ -379,6 +381,7 @@ mg_villages.add_building = function( building_data )
 		 and mg_villages.path_info[ building_data.short_file_name ] ) then
 			local paths = mg_villages.path_info[ building_data.short_file_name];
 			if( paths and paths[1] ) then
+				-- iterate over all bed-to-first-front-door-paths (we want to identify beds)
 				for i,p in ipairs( paths[1] ) do
 					-- the last entry has a diffrent meaning
 					if( p and p[1] and i<#paths[1]) then
@@ -388,6 +391,17 @@ mg_villages.add_building = function( building_data )
 						if( p[2] ) then
 							building_data.stand_next_to_bed_list[i] = p[2];
 						end
+					end
+				end
+				-- iterate over all paths and take a look at the first bed only (we want to
+				-- get the doors now, not the beds)
+				for i,p in ipairs( paths ) do
+					-- paths[i]: paths from all beds to front door i
+					-- paths[i][1]: path from first bed to front door i
+					if( p and p[1] ) then
+						-- the place in front of the door is the last entry
+						local d = p[1][ #p[1]];
+						building_data.front_door_list[i] = {d[1],d[2],d[3]};
 					end
 				end
 			end
@@ -407,9 +421,17 @@ mg_villages.add_building = function( building_data )
 						building_data.workplace_list[i] = {p[1][1],p[1][2],p[1][3],p[1][4]};
 					end
 				end
+				-- no front doors found through beds? then take a look if the workplaces found doors
+				if( #building_data.front_door_list < 1 ) then
+					for i,p in ipairs( paths ) do
+						if( p and p[1] ) then
+							local d = p[1][ #p[1]];
+							building_data.front_door_list[i] = {d[1],d[2],d[3]};
+						end
+					end
+				end
 			end
 		end
-
 
 	-- missing data regarding building size - do not use this building for anything
 	elseif( not( building_data.sizex )    or not( building_data.sizez )
