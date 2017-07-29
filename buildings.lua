@@ -64,7 +64,7 @@ local buildings = {
 --	{scm="church_2_twoelk", yoff= 0, orients={0}, farming_plus=0, avoid='', typ='church',    weight={medieval=4}, pervillage=1},    
 	{scm="forge_1",         yoff= 0, orients={0}, farming_plus=0, avoid='', typ='forge',     weight={medieval=2,   single=1/2}, pervillage=1,   inh=-1},
 	{scm="mill_1",          yoff= 0, orients={0}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2            }, pervillage=1,   inh=-1},
-	{scm="watermill_1",     yoff=-3, orients={3}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2            }, pervillage=1,   inh=-2},
+	{scm="watermill_1",     yoff=-3, orients={1}, farming_plus=0, avoid='', typ='mill',      weight={medieval=2            }, pervillage=1,   inh=-2},
 	{scm="hut_1",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1,   single=1  },                 inh=1},
 	{scm="hut_2",           yoff= 0, orients={0}, farming_plus=0, avoid='', typ='hut',       weight={medieval=1,   single=1  },                 inh=2},
 	{scm="farm_full_1",     yoff= 0, orients={0}, farming_plus=0, avoid='', typ='farm_full', weight={medieval=1/4, single=1  },               inh=2},
@@ -382,7 +382,8 @@ mg_villages.add_building = function( building_data )
 				for i,p in ipairs( paths[1] ) do
 					-- the last entry has a diffrent meaning
 					if( p and p[1] and i<#paths[1]) then
-						building_data.bed_list[i] = p[1];
+						-- param2 is the 5th parameter
+						building_data.bed_list[i] = {p[1][1],p[1][2],p[1][3],p[1][5]};
 						-- also store where the mob may stand
 						if( p[2] ) then
 							building_data.stand_next_to_bed_list[i] = p[2];
@@ -403,7 +404,7 @@ mg_villages.add_building = function( building_data )
 			if( paths and paths[1] ) then
 				for i,p in ipairs( paths[1] ) do
 					if( p and p[1] and i<#paths[1]) then
-						building_data.workplace_list[i] = p[1];
+						building_data.workplace_list[i] = {p[1][1],p[1][2],p[1][3],p[1][4]};
 					end
 				end
 			end

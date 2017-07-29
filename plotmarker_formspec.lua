@@ -63,6 +63,10 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		return;
 	end
 
+	local mirror_str = "";
+	if( plot.mirror ) then
+		mirror_str = minetest.formspec_escape(" (mirrored)");
+	end
 	-- create the header
 	local formspec = "size[13,10]"..
 		"label[3.3,0.0;Plot No.: "..tostring( plot_nr )..", with "..tostring( mg_villages.BUILDINGS[ plot.btype ].scm ).."]"..
@@ -210,7 +214,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		"button[6.0,1.0;2.0,0.5;inhabitants;Who lives here]"..
 		"label[1.0,0.5;Plot No.: "..tostring( plot_nr ).."]"..
 		"label[2.5,0.5;Building:]"..
-		"label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm ).."]"..
+		"label[3.5,0.5;"..tostring( mg_villages.BUILDINGS[btype].scm )..mirror_str.."]"..
 		"field[20,20;0.1,0.1;pos2str;Pos;"..minetest.pos_to_string( pos ).."]";
 		local formspec = "";
 	local ifinhabit = "";

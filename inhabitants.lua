@@ -297,11 +297,11 @@ mg_villages.inhabitants.assign_mobs_to_beds = function( bpos, house_nr, village_
 		bpos.beds[i] = {};
 		-- store the index for faster lookup
 		bpos.beds[i].bnr = i;
-		local p = mg_villages.transform_coordinates( {bed[1],bed[2],bed[3]}, bpos )
+		local p = mg_villages.transform_coordinates( {bed[1],bed[2],bed[3],bed[4]}, bpos )
 		bpos.beds[i].x = p.x;
 		bpos.beds[i].y = p.y;
 		bpos.beds[i].z = p.z;
-		bpos.beds[i].p2 = bed[4];
+		bpos.beds[i].p2 =p.p2;
 	end
 	-- lumberjack home
 	if( building_data.typ == "lumberjack" ) then
@@ -717,6 +717,14 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 			end
 		end
 	end
+	local next_to_bed_str = "";
+	if( this_mob_data.bnr and building_data.stand_next_to_bed_list[ this_mob_data.bnr ]) then
+		next_to_bed_str = ",Gets up from bed to:,"..
+			minetest.formspec_escape(
+				minetest.pos_to_string(
+					mg_villages.transform_coordinates(
+						building_data.stand_next_to_bed_list[ this_mob_data.bnr], bpos)));
+	end
 	local text =
 		 "First name:,"..(this_mob_data.first_name or '- ? -')..
 		",Middle initial:,"..(this_mob_data.middle_name or '- ? -').."."..
@@ -729,6 +737,8 @@ mg_villages.inhabitants.print_mob_info = function( village_to_add_data_bpos, hou
 		",Sleeps in bed at:,"..minetest.formspec_escape( minetest.pos_to_string( this_mob_data )..
 					", "..this_mob_data.p2.." ["..(this_mob_data.bnr or "-?-").."/"..
 					(#building_data.bed_list or "-?-").."]")..
+		-- place next to te bed where the mob can stand
+		next_to_bed_str..
 		-- position of the mob's mob spawner
 		",Has a spawner at:,"..minetest.formspec_escape( minetest.pos_to_string(
 					handle_schematics.get_pos_in_front_of_house( bpos, bed_nr)))..
@@ -1066,7 +1076,7 @@ mg_villages.transform_coordinates = function( pos, bpos )
 	end
 
 	-- param2 is rotated the same way as in handle_schematics.generate_building_what_to_place_here_and_how
-	if( p[4] ) then -- param2
+	if( pos[4] ) then -- param2
 		local mirror_x = false;
 		local mirror_z = false;
 		if( bpos.mirror ) then
@@ -1083,11 +1093,11 @@ mg_villages.transform_coordinates = function( pos, bpos )
 			end
 		end
 		if(     mirror_x ) then
-			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 2 ];
+			p.p2 = handle_schematics.rotation_table[ 'facedir' ][ pos[4]+1 ][ bpos.brotate+1 ][ 2 ];
 		elseif( mirror_z ) then
-			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 3 ];
+			p.p2 = handle_schematics.rotation_table[ 'facedir' ][ pos[4]+1 ][ bpos.brotate+1 ][ 3 ];
 		else
-			p[4] = handle_schematics.rotation_table[ 'facedir' ][ p[4]+1 ][ bpos.brotate+1 ][ 1 ];
+			p.p2 = handle_schematics.rotation_table[ 'facedir' ][ pos[4]+1 ][ bpos.brotate+1 ][ 1 ];
 		end
 	end
 
@@ -1259,8 +1269,7 @@ mg_villages.inhabitants.prepare_metadata = function( village, village_id, minp, 
 			for bed_nr, bed in ipairs( bpos.beds ) do
 				-- if the bed is located withhin the given area OR no area is given
 				-- (for manual calls later on, outside of mapgen)
-				if( not( minp ) or not( maxp )
-				  or (  minp.x <= bed.x and maxp.x >= bed.x
+				if( not( minp ) or not( maxp ) or (  minp.x <= bed.x and maxp.x >= bed.x
 				    and minp.y <= bed.y and maxp.y >= bed.y
 				    and minp.z <= bed.z and maxp.z >= bed.z)) then
 					local meta = minetest.get_meta( bed );
@@ -1269,6 +1278,23 @@ mg_villages.inhabitants.prepare_metadata = function( village, village_id, minp, 
 					meta:set_string('village_id', village_id );
 					meta:set_int(   'plot_nr',    plot_nr);
 					meta:set_int(   'bed_nr',     bed_nr);
+				end
+				-- beds from the beds mod tend to have their foot as the selection box;
+				-- we need to set the infotext for the bed's foot as well
+				local p_foot = {x=bed.x,y=bed.y,z=bed.z};
+				if(     bed.p2==0 ) then p_foot.z = p_foot.z-1;
+				elseif( bed.p2==1 ) then p_foot.x = p_foot.x-1;
+				elseif( bed.p2==2 ) then p_foot.z = p_foot.z+1;
+				elseif( bed.p2==3 ) then p_foot.x = p_foot.x+1;
+				end
+				if( not( minp ) or not( maxp )
+				  or (  minp.x <= p_foot.x and maxp.x >= p_foot.x
+				    and minp.y <= p_foot.y and maxp.y >= p_foot.y
+				    and minp.z <= p_foot.z and maxp.z >= p_foot.z)) then
+					local meta = minetest.get_meta( p_foot );
+					-- setting the infotext is enough here
+					meta:set_string('infotext', 'Bed of '..
+						mg_villages.inhabitants.mob_get_full_name( bed, bpos.beds[1] ));
 				end
 				-- there might be a workplace belonging to the bed/mob
 				if( bed.works_at and bed.workplace
