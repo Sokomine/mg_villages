@@ -43,12 +43,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	if( not( plot.btype ) or not( mg_villages.BUILDINGS[ plot.btype ] )
 	  or not( mg_villages.BUILDINGS[ plot.btype ].mts_path )
 	  or not( mg_villages.BUILDINGS[ plot.btype ].scm )) then
-		minetest.chat_send_player( pname, 'Error. Unkown building. btype: '..tostring( plot.btype ));
-		if( plot.btype and mg_villages.BUILDINGS[ plot.btype ] ) then
-			minetest.chat_send_player( pname, 'Further information: mts_path: '..
-				tostring( mg_villages.BUILDINGS[ plot.btype ].mts_path )..' scm: '..
-				tostring( mg_villages.BUILDINGS[ plot.btype ].scm )..'.');
-		end
+		minetest.chat_send_player( pname, 'Error. Unknown building. btype: '..tostring( plot.btype ));
 		return;
 	end
 	local building_name = mg_villages.BUILDINGS[ plot.btype ].mts_path..mg_villages.BUILDINGS[ plot.btype ].scm;

@@ -498,7 +498,7 @@ mg_villages.inhabitants.print_house_info = function( village_to_add_data_bpos, h
 			people_str = minetest.formspec_escape( mg_villages.inhabitants.mob_get_full_name( owner, owner ).." owns this plot");
 		end
 
-	elseif( not( bpos.beds ) or #bpos.beds<1 and bpos.worker and bpos.worker.title) then
+	elseif( (not( bpos.beds ) or #bpos.beds<1) and bpos.worker and bpos.worker.title) then
 		if( not( bpos.worker.lives_at)) then
 			str = str.."WARNING: NO WORKER assigned to this plot.";
 		else
