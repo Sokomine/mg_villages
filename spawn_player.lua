@@ -1,6 +1,6 @@
 
 
-local function spawnplayer(player)
+mg_villages.spawnplayer = function(player)
 	if( minetest.settings and minetest.settings:get("static_spawnpoint")) then
 		return;
 	end
@@ -37,11 +37,11 @@ local function spawnplayer(player)
 end
 
 minetest.register_on_newplayer(function(player)
-	spawnplayer(player)
+	mg_villages.spawnplayer(player)
 end)
 
 minetest.register_on_respawnplayer(function(player)
-	spawnplayer(player)
+	mg_villages.spawnplayer(player)
 	return true
 end)
 
