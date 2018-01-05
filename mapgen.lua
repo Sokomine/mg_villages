@@ -1179,7 +1179,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 --	vm:calc_lighting( {x=e1.x+1,y=e1.y+1,z=e1.z+1}, {x=e2.x-1,y=e2.y-1,z=e2.z-1});
 	t1 = time_elapsed( t1, 'vm calc lighting' );
 
-	vm:write_to_map(data)
+	vm:write_to_map(true)
 	t1 = time_elapsed( t1, 'vm data written' );
 
 	vm:update_liquids()
@@ -1323,7 +1323,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	end
 
 	-- if this mapchunk contains no part of a village, probably a lone building may be found in it
-	if( mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
+	if( #villages<1 and mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
 		villages = mg_villages.houses_in_mapchunk(   minp, maxp.x-minp.x+1, villages );
 	end
 
