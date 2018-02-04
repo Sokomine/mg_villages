@@ -62,7 +62,6 @@ if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 		paramtype = "light",
 		paramtype2 = "wallmounted",
 		sunlight_propagates = true,
-		is_ground_content = false,
 		walkable = false,
 		light_source = LIGHT_MAX-1,
 		selection_box = {
@@ -75,6 +74,7 @@ if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 		legacy_wallmounted = true,
 		sounds = default.node_sound_defaults(),
 		drop   = "default:torch",
+		is_ground_content = false,
 	})
 end
 
@@ -84,6 +84,7 @@ minetest.register_node("mg_villages:plotmarker", {
 	description = "Plot marker",
 	drawtype = "nodebox",
 	tiles = {"default_stone_brick.png"},
+	is_ground_content = false,
 	paramtype = "light",
 	paramtype2 = "facedir",
 	node_box = {
@@ -121,6 +122,7 @@ minetest.register_node("mg_villages:mob_workplace_marker", {
 	paramtype = "light",
 	paramtype2 = "facedir",
 	walkable = false,
+	is_ground_content = false,
 	node_box = {
 		type = "fixed",
 		fixed = {
