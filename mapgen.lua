@@ -48,20 +48,20 @@ end
 -- if you change any of the 3 constants below, also change them in the function
 --   mg_villages.village_area_mark_inside_village_area
 mg_villages.inside_village = function(x, z, village, vnoise)
-        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 40
+        return mg_villages.get_vn(x, z, vnoise:get_2d({x = x, y = z}), village) <= 40
 end
 
 mg_villages.inside_village_area = function(x, z, village, vnoise)
-        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 80
+        return mg_villages.get_vn(x, z, vnoise:get_2d({x = x, y = z}), village) <= 80
 end
 
 mg_villages.inside_village_terrain_blend_area = function(x, z, village, vnoise)
-        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village) <= 160
+        return mg_villages.get_vn(x, z, vnoise:get_2d({x = x, y = z}), village) <= 160
 end
 
 
 mg_villages.get_vnoise = function(x, z, village, vnoise) -- PM v
-        return mg_villages.get_vn(x, z, vnoise:get2d({x = x, y = z}), village)
+        return mg_villages.get_vn(x, z, vnoise:get_2d({x = x, y = z}), village)
 end -- PM ^
 
 mg_villages.get_vn = function(x, z, noise, village)
@@ -593,7 +593,7 @@ mg_villages.village_area_mark_inside_village_area = function( village_area, vill
 			if( not( village_area[ x ][ z ] )) then
 				village_area[ x ][ z ] = { 0, 0 };
 
-				local n_rawnoise = village_noise:get2d({x = x, y = z}) -- create new blended terrain
+				local n_rawnoise = village_noise:get_2d({x = x, y = z}) -- create new blended terrain
 				for village_nr, village in ipairs(villages) do
 					local vn = mg_villages.get_vn(x, z, n_rawnoise, village);
 					if(     village.is_single_house ) then

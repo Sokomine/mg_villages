@@ -21,7 +21,7 @@ minetest.register_node("mg_villages:road", {
 
 mg_villages.road_node = minetest.get_content_id( 'mg_villages:road' );
 -- do not drop snow on roads
-if( moresnow ) then
+if( minetest.get_modpath("moresnow")) then
 	moresnow.snow_cover[ mg_villages.road_node ] = moresnow.c_air;
 end
 

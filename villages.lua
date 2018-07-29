@@ -24,7 +24,7 @@ mg_villages.villages_at_point = function(minp, noise1)
 			local s = pi:next(1, 400)
 			local x = pi:next(mp.x, mp.x + 79)
 			local z = pi:next(mp.z, mp.z + 79)
-			if s <= mg_villages.VILLAGE_CHANCE and noise1:get2d({x = x, y = z}) >= -0.3 then return {} end
+			if s <= mg_villages.VILLAGE_CHANCE and noise1:get_2d({x = x, y = z}) >= -0.3 then return {} end
 		end
 	end
 	end
@@ -32,7 +32,7 @@ mg_villages.villages_at_point = function(minp, noise1)
 	if pr:next(1, 400) > mg_villages.VILLAGE_CHANCE then return {} end -- No village here
 	local x = pr:next(minp.x, minp.x + 79)
 	local z = pr:next(minp.z, minp.z + 79)
-	if noise1:get2d({x = x, y = z}) < -0.3 then return {} end -- Deep in the ocean
+	if noise1:get_2d({x = x, y = z}) < -0.3 then return {} end -- Deep in the ocean
 
 	-- fallback: type "nore" (that is what the mod originally came with)
 	local village_type = 'nore';
@@ -604,7 +604,7 @@ end
 local function generate_walls(bpos, data, a, minp, maxp, vh, vx, vz, vs, vnoise)
 	for x = minp.x, maxp.x do
 	for z = minp.z, maxp.z do
-		local xx = (vnoise:get2d({x=x, y=z})-2)*20+(40/(vs*vs))*((x-vx)*(x-vx)+(z-vz)*(z-vz))
+		local xx = (vnoise:get_2d({x=x, y=z})-2)*20+(40/(vs*vs))*((x-vx)*(x-vx)+(z-vz)*(z-vz))
 		if xx>=40 and xx <= 44 then
 			bpos[#bpos+1] = {x=x, z=z, y=vh, btype="wall", bsizex=1, bsizez=1, brotate=0}
 		end
