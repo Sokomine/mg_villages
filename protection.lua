@@ -1,30 +1,33 @@
 -- get the id of the village pos lies in (or nil if outside of villages)
 mg_villages.get_town_id_at_pos = function( pos )
 	for id, v in pairs( mg_villages.all_villages ) do
-		local size = v.vs * 3;
-		if(   ( math.abs( pos.x - v.vx ) < size )
-		  and ( math.abs( pos.z - v.vz ) < size )
-		  and ( pos.y - v.vh < 40 and v.vh - pos.y < 10 )) then
-			local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
-			if( mg_villages.inside_village_area( pos.x,  pos.z, v, village_noise)) then
+		local height_diff = pos.y - v.vh;
+		if( height_diff < 40 and height_diff > -10 ) then
 
-				local node = minetest.get_node( pos );
-				-- leaves can be digged in villages
-				if( node and node.name ) then
-					if(    minetest.registered_nodes[ node.name ]
-					   and minetest.registered_nodes[ node.name ].groups
-				           and minetest.registered_nodes[ node.name ].groups.leaves ) then
-						return nil;
-					elseif( node.name=='default:snow' ) then
-						return nil;
-					-- bones can be digged in villages
-					elseif( node.name == 'bones:bones' ) then
-						return nil;
+			local size = v.vs * 3;
+			if(   ( math.abs( pos.x - v.vx ) < size )
+			  and ( math.abs( pos.z - v.vz ) < size )) then
+				local village_noise = minetest.get_perlin(7635, 3, 0.5, 16);
+				if( mg_villages.inside_village_area( pos.x,  pos.z, v, village_noise)) then
+
+					local node = minetest.get_node( pos );
+					-- leaves can be digged in villages
+					if( node and node.name ) then
+						if(    minetest.registered_nodes[ node.name ]
+						   and minetest.registered_nodes[ node.name ].groups
+					           and minetest.registered_nodes[ node.name ].groups.leaves ) then
+							return nil;
+						elseif( node.name=='default:snow' ) then
+							return nil;
+						-- bones can be digged in villages
+						elseif( node.name == 'bones:bones' ) then
+							return nil;
+						else
+							return id;
+						end
 					else
 						return id;
 					end
-				else
-					return id;
 				end
 			end
 		end
