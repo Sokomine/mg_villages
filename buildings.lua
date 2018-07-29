@@ -290,10 +290,6 @@ mg_villages.add_building = function( building_data )
 	if( build_chest and build_chest.add_entry and building_data.typ ) then
 		build_chest.add_entry( {'main','mg_villages', building_data.typ, building_data.scm, file_name });
 	end
-	-- store information about all buildings - no matter weather they can be used or not - for later presentation in the build_chest's menu
-	if( build_chest and build_chest.add_building ) then
-		build_chest.add_building( file_name, building_data );
-	end
 
 
 	if( not( is_used )) then
@@ -305,11 +301,10 @@ mg_villages.add_building = function( building_data )
 	end
 
 
-	-- determine the size of the building
-	local res = nil;
 	-- read the size of the building;
 	-- convert to .mts for later usage if necessary
-	res  = handle_schematics.analyze_file( file_name, building_data.we_origin, building_data.mts_path .. building_data.scm ); 
+	-- true: no entry in the build_chest (we did that manually already)
+	local res  = handle_schematics.analyze_file( file_name, building_data.we_origin, building_data.mts_path .. building_data.scm, building_data, true );
 
 	if( not( res )) then
 		mg_villages.print(mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to import failure.');
@@ -318,51 +313,7 @@ mg_villages.add_building = function( building_data )
 	-- provided the file could be analyzed successfully (now covers both .mts and .we files)
 	elseif( res and res.size and res.size.x ) then
 
-		-- the file has to be placed with minetest.place_schematic(...)
-		building_data.is_mts = 1;
-
-		building_data.sizex = res.size.x;
-		building_data.sizez = res.size.z;
-		building_data.ysize = res.size.y;
-			
-		-- how many beds does the building contain?
-		building_data.bed_count = res.bed_count;
-		-- and where are the beds placed in the original schematic?
-		building_data.bed_list = res.bed_list;
-
-		-- some buildings may be rotated	
-		if( not( building_data.orients ) and res.rotated ) then
-			building_data.orients = {};
-			if(     res.rotated == 0 ) then
-				building_data.orients[1] = 0;
-			elseif( res.rotated == 90 ) then
-				building_data.axis = 1; -- important when mirroring
-				building_data.orients[1] = 1;
-			elseif( res.rotated == 180 ) then
-				building_data.orients[1] = 2;
-			elseif( res.rotated == 270 ) then
-				building_data.orients[1] = 3; 
-				building_data.axis = 1; -- important when mirroring
-			end
-		end
-
-		if( not( building_data.yoff ) and res.burried ) then
-			building_data.yoff = 1-res.burried;
-		end
-
-		-- we do need at least the list of nodenames which will need on_constr later on
-		building_data.rotated          = res.rotated;
-		building_data.nodenames        = res.nodenames;
-		building_data.on_constr        = res.on_constr;
-		building_data.after_place_node = res.after_place_node;
-		building_data.door_a           = res.door_a;
-		building_data.door_b           = res.door_b;
-
-		if( res.scm_data_cache ) then
-			building_data.scm_data_cache   = res.scm_data_cache;
-			building_data.is_mts = 0;
-		end
-
+		building_data = res;
 		-- identify front doors, calculate paths from beds/workplaces to front of house
 		building_data = mg_villages.analyze_building_for_mobs( file_name, building_data, res );
 
