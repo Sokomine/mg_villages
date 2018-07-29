@@ -1162,11 +1162,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	t1 = time_elapsed( t1, 'fill_with_plants' );
 
-	if( mg_villages.CREATE_HIGHLANDPOOLS ) then
-		mg_villages.do_highlandpools(minp, maxp, seed, vm, a, data, village_area, cid);
-	end
-	t1 = time_elapsed( t1, 'create highlandpools' );
-
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
