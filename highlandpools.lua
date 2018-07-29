@@ -47,7 +47,7 @@ end
 
 -- On generated function
 
-mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, village_area)
+mg_villages.do_highlandpools_paramat = function(minp, maxp, seed, vm, area, data, village_area, cid)
 	local y0 = minp.y
 	if y0 < -32 or y0 > YMAX then
 		return
@@ -73,6 +73,7 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 	for zcen = z0 + 8, z1 - 7, 8 do
 		-- TODO: village_area[ x ][ z ][ 2 ] == 0 means: not inside any village area or terrain blend area
 		local yasurf = false -- y of above surface node
+		-- search for ground (only c_grass counts as success)
 		for y = y1, 2, -1 do
 			local vi = area:index(xcen, y, zcen)
 			local c_node = data[vi]
@@ -85,12 +86,18 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 				break
 			end
 		end
+		-- if the ground is c_grass
 		if yasurf then
+			-- search in all 4 directions:
+			--   abort if mapchunk boundary found;
+			--   stop searching once a node is encountered that can't be part of the pool
 			local abort = false
 			for ser = 1, 80 do
 				local vi = area:index(xcen + ser, yasurf, zcen)
 				local c_node = data[vi]
 				if xcen + ser == x1 then
+					abort = true
+				elseif (village_area and village_area[xcen+ser] and village_area[xcen+ser][zcen] and village_area[xcen+ser][zcen][2]>0 ) then
 					abort = true
 				elseif c_node ~= c_air
 				and c_node ~= c_tree
@@ -104,6 +111,8 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 				local c_node = data[vi]
 				if xcen - ser == x0 then
 					abort = true
+				elseif (village_area and village_area[xcen-ser] and village_area[xcen-ser][zcen] and village_area[xcen-ser][zcen][2]>0 ) then
+					abort = true
 				elseif c_node ~= c_air
 				and c_node ~= c_tree
 				and c_node ~= c_leaves
@@ -115,6 +124,8 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 				local vi = area:index(xcen, yasurf, zcen + ser)
 				local c_node = data[vi]
 				if zcen + ser == z1 then
+					abort = true
+				elseif (village_area and village_area[xcen] and village_area[xcen][zcen+ser] and village_area[xcen][zcen+ser][2]>0 ) then
 					abort = true
 				elseif c_node ~= c_air
 				and c_node ~= c_tree
@@ -128,6 +139,8 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 				local c_node = data[vi]
 				if zcen - ser == z0 then
 					abort = true
+				elseif (village_area and village_area[xcen] and village_area[xcen][zcen-ser] and village_area[xcen][zcen-ser][2]>0 ) then
+					abort = true
 				elseif c_node ~= c_air
 				and c_node ~= c_tree
 				and c_node ~= c_leaves
@@ -138,8 +151,10 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 			if abort then
 				break
 			end
-			
+
+			-- so far: ground is c_grass, and the pool will not spill into neighbouring mapchunks			
 			local vi = area:index(xcen, yasurf, zcen)
+			-- place the first water source
 			data[vi] = c_watsour
 			local flab = false -- flow abort
 			for flow = 1, FLOW do
@@ -147,9 +162,11 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 					for x = x0, x1 do
 						local vif = area:index(x, yasurf, z)
 						if data[vif] == c_watsour then
+							-- abort at mapgen edges
 							if x == x0 or x == x1 or z == z0 or z == z1 then
 								flab = true -- if water at chunk edge abort flow
 								break
+							-- spread the water into all four directions
 							else -- flow water
 								local vie = area:index(x + 1, yasurf, z)
 								local viw = area:index(x - 1, yasurf, z)
@@ -232,3 +249,20 @@ mg_villages.do_highlandpools = function(minp, maxp, seed, vm, area, data, villag
 	end
 	
 end
+
+
+
+mg_villages.do_highlandpools = function(minp, maxp, seed, vm, a, data, village_area, cid)
+end
+
+--[[
+	local y = maxp.y;
+	local h1 = maxp.y;
+	while( y > 0 and y >= minp.y and y > 0 and h1==maxp.y ) do
+		local ci = data[ a:index( minp.x, y, minp.z )];
+		if(( ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) or (y==0)) then
+		y = y-1;
+	end
+	for x = minp.x, maxp.x do
+end
+--]]
