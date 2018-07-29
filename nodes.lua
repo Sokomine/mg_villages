@@ -5,10 +5,11 @@ minetest.register_node("mg_villages:road", {
 	tiles = {"default_gravel.png", "default_dirt.png"},
         is_ground_content = false, -- will not be removed by the cave generator
         groups = {crumbly=2}, -- does not fall
-        sounds = default.node_sound_dirt_defaults({
-                footstep = {name="default_gravel_footstep", gain=0.5},
-                dug = {name="default_gravel_footstep", gain=1.0},
-	}),
+        sounds = default.node_sound_gravel_defaults,
+--        sounds = default.node_sound_dirt_defaults({
+--                footstep = {name="default_gravel_footstep", gain=0.5},
+--                dug = {name="default_gravel_footstep", gain=1.0},
+--	}),
 	paramtype  = "light",
 	paramtype2 = "facedir",
 	drawtype   = "nodebox",
@@ -32,7 +33,7 @@ minetest.register_node("mg_villages:soil", {
 	drop = "default:dirt",
 	is_ground_content = true,
 	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1, soil=3, wet=1},
-	sounds = default.node_sound_dirt_defaults(),
+	sounds = default.node_sound_dirt_defaults,
 })
 
 minetest.register_node("mg_villages:desert_sand_soil", {
@@ -41,7 +42,7 @@ minetest.register_node("mg_villages:desert_sand_soil", {
 	is_ground_content = true,
 	drop   = "default:desert_sand",
 	groups = {crumbly=3, not_in_creative_inventory = 1, sand=1, desert = 1, soil=3, wet=1},
-	sounds = default.node_sound_sand_defaults(),
+	sounds = default.node_sound_sand_defaults,
 })
 
 
@@ -72,7 +73,7 @@ if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 		},
 		groups = {choppy=2,dig_immediate=3,flammable=1,attached_node=1},
 		legacy_wallmounted = true,
-		sounds = default.node_sound_defaults(),
+		sounds = default.node_sound_defaults,
 		drop   = "default:torch",
 		is_ground_content = false,
 	})
