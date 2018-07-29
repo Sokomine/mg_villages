@@ -45,8 +45,7 @@ end
 --   mg_villages.path_info[ short_file_name.."|WORKPLACE" ] contains the paths from the workplaces
 -- creates building_data.all_entrances
 -- creates building_data.workplace_list
--- Note: parameter "res" is the raw data as provided by analyze_file
-mg_villages.analyze_building_for_mobs = function( file_name, building_data, res )
+mg_villages.analyze_building_for_mobs_update_paths = function( file_name, building_data )
 
 	local short_file_name = string.sub(file_name, mg_villages.file_name_offset, 256);
 	building_data.short_file_name = short_file_name;
@@ -81,7 +80,7 @@ mg_villages.analyze_building_for_mobs = function( file_name, building_data, res 
 	-- this is diffrent information from the normal bed list
 	local store_as = short_file_name.."|WORKPLACE";
 	if(not( mg_villages.path_info[ store_as ] )) then
-		local workplace_list = mg_villages.analyze_building_for_mobs_search_nodes( res, "mg_villages:mob_workplace_marker", false );
+		local workplace_list = mg_villages.analyze_building_for_mobs_search_nodes( building_data, "mg_villages:mob_workplace_marker", false );
 
 		if( workplace_list and #workplace_list>0) then
 			-- store it for later use
@@ -113,7 +112,7 @@ TODO: check if 2 nodes above the target node are air or walkable;
 TODO: exceptions to that: bench (only 1 above needs to be walkable)
 TODO: other exceptions: furnace, chests, washing place: place in front is wanted - not on top
 TODO: search for:
-	local pos_list = mg_villages.analyze_building_for_mobs_search_nodes( res, "farming:soil_wet", true );
+	local pos_list = mg_villages.analyze_building_for_mobs_search_nodes( building_data, "farming:soil_wet", true );
 farming:soil   farming:soil_wet
 cottages:straw_ground
 default:chest cottages:shelf cottages:chest_storage  cottages:chest_private cottages:chest_work
@@ -159,6 +158,94 @@ any hatch...
 			end
 		end
 		print( str2 );
+	end
+	return building_data;
+end
+
+
+
+-- Calls mg_villages.analyze_building_for_mobs_update_paths and evaluates the output:
+-- * determines the position of front doors (building_data.front_door_list)
+-- * position of beds (building_data.bed_list)
+-- * places where mobs can stand when they got up from their bed or want
+--   to go to bed (building_data.stand_next_to_bed_list)
+-- * amount of usable beds in the house (building_data.bed_count)
+-- * position of workplaces where a currently working mob may want to
+--   stand (i.e. behind a shop's counter, next to a machine, in front
+--   of the class/congregation, ..) (building_data.workplace_list)
+-- Returns: Updated building_data with the values mentionned above set.
+-- 	building_data	Information about the building as gained from registration
+-- 	                and from handle_schematics.analze_file(..)
+mg_villages.analyze_building_for_mobs = function( building_data, file_name )
+
+	-- identify front doors, calculate paths from beds/workplaces to front of house
+	building_data = mg_villages.analyze_building_for_mobs_update_paths( file_name, building_data );
+
+	-- building_data.bed_list and building_data.workspace_list are calculated withhin
+	-- the above function - provided they are not part of path_info yet;
+	-- the information stored in path_info is the relevant one for mob movement/pathfinding
+
+	-- store the front doors in extra list
+	building_data.front_door_list = {};
+	-- gain the list of beds from path_info data
+	building_data.bed_list = {};
+	-- mobs are seldom able to stand directly on or even next to the bed when getting up
+	building_data.stand_next_to_bed_list = {};
+	-- have any beds been found?
+	if( building_data.short_file_name
+	 and mg_villages.path_info[ building_data.short_file_name ] ) then
+		local paths = mg_villages.path_info[ building_data.short_file_name];
+		if( paths and paths[1] ) then
+			-- iterate over all bed-to-first-front-door-paths (we want to identify beds)
+			for i,p in ipairs( paths[1] ) do
+				-- the last entry has a diffrent meaning
+				if( p and p[1] and i<#paths[1]) then
+					-- param2 is the 5th parameter
+					building_data.bed_list[i] = {p[1][1],p[1][2],p[1][3],p[1][5]};
+					-- also store where the mob may stand
+					if( p[2] ) then
+						building_data.stand_next_to_bed_list[i] = p[2];
+					end
+				end
+			end
+			-- iterate over all paths and take a look at the first bed only (we want to
+			-- get the doors now, not the beds)
+			for i,p in ipairs( paths ) do
+				-- paths[i]: paths from all beds to front door i
+				-- paths[i][1]: path from first bed to front door i
+				if( p and p[1] ) then
+					-- the place in front of the door is the last entry
+					local d = p[1][ #p[1] ];
+					building_data.front_door_list[i] = {d[1],d[2],d[3]};
+				end
+			end
+		end
+	end
+	-- make sure this refers to the same data as building_data.bed_list
+	building_data.bed_count = #building_data.bed_list;
+
+	-- gain the list of workplaces from the path_info data
+	building_data.workplace_list = {};
+	-- have any workplaces been found?
+	if( building_data.short_file_name
+	 and mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE" ] ) then
+		local paths = mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE"];
+		if( paths and paths[1] ) then
+			for i,p in ipairs( paths[1] ) do
+				if( p and p[1] and i<#paths[1]) then
+					building_data.workplace_list[i] = {p[1][1],p[1][2],p[1][3],p[1][4]};
+				end
+			end
+			-- no front doors found through beds? then take a look if the workplaces found doors
+			if( #building_data.front_door_list < 1 ) then
+				for i,p in ipairs( paths ) do
+					if( p and p[1] ) then
+						local d = p[1][ #p[1] ];
+						building_data.front_door_list[i] = {d[1],d[2],d[3]};
+					end
+				end
+			end
+		end
 	end
 	return building_data;
 end
