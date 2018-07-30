@@ -1,5 +1,5 @@
 
--- helper function for mg_villages.analyze_building_for_mobs
+-- helper function for mg_villages.analyze_building_for_mobs_update_paths
 -- "res" is the raw data as provided by analyze_file
 -- "node_name" is the name of the node we are looking for
 mg_villages.analyze_building_for_mobs_search_nodes = function( res, node_name, check_place_for_standing )
@@ -40,12 +40,12 @@ end
 
 
 
--- changes mg_villages.path_info and adds paths from beds and workplaces to front of building
---   mg_villages.path_info[ short_file_name ] contains the paths from the beds
---   mg_villages.path_info[ short_file_name.."|WORKPLACE" ] contains the paths from the workplaces
+-- changes path_info and adds paths from beds and workplaces to front of building
+--   path_info[ short_file_name ] contains the paths from the beds
+--   path_info[ short_file_name.."|WORKPLACE" ] contains the paths from the workplaces
 -- creates building_data.all_entrances
 -- creates building_data.workplace_list
-mg_villages.analyze_building_for_mobs_update_paths = function( file_name, building_data )
+mg_villages.analyze_building_for_mobs_update_paths = function( file_name, building_data, path_info )
 
 	local short_file_name = string.sub(file_name, mg_villages.file_name_offset, 256);
 	building_data.short_file_name = short_file_name;
@@ -58,13 +58,13 @@ mg_villages.analyze_building_for_mobs_update_paths = function( file_name, buildi
 	-- TODO: provide a more general list with beds, work places etc.
 	if( building_data.bed_list
 	  and #building_data.bed_list > 0 ) then
-		if(not( mg_villages.path_info[ short_file_name ])) then
+		if(not( path_info[ short_file_name ])) then
 			print("BEDS in "..tostring( short_file_name )..":");
-			mg_villages.path_info[ short_file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
+			path_info[ short_file_name ] = mob_world_interaction.find_all_front_doors( building_data, building_data.bed_list );
 		end
 		-- we are looking for the places in front of the front doors; not the front doors themshelves
 		building_data.all_entrances = {};
-		for i,e in ipairs( mg_villages.path_info[ short_file_name ] ) do
+		for i,e in ipairs( path_info[ short_file_name ] ) do
 			-- the last entry in the list for the first bed is what we are looking for
 			-- (provided there actually is a path)
 			if( e[1] and #e[1]>0 ) then
@@ -79,7 +79,7 @@ mg_villages.analyze_building_for_mobs_update_paths = function( file_name, buildi
 
 	-- this is diffrent information from the normal bed list
 	local store_as = short_file_name.."|WORKPLACE";
-	if(not( mg_villages.path_info[ store_as ] )) then
+	if(not( path_info[ store_as ] )) then
 		local workplace_list = mg_villages.analyze_building_for_mobs_search_nodes( building_data, "mg_villages:mob_workplace_marker", false );
 
 		if( workplace_list and #workplace_list>0) then
@@ -87,7 +87,7 @@ mg_villages.analyze_building_for_mobs_update_paths = function( file_name, buildi
 			building_data.workplace_list = workplace_list;
 
 			print("WORKPLACE: "..tostring( building_data.short_file_name )..": "..minetest.serialize( workplace_list ));
-			mg_villages.path_info[ store_as ] = mob_world_interaction.find_all_front_doors( building_data, workplace_list );
+			path_info[ store_as ] = mob_world_interaction.find_all_front_doors( building_data, workplace_list );
 
 			-- if no entrances are known yet, then store them now; the entrances associated with
 			-- beds are considered to be more important. This here is only a fallback if no beds
@@ -95,7 +95,7 @@ mg_villages.analyze_building_for_mobs_update_paths = function( file_name, buildi
 			if( not( building_data.all_entrances )) then
 				-- we are looking for the places in front of the front doors; not the front doors themshelves
 				building_data.all_entrances = {};
-				for i,e in ipairs( mg_villages.path_info[ store_as ] ) do
+				for i,e in ipairs( path_info[ store_as ] ) do
 					-- might just be the place outside the house instead of a door
 					if( e[1] and #e[1]>0 ) then
 						table.insert( building_data.all_entrances, e[1][ #e[1] ]);
@@ -130,28 +130,28 @@ any hatch...
 	-- some debug information
 	if( mg_villages.DEBUG_LEVEL and mg_villages.DEBUG_LEVEL == mg_villages.DEBUG_LEVEL_TIMING ) then
 		local str2 = " in "..short_file_name.." ["..building_data.typ.."]";
-		if(   not( mg_villages.path_info[ short_file_name ] )
-		  and not( mg_villages.path_info[ store_as ] )) then
+		if(   not( path_info[ short_file_name ] )
+		  and not( path_info[ store_as ] )) then
 			str2 = "nothing of intrest (no bed, no workplace)"..str2;
-		elseif( mg_villages.path_info[ short_file_name ]
-		   and (#mg_villages.path_info[ short_file_name ]<1
-		     or #mg_villages.path_info[ short_file_name ][1]<1
-		     or #mg_villages.path_info[ short_file_name ][1][1]<1 )) then
+		elseif( path_info[ short_file_name ]
+		   and (#path_info[ short_file_name ]<1
+		     or #path_info[ short_file_name ][1]<1
+		     or #path_info[ short_file_name ][1][1]<1 )) then
 			str2 = "BROKEN paths for beds"..str2;
-		elseif( mg_villages.path_info[ store_as        ]
-		   and (#mg_villages.path_info[ store_as        ]<1
-		     or #mg_villages.path_info[ store_as        ][1]<1
-		     or #mg_villages.path_info[ store_as        ][1][1]<1 )) then
+		elseif( path_info[ store_as        ]
+		   and (#path_info[ store_as        ]<1
+		     or #path_info[ store_as        ][1]<1
+		     or #path_info[ store_as        ][1][1]<1 )) then
 			str2 = "BROKEN paths for workplaces"..str2;
 		else
-			if( mg_villages.path_info[ store_as ] ) then
-				str2 = tostring( #mg_villages.path_info[ store_as ][1]-1 )..
+			if( path_info[ store_as ] ) then
+				str2 = tostring( #path_info[ store_as ][1]-1 )..
 					" workplaces"..str2;
 			else
 				str2 = "no workplaces"..str2;
 			end
-			if( mg_villages.path_info[ short_file_name ] ) then
-				str2 = tostring( #mg_villages.path_info[ short_file_name ][1]-1 )..
+			if( path_info[ short_file_name ] ) then
+				str2 = tostring( #path_info[ short_file_name ][1]-1 )..
 					" beds and "..str2;
 			else
 				str2 = "no beds and "..str2;
@@ -176,10 +176,13 @@ end
 -- Returns: Updated building_data with the values mentionned above set.
 -- 	building_data	Information about the building as gained from registration
 -- 	                and from handle_schematics.analze_file(..)
-mg_villages.analyze_building_for_mobs = function( building_data, file_name )
+--      file_name       with complete path to the schematic
+--      path_info       Data structure where path_info (paths from doors to beds etc.)
+--                      is cached.
+mg_villages.analyze_building_for_mobs = function( building_data, file_name, path_info )
 
 	-- identify front doors, calculate paths from beds/workplaces to front of house
-	building_data = mg_villages.analyze_building_for_mobs_update_paths( file_name, building_data );
+	building_data = mg_villages.analyze_building_for_mobs_update_paths( file_name, building_data, path_info );
 
 	-- building_data.bed_list and building_data.workspace_list are calculated withhin
 	-- the above function - provided they are not part of path_info yet;
@@ -193,8 +196,8 @@ mg_villages.analyze_building_for_mobs = function( building_data, file_name )
 	building_data.stand_next_to_bed_list = {};
 	-- have any beds been found?
 	if( building_data.short_file_name
-	 and mg_villages.path_info[ building_data.short_file_name ] ) then
-		local paths = mg_villages.path_info[ building_data.short_file_name];
+	 and path_info[ building_data.short_file_name ] ) then
+		local paths = path_info[ building_data.short_file_name];
 		if( paths and paths[1] ) then
 			-- iterate over all bed-to-first-front-door-paths (we want to identify beds)
 			for i,p in ipairs( paths[1] ) do
@@ -228,8 +231,8 @@ mg_villages.analyze_building_for_mobs = function( building_data, file_name )
 	building_data.workplace_list = {};
 	-- have any workplaces been found?
 	if( building_data.short_file_name
-	 and mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE" ] ) then
-		local paths = mg_villages.path_info[ building_data.short_file_name.."|WORKPLACE"];
+	 and path_info[ building_data.short_file_name.."|WORKPLACE" ] ) then
+		local paths = path_info[ building_data.short_file_name.."|WORKPLACE"];
 		if( paths and paths[1] ) then
 			for i,p in ipairs( paths[1] ) do
 				if( p and p[1] and i<#paths[1]) then

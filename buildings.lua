@@ -315,7 +315,7 @@ mg_villages.add_building = function( building_data )
 
 		building_data = res;
 		-- identify front doors, calculate paths from beds/workplaces to front of house
-		building_data = mg_villages.analyze_building_for_mobs( building_data, file_name );
+		building_data = mg_villages.analyze_building_for_mobs( building_data, file_name, mg_villages.path_info);
 
 	-- missing data regarding building size - do not use this building for anything
 	elseif( not( building_data.sizex )    or not( building_data.sizez )
