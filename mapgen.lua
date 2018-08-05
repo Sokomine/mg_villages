@@ -1199,8 +1199,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	for _, village in ipairs(villages) do
 		for _,v in ipairs( village.to_add_data.extra_calls.chests ) do
 			local building_nr  = village.to_add_data.bpos[ v.bpos_i ];
-			local building_typ = mg_villages.BUILDINGS[ building_nr.btype ].scm;
-			mg_villages.fill_chest_random( v, pr, building_nr, building_typ );
+			local building_data_typ = mg_villages.BUILDINGS[ building_nr.btype ].typ;
+			handle_schematics.fill_chest_random( v, pr, building_nr, building_data_typ );
 		end
 	end
 	t1 = time_elapsed( t1, 'do fill chests' );
