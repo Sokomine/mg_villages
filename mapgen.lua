@@ -121,7 +121,14 @@ mg_villages.check_if_ground = function( ci )
 		replacements_group.node_is_ground[ minetest.get_content_id( 'air' )] = false;
 		local ground_nodes = {'ethereal:dry_dirt', 'default:dirt_with_dry_grass','default:stone','default:sandstone','default:desertstone',
                         'ethereal:grey_dirt', 'default:dirt_with_snow', 'default:dirt_with_grass', 'ethereal:grove_dirt', 'ethereal:green_dirt',
-			'ethereal:grove_dirt','ethereal:jungle_dirt'};
+			'ethereal:grove_dirt','ethereal:jungle_dirt',
+			'default:dirt_with_grass_footsteps',
+			'default:dirt_with_rainforest_litter',
+			'default:dirt_with_coniferous_litter',
+			'default:permafrost',
+			'default:permafrost_with_moss',
+			'default:permafrost_with_stones'};
+
 		for _,name in ipairs( ground_nodes ) do
 			if( minetest.registered_nodes[ name ]) then
 				replacements_group.node_is_ground[ minetest.get_content_id( name )] = true;
@@ -266,9 +273,12 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	elseif( surface_node == cid.c_desert_sand ) then
 		below_1 = cid.c_desert_sand;
 		below_2 = cid.c_desert_stone;
+	elseif( surface_node == cid.c_silver_sand ) then
+		below_1 = cid.c_silver_sand;
+		below_2 = cid.c_silver_sandstone;
 	elseif( surface_node == cid.c_sand ) then
 		below_1 = cid.c_sand;
-		below_2 = cid.c_stone;
+		below_2 = cid.c_sandstone;
 	elseif( cid.c_ethereal_clay_read
 	    and (surface_node == cid.c_ethereal_clay_red
 	      or surface_node == cid.c_ethereal_clay_orange)) then
@@ -497,6 +507,9 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 						y = minp.y-1;
 					elseif( ci == cid.c_sand ) then
 						data[a:index(x, village.vh, z)] = cid.c_sand;
+						y = minp.y-1;
+					elseif( ci == cid.c_silver_sand or ci == cid.c_silver_sandstone) then
+						data[a:index(x, village.vh, z)] = cid.c_silver_sand;
 						y = minp.y-1;
 					-- use dirt_with_grass as a fallback
 					elseif( ci ~= cid.c_air and ci ~= cid.c_ignore and ci ~= cid.c_water and mg_villages.check_if_ground( ci ) == true) then
@@ -987,6 +1000,8 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	cid.c_dirt_with_grass = minetest.get_content_id( 'default:dirt_with_grass' );
 	cid.c_desert_sand = minetest.get_content_id( 'default:desert_sand' ); -- PM v
 	cid.c_desert_stone  = minetest.get_content_id( 'default:desert_stone');
+	cid.c_silver_sand = minetest.get_content_id( 'default:silver_sand' ); -- PM v
+	cid.c_silver_sandstone  = minetest.get_content_id( 'default:silver_sandstone');
 	cid.c_sand = minetest.get_content_id( 'default:sand' ); 
 	cid.c_tree = minetest.get_content_id( 'default:tree');
 	cid.c_sapling = minetest.get_content_id( 'default:sapling');
