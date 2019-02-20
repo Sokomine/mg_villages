@@ -8,6 +8,46 @@ handle_schematics.global_replacement_table[ 'farming:soil'                 ] = '
 handle_schematics.global_replacement_table[ 'farming:desert_sand_soil_wet' ] = 'mg_villages:desert_sand_soil';
 handle_schematics.global_replacement_table[ 'farming:desert_sand_soil'     ] = 'mg_villages:desert_sand_soil';
 
+handle_schematics.stonebrick_stair_replacements = {
+	'cobble', 'desert_cobble', 'mossycobble',
+	'stone',            'stone_block',            'stonebrick',
+	'sandstone',        'sandstone_block',        'sandstonebrick',
+	'desert_stone',     'desert_stone_block',     'desert_stonebrick',
+	'desert_sandstone', 'desert_sandstone_block', 'desert_sandstone_brick',
+	'silver_sandstone', 'silver_sandstone_block', 'silver_sandstone_brick',
+	'stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks',
+	}
+
+handle_schematics.wood_stair_replacements = {
+	'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood',
+	'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood',
+	'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood',
+	'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood',
+	'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood',
+
+	'cobble', 'desert_cobble', 'mossycobble',
+	'stone',            'stone_block',            'stonebrick',
+	'sandstone',        'sandstone_block',        'sandstonebrick',
+	'desert_stone',     'desert_stone_block',     'desert_stonebrick',
+	'desert_sandstone', 'desert_sandstone_block', 'desert_sandstone_brick',
+	'silver_sandstone', 'silver_sandstone_block', 'silver_sandstone_brick',
+
+	'stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks',
+	}
+
+handle_schematics.brick_stair_replacements = {
+	'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood',
+	'cobble', 'desert_cobble', 'mossycobble',
+	'stone',            'stone_block',            'stonebrick',
+	'sandstone',        'sandstone_block',        'sandstonebrick',
+	'desert_stone',     'desert_stone_block',     'desert_stonebrick',
+	'desert_sandstone', 'desert_sandstone_block', 'desert_sandstone_brick',
+	'silver_sandstone', 'silver_sandstone_block', 'silver_sandstone_brick',
+	'stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks',
+	'brick', 'brick', 'brick', 'brick', 'brick',
+	'clay', 'clay', 'loam', 'loam',
+	}
+
 -- if cottages is not installed, place "normal" beds in the chateau and wherever else needed
 if( not( minetest.get_modpath( 'cottages' ))) then
 	handle_schematics.global_replacement_table[ 'cottages:bed_head' ] = 'beds:fancy_bed_top';
@@ -415,8 +455,14 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
 		'darkage:gneiss', 'darkage:gneiss_cobble', 'darkage:marble', 'darkage:marble_tile',
 		'darkage:mud', 'darkage:ors', 'darkage:ors_cobble',
 		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate',
-		'mapgen:mese_stone', 'mapgen:soap_stone'},
-		'default:wood');
+		'mapgen:mese_stone', 'mapgen:soap_stone',
+		'default:wood',
+		'default:silver_sandstone',
+		'default:silver_sandstone_block',
+		'default:silver_sandstone_brick',
+		'default:desert_sandstone_block',
+		'default:desert_sandstone_brick',
+	}, 'default:wood');
       end
       -- tree trunks are seldom used in these houses; let's change them anyway
       mg_villages.replace_tree_trunk( replacements, wood_type );
@@ -425,14 +471,14 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
       mg_villages.replace_materials( replacements, pr,
 		{'stairs:stair_stonebrick',  'stairs:slab_stonebrick', 'default:stonebrick'},
 		{'stairs:stair_',            'stairs:slab_',           'default:'          },
-		{ 'stonebrick', 'stone', 'sandstone', 'cobble'},
+		handle_schematics.stonebrick_stair_replacements,
 		'stonebrick');
 
       -- decorative slabs above doors etc.
       mg_villages.replace_materials( replacements, pr,
 		{'stairs:stair_wood'},
 		{'stairs:stair_'},
-		{'stonebrick', 'stone', 'sandstone', 'cobble', 'wood', 'junglewood', 'pine_wood', 'acaica_wood', 'aspen_wood' },
+		handle_schematics.wood_stair_replacements,
 		'wood');
 
       -- brick roofs are a bit odd; but then...
@@ -440,7 +486,7 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
       mg_villages.replace_materials( replacements, pr,
 		{'stairs:stair_brick',  'stairs:slab_brick', 'default:brick'},
 		{'stairs:stair_',       'stairs:slab_',      'default:'     },
-		{ 'brick', 'stone', 'cobble', 'stonebrick', 'wood', 'junglewood', 'pine_wood', 'acacia_wood', 'aspen_wood', 'sandstone' },
+		handle_schematics.brick_stair_replacements,
 		'brick' );
 
       return replacements;
@@ -454,7 +500,7 @@ mg_villages.replacements_nore = function( housetype, pr, replacements )
 --		{'default:'},
 		{'stairs:stair_stonebrick',  'stairs:slab_stonebrick', 'default:stonebrick'},
 		{'stairs:stair_',       'stairs:slab_',      'default:'     },
-		{'stonebrick', 'desert_stonebrick','sandstonebrick', 'sandstone','stone','desert_stone','stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks'},
+		handle_schematics.stonebrick_stair_replacements,
 		'stonebrick');
 
       -- replace the wood as well
@@ -590,7 +636,7 @@ mg_villages.replacements_chateau = function( housetype, pr, replacements )
       local mfs2 = mg_villages.replace_materials( replacements, pr,
 		{'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
 		{'stairs:stair_',        'stairs:slab_',       'default:'      },
-		{ 'cobble', 'brick', 'clay', 'desert_cobble', 'desert_stone', 'desert_stonebrick', 'sandstone', 'sandstonebrick', 'stonebrick' },
+		handle_schematics.stonebrick_stair_replacements,
 		'cobble');
 
       return replacements;
@@ -645,16 +691,14 @@ mg_villages.replacements_claytrader = function( housetype, pr, replacements )
       mg_villages.replace_materials( replacements, pr,
 		{ 'stairs:stair_brick', 'stairs:slab_brick', 'default:brick' }, -- default_materials
 		{ 'stairs:stair_',      'stairs:slab_',      'default:'      }, -- prefixes (for new materials)
-		{ 'brick', 'stone', 'sandstone', 'sandstonebrick', 'desert_stone', 'desert_cobble', 'desert_stonebrick' }, -- new materials
+		handle_schematics.brick_stair_replacements,
 		'brick' ); -- original material
 	
       -- material for the floor
       mg_villages.replace_materials( replacements, pr,
 		{'default:stone'},
 		{'default:'},
-		{ 'brick', 'stone', 'sandstone', 'sandstonebrick', 'clay', 'desert_stone', 'desert_cobble', 'desert_stonebrick',
-		'default:stone_flat', 'default:desert_stone_flat', -- realtest
-		},
+		handle_schematics.stonebrick_stair_replacements,
 		'stone');
 
       -- the clay trader homes come with stone stair roofs; slabs are used in other places as well (but those replacements here are ok)
@@ -759,6 +803,11 @@ mg_villages.replacements_medieval = function( housetype, pr, replacements )
 		'darkage:reinforced_wood', 'darkage:reinforced_wood_left', 'darkage:reinforced_wood_right',
 		'darkage:schist', 'darkage:serpentine', 'darkage:shale', 'darkage:silt', 'darkage:slate',
 		'darkage:slate_cobble', 'darkage:slate_tile', 'darkage:stone_brick',
+		'default:silver_sandstone',
+		'default:silver_sandstone_block',
+		'default:silver_sandstone_brick',
+		'default:desert_sandstone_block',
+		'default:desert_sandstone_brick',
 		'mapgen:mese_stone', 'mapgen:soap_stone'};
 
    -- what is sandstone (the floor) may be turned into something else
@@ -829,12 +878,7 @@ mg_villages.replacements_medieval = function( housetype, pr, replacements )
    local mcs = mg_villages.replace_materials( replacements, pr,
 		{'default:cobble'},
 		{'default:'},
-		{'sandstone', 'desert_stone', 'desert_cobble',
-                      'cobble',      'cobble',
-                      'stonebrick',  'stonebrick', 'stonebrick', -- more common than other materials
-                      'mossycobble', 'mossycobble','mossycobble',
-                      'stone',       'stone',
-                      'desert_stonebrick','sandstonebrick'},
+		handle_schematics.stonebrick_stair_replacements,
 		'cobble');
    -- set a fitting material for the slabs; mossycobble uses the default cobble slabs
    if( mg_villages.realtest_trees ) then
@@ -889,7 +933,7 @@ mg_villages.replacements_tower = function( housetype, pr, replacements )
       mg_villages.replace_materials( replacements, pr,
                 {'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
                 {'stairs:stair_',         'stairs:slab_',      'default:'     },
-                {'stonebrick', 'desert_stonebrick','sandstonebrick', 'sandstone','stone','desert_stone','stone_flat','desert_stone_flat','stone_bricks','desert_strone_bricks'},
+		handle_schematics.stonebrick_stair_replacements,
                 'stonebrick');
 
       return replacements;
