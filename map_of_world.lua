@@ -40,7 +40,7 @@ mg_villages.map_of_world = function( pname )
 	if( not( player )) then
 		return '';
 	end
-	local ppos  = player:getpos();
+	local ppos  = player:get_pos();
 
 	-- also usable: diamond_block, sand, water
 	local formspec = "size[14.4,10]"..

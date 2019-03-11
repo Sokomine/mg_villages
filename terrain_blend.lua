@@ -36,8 +36,8 @@ mg_villages.village_area_mark_single_house_area = function(village_area, minp, m
 	local minpos = {x=minp.x, y=minp.z}
 
 	noise_object_blending = noise_object_blending or minetest.get_perlin_map(np_blend, chulens);
-	local nvals_blend = noise_object_blending:get2dMap_flat(minpos, noise_buffer);
---	local nvals_blend = minetest.get_perlin_map(np_blend, chulens):get2dMap_flat(minpos)
+	local nvals_blend = noise_object_blending:get_2d_map_flat(minpos, noise_buffer);
+--	local nvals_blend = minetest.get_perlin_map(np_blend, chulens):get_2d_map_flat(minpos)
 
 	-- mark mapchunk-sized house area
 	local ni = 1

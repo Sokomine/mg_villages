@@ -119,7 +119,7 @@ mg_villages.list_villages_formspec = function( player, formname, fields )
 		return
 	end
 	local pname = player:get_player_name();
-	local ppos  = player:getpos();
+	local ppos  = player:get_pos();
 
 	local radius = 1000000;
 	-- without the special priv, players can only obtain informatoin about villages which are very close by
@@ -226,7 +226,7 @@ minetest.register_chatcommand( 'visit', {
 
 				minetest.chat_send_player( name, "Initiating transfer to village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown'))..".");
 				local player =  minetest.get_player_by_name( name );
-				player:moveto( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
+				player:move_to( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
 				return;
 			end
 		end
@@ -260,7 +260,7 @@ minetest.register_chatcommand( 'village_mob_repopulate', {
 				minetest.chat_send_player( name, "Deleting information about workplaces and beds. Recalculating. Assigning new data for village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown'))..".");
 				-- move the player to the center of the village he just changed
 				local player =  minetest.get_player_by_name( name );
-				player:moveto( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
+				player:move_to( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
 
 				local village_id = tostring( v.vx )..':'..tostring( v.vz );
 				-- actually do the reassigning

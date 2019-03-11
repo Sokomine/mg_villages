@@ -29,7 +29,7 @@ mg_villages.plotmarker_search_trader = function( trader, height )
 	for i,obj in ipairs( obj_list ) do
 		local e = obj:get_luaentity();
 		if( e and e.object ) then
-			local p = e.object:getpos();
+			local p = e.object:get_pos();
 			if( p and p.x and math.abs(p.x-trader.x)<1.5
 			      and p.z and math.abs(p.z-trader.z)<1.5
 			      and e.name and e.name=="mobf_trader:trader"
@@ -70,7 +70,7 @@ mg_villages.plotmarker_list_traders = function( plot, formspec )
 
 		if( fields[ "visit_trader_"..i ] ) then
 
-			player:moveto( {x=trader.x, y=(village.vh+1), z=trader.z} );
+			player:move_to( {x=trader.x, y=(village.vh+1), z=trader.z} );
 			minetest.chat_send_player( pname, "You are visiting the "..tostring( trader.typ )..
 				" trader, who is supposed to be somewhere here. He might also be on a floor above you.");
 			return formspec;
@@ -109,7 +109,7 @@ mg_villages.mob_spanwer_on_rightclick = function( pos, node, clicker, itemstack,
 	if( mob_info.mob_id and mob_basics) then
 		mob = mob_basics.find_mob_by_id( mob_info.mob_id, "trader" );
 		if( mob ) then
-			mob_pos = mob.object:getpos();
+			mob_pos = mob.object:get_pos();
 			if( mob_pos and mob_pos.x == pos.x and mob_pos.z == pos.z ) then
 				str = str.." yes, waiting right here. ";
 				mob.trader_does = "stand";

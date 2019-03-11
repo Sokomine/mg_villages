@@ -377,7 +377,7 @@ mg_villages.form_input_handler = function( player, formname, fields)
 		if( minetest.check_player_privs( pname, {teleport=true})) then
 			local pos = minetest.string_to_pos( fields.pos2str );
 			-- teleport the player to the target position
-			player:moveto( { x=pos.x, y=(pos.y+1), z=pos.z }, false);
+			player:move_to( { x=pos.x, y=(pos.y+1), z=pos.z }, false);
 		else
 			minetest.chat_sned_player( pname, "Sorry. You do not have the teleport privilege.");
 		end
