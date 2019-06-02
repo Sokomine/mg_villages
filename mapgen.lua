@@ -774,7 +774,7 @@ end
 
 
 mg_villages.change_village_height = function( village, new_height )
-	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, S("CHANGING HEIGHT from").." "..tostring( village.vh ).." "..S("to").." "..tostring( new_height ));
+	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, S("CHANGING HEIGHT from @1 to @2.", tostring( village.vh ), tostring( new_height )));
 	for _, pos in ipairs(village.to_add_data.bpos) do
 		pos.y = new_height;
 	end

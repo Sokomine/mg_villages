@@ -325,7 +325,7 @@ mg_villages.add_building = function( building_data )
 		or   building_data.sizex == 0 or      building_data.sizez==0) then
 
 		-- no village will use it
-		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, S("No schematic found for building").." \'"..tostring( building_data.scm ).."\'. "..S("Will not use that building."));
+		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, S("No schematic found for building \'@1\'. Will not use that building.", tostring( building_data.scm )));
 		building_data.weight = {};
 		building_data.not_available = 1;
 		return false;

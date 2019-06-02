@@ -160,9 +160,7 @@ minetest.register_on_protection_violation( function(pos, name)
 		return;
 	end
 
-	minetest.chat_send_player( name, S("You are inside of the area of the village").." "..
-		tostring( mg_villages.all_villages[ found ].name )..
-		S(". The inhabitants do not allow you any modifications."));
+	minetest.chat_send_player( name, S("You are inside of the area of the village @1. The inhabitants do not allow you any modifications.", tostring( mg_villages.all_villages[ found ].name )))
 end );
 
 
@@ -186,7 +184,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		or not( mg_villages.all_villages[ village_id ].to_add_data )
 		or not( mg_villages.all_villages[ village_id ].to_add_data.bpos )
 		or not( mg_villages.all_villages[ village_id ].to_add_data.bpos[ plot_nr ] )) then
-		minetest.chat_send_player( pname, S("Error. This plot marker is not configured correctly.")..minetest.serialize({village_id,plot_nr }));
+		minetest.chat_send_player( pname, S("Error. This plot marker is not configured correctly.").." "..minetest.serialize({village_id,plot_nr }));
 		return;
 	end
 
@@ -214,7 +212,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	-- create the header
 	local formspec = "size[9,8,true]"..
 		default.gui_bg..default.gui_bg_img..
-		"label[0.3,0.0;"..S("Plot No.").." : "..tostring( plot_nr )..", "..S("with")..' '..tostring( mg_villages.BUILDINGS[ plot.btype ].scm ).."]"..
+		"label[0.3,0.0;"..S("Plot No. : @1, with @2", tostring( plot_nr ), tostring( mg_villages.BUILDINGS[ plot.btype ].scm )).."]"..
 		"label[0.3,0.4;"..S("Located at").." : ]"      ..
 			"label[2.3,0.4;"..(minetest.pos_to_string( pos ) or '?')..S(", which is").."]"..
 			"label[2.3,0.8;"..tostring( distance )..' '..S("m away")..' '..S("from the village center").."]"..
@@ -228,9 +226,9 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 
 	if( plot and plot.traders ) then
 		if( #plot.traders > 1 ) then
-			formspec = formspec.."label[0.3,4.8;"..S("Some traders live here. One works as a")..' '..tostring(plot.traders[1].typ)..".]";
+			formspec = formspec.."label[0.3,4.8;"..S("Some traders live here. One works as a")..' '..S(tostring(plot.traders[1].typ))..".]";
 			for i=2,#plot.traders do
-				formspec = formspec.."label[0.3,"..(4.5+i).."; "..S("Another trader works as a")..' '..tostring(plot.traders[i].typ)..".]";
+				formspec = formspec.."label[0.3,"..(4.5+i).."; "..S("Another trader works as a")..' '..S(tostring(plot.traders[i].typ))..".]";
 			end
 		elseif( plot.traders[1] and plot.traders[1].typ) then
 			formspec = formspec..
@@ -251,7 +249,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			if( fields[ "visit_trader_"..i ] ) then
 
 				player:moveto( {x=trader.x, y=(village.vh+1), z=trader.z} );
-				minetest.chat_send_player( pname, S("You are visiting the")..' '..tostring( trader.typ )..' '..
+				minetest.chat_send_player( pname, S("You are visiting the")..' '..S(tostring( trader.typ ))..' '..
 					S("trader, who is supposed to be somewhere here. He might also be on a floor above you."));
 				return;
 			end
@@ -415,7 +413,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 	local price = "default:gold_ingot 2";
 
 	if (btype ~= 'road' and mg_villages.BUILDINGS[btype]) then
-		local plot_descr = S("Plot No.")..' '..tostring( plot_nr )..' '..S("with")..' '..tostring( mg_villages.BUILDINGS[btype].scm)
+		local plot_descr = S("Plot No. : @1, with @2", tostring( plot_nr ), tostring( mg_villages.BUILDINGS[btype].scm))
 
 		if (mg_villages.BUILDINGS[btype].price) then
 			price = mg_villages.BUILDINGS[btype].price;

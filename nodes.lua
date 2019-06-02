@@ -3,7 +3,7 @@ local S = mg_villages.intllib
 
 -- slightly lower than a normal nodes for better look
 minetest.register_node("mg_villages:road", {
-	description = S("village road"),
+	description = S("Village Road"),
 	tiles = {"default_gravel.png", "default_dirt.png"},
         is_ground_content = false, -- will not be removed by the cave generator
         groups = {crumbly=2}, -- does not fall

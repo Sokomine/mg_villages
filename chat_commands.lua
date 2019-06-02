@@ -226,7 +226,7 @@ minetest.register_chatcommand( 'visit', {
 			-- we have found the village
 			if( v and v.nr == nr ) then
 
-				minetest.chat_send_player( name, S("Initiating transfer to village no.")..' '..tostring( v.nr )..", "..S("called ")..( tostring( v.name or 'unknown'))..".");
+				minetest.chat_send_player( name, S("Initiating transfer to village no. @1, called @2.", tostring( v.nr ), tostring( v.name or 'unknown')));
 				local player =  minetest.get_player_by_name( name );
 				player:move_to( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
 				return;
@@ -276,6 +276,6 @@ minetest.register_chatcommand( 'village_mob_repopulate', {
 			end
 		end
 		-- no village found
-		minetest.chat_send_player( name, S("There is no village with the number")..' '..tostring( param ).." ("..S("yet").."?)");
+		minetest.chat_send_player( name, S("There is no village with the number @1 (Yet?)."), tostring( param ));
         end
 });

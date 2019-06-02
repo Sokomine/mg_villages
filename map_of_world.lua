@@ -185,7 +185,7 @@ end
 
 
 minetest.register_chatcommand( 'vmap', {
-	description = S("Shows a map of all known villages withhin")..' '..tostring( mg_villages.MAP_RANGE )..' '..S("blocks."),
+	description = S("Shows a map of all known villages withhin @1 blocks.", tostring( mg_villages.MAP_RANGE )),
 	privs = {},
 	func = function(name, param)
 		minetest.show_formspec( name, 'mg:world_map', mg_villages.map_of_world( name ));
