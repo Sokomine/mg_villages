@@ -121,7 +121,7 @@ minetest.register_node("mg_villages:plotmarker", {
 minetest.register_node("mg_villages:mob_workplace_marker", {
 	description = "Place where a mob ought to work",
 	drawtype = "nodebox",
-	tiles = {"character.png"},
+	tiles = {"workplace_marker.png"},
 	paramtype = "light",
 	paramtype2 = "facedir",
 	walkable = false,
