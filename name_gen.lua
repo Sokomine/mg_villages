@@ -1,3 +1,5 @@
+-- Intllib
+local S = mg_villages.intllib
 
 namegen = {};
 
@@ -76,14 +78,14 @@ namegen.generate_village_name_with_prefix = function( pr, village )
 	if( village.is_single_house and village.to_add_data and village.to_add_data.bpos ) then
 		-- the building got removed from mg_villages.BUILDINGS in the meantime
 		if( not( mg_villages.BUILDINGS[ village.to_add_data.bpos[1].btype] )) then
-			return 'Abandomed building';
+			return S("Abandoned building");
 		end
 		local btyp = mg_villages.BUILDINGS[ village.to_add_data.bpos[1].btype].typ;
 		local bdata = mg_villages.village_type_data[ btyp ];
 		if( bdata and (bdata.name_prefix or bdata.name_postfix )) then
 			name = (bdata.name_prefix or '')..name..(bdata.name_postfix or '');
 		else			
-			name = 'House '..name;
+			name = S("House")..' '..name;
 		end
 	end
 	return name;

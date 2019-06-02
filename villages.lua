@@ -5,6 +5,9 @@
 
 local calls;
 
+-- Intllib
+local S = mg_villages.intllib
+
 local function is_village_block(minp)
 	local x, z = math.floor(minp.x/80), math.floor(minp.z/80)
 	local vcc = mg_villages.VILLAGE_CHECK_COUNT
@@ -82,7 +85,7 @@ local function choose_building(l, pr, village_type)
 		
 		if(  not( mg_villages.village_type_data[ village_type ] )
 		  or not( mg_villages.village_type_data[ village_type ][ 'building_list'] )) then
-			mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, 'Unsupported village type: '..tostring( village_type )..' for house at '..tostring(bx)..':'..tostring(bz)..'.');
+			mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, S("Unsupported village type").." : "..tostring( village_type )..' '..S("for house at") ' '..tostring(bx)..':'..tostring(bz)..'.');
 			-- ...and crash in the next few lines (because there is no real solution for this problem)
 		end
 
@@ -915,8 +918,8 @@ mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 			table.insert( villages, candidate );
 
 			-- there may be quite a lot of single houses added; plus they are less intresting than entire villages. Thus, logfile spam is reduced
-			mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'adding SINGLE HOUSE of type '..tostring( candidate.village_type )..
-				' to map at '..tostring( candidate.vx )..':'..tostring( candidate.vz )..'.');
+			mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, S("adding SINGLE HOUSE of type")..' '..tostring( candidate.village_type )..
+				' '..S("to map at")..' '..tostring( candidate.vx )..':'..tostring( candidate.vz )..'.');
 		end
 	end
 	return villages;

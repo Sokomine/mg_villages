@@ -1,4 +1,5 @@
-
+-- Intllib
+local S = mg_villages.intllib
 
 -- villages up to this many nodes in each direction are shown on the map
 mg_villages.MAP_RANGE = 1000;
@@ -169,7 +170,7 @@ mg_villages.map_of_world = function( pname )
 	end
 
 	i = i+0.45;
-	formspec = formspec.."label[10.0,"..tostring(i)..";Villages shown on this map:]";
+	formspec = formspec.."label[10.0,"..tostring(i)..";"..S("Villages shown on this map").." : ]";
 	i = i+0.45;
 	local j = 1;
 	while (i<10.5 and j<=#shown_villages) do
@@ -184,7 +185,7 @@ end
 
 
 minetest.register_chatcommand( 'vmap', {
-	description = "Shows a map of all known villages withhin "..tostring( mg_villages.MAP_RANGE ).." blocks.",
+	description = S("Shows a map of all known villages withhin")..' '..tostring( mg_villages.MAP_RANGE )..' '..S("blocks."),
 	privs = {},
 	func = function(name, param)
 		minetest.show_formspec( name, 'mg:world_map', mg_villages.map_of_world( name ));

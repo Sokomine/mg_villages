@@ -11,6 +11,9 @@
 --  guests		Negative value, i.e. -2: 2 of the beds will belong to the family working here; the rest will be guests.
 --                      For building type "chateau", guest names the number of servants/housemaids instead of guests.
 
+-- Intllib
+local S = mg_villages.intllib
+
 mg_villages.all_buildings_list = {}
 
 local buildings = {
@@ -294,7 +297,7 @@ mg_villages.add_building = function( building_data )
 
 	if( not( is_used )) then
 		-- do nothing; skip this file
-		mg_villages.print(mg_villages.DEBUG_LEVEL_INFO, 'SKIPPING '..tostring( building_data.scm )..' due to village type not supported.');
+		mg_villages.print(mg_villages.DEBUG_LEVEL_INFO, S("SKIPPING").." "..tostring( building_data.scm )..' '..S("due to village type not supported."));
 		-- building cannot be used
 		building_data.not_available = 1;
 		return false;
@@ -307,7 +310,7 @@ mg_villages.add_building = function( building_data )
 	local res  = handle_schematics.analyze_file( file_name, building_data.we_origin, building_data.mts_path .. building_data.scm, building_data, true );
 
 	if( not( res )) then
-		mg_villages.print(mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to import failure.');
+		mg_villages.print(mg_villages.DEBUG_LEVEL_WARNING, S("SKIPPING").." "..tostring( building_data.scm ).." "..S("due to import failure."));
 		building_data.not_available = 1;
 		return false;
 	-- provided the file could be analyzed successfully (now covers both .mts and .we files)
@@ -322,7 +325,7 @@ mg_villages.add_building = function( building_data )
 		or   building_data.sizex == 0 or      building_data.sizez==0) then
 
 		-- no village will use it
-		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, 'No schematic found for building \''..tostring( building_data.scm )..'\'. Will not use that building.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, S("No schematic found for building").." \'"..tostring( building_data.scm ).."\'. "..S("Will not use that building."));
 		building_data.weight = {};
 		building_data.not_available = 1;
 		return false;
@@ -334,7 +337,7 @@ mg_villages.add_building = function( building_data )
 
 
 	if( not( building_data.weight ) or type( building_data.weight ) ~= 'table' ) then
-		mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, 'SKIPPING '..tostring( building_data.scm )..' due to missing weight information.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_WARNING, S("SKIPPING").." "..tostring( building_data.scm ).." "..S("due to missing weight information."));
 		building_data.not_available = 1;
 		return false;
 	end

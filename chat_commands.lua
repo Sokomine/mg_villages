@@ -1,5 +1,7 @@
+-- Intllib
+local S = mg_villages.intllib
 
-minetest.register_privilege("mg_villages", { description = "Allows to teleport to villages via /vist <nr>", give_to_singleplayer = false});
+minetest.register_privilege("mg_villages", { description = S("Allows to teleport to villages via").." /vist <nr>", give_to_singleplayer = false});
 
 -- store per player which list of villages was offered
 mg_villages.tmp_player_village_list = {};
@@ -194,7 +196,7 @@ end
 
 
 minetest.register_chatcommand( 'villages', {
-	description = "Shows a list of all known villages.",
+	description = S("Shows a list of all known villages."),
 	privs = {},
 	func = function(name, param)
 		mg_villages.list_villages_formspec( minetest.get_player_by_name( name ), "mg_villages:formspec_list_villages", {});
@@ -203,19 +205,19 @@ minetest.register_chatcommand( 'villages', {
 
 
 minetest.register_chatcommand( 'visit', {
-        description = "Teleports you to a known village.",
+        description = S("Teleports you to a known village."),
 	params = "<village number>",
         privs = {},
         func = function(name, param)
 
 
 		if( mg_villages.REQUIRE_PRIV_FOR_TELEPORT and not( minetest.check_player_privs( name, {mg_villages=true}))) then
-			minetest.chat_send_player( name, "You need the 'mg_villages' priv in order to teleport to villages using this command.");
+			minetest.chat_send_player( name, S("You need the 'mg_villages' priv in order to teleport to villages using this command."));
 			return;
 		end
 
 		if( not( param ) or param == "" ) then
-			minetest.chat_send_player( name, "Which village do you want to visit? Please provide the village number!");
+			minetest.chat_send_player( name, S("Which village do you want to visit? Please provide the village number!"));
 			return;
 		end
 
@@ -224,7 +226,7 @@ minetest.register_chatcommand( 'visit', {
 			-- we have found the village
 			if( v and v.nr == nr ) then
 
-				minetest.chat_send_player( name, "Initiating transfer to village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown'))..".");
+				minetest.chat_send_player( name, S("Initiating transfer to village no.")..' '..tostring( v.nr )..", "..S("called ")..( tostring( v.name or 'unknown'))..".");
 				local player =  minetest.get_player_by_name( name );
 				player:move_to( { x=v.vx, y=(v.vh+1), z=v.vz }, false);
 				return;
@@ -274,6 +276,6 @@ minetest.register_chatcommand( 'village_mob_repopulate', {
 			end
 		end
 		-- no village found
-		minetest.chat_send_player( name, "There is no village with the number "..tostring( param ).." (yet?).");
+		minetest.chat_send_player( name, S("There is no village with the number")..' '..tostring( param ).." ("..S("yet").."?)");
         end
 });

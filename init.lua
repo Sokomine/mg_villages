@@ -1,12 +1,20 @@
-
 -- reserve namespace for the villages
 mg_villages = {}
+
+-- Intllib
+local S
+if minetest.get_modpath("intllib") then
+	S = intllib.Getter()
+else
+	S = function(s) return s end
+end
+mg_villages.intllib = S
 
 mg_villages.all_villages  = {}
 mg_villages.mg_generated_map = {}
 mg_villages.anz_villages = 0;
 
-mg_villages.modpath = minetest.get_modpath( "mg_villages");
+mg_villages.modpath = minetest.get_modpath("mg_villages");
 
 
 mg_villages.DEBUG_LEVEL_NONE    = -1 -- -1: disable all printed messages

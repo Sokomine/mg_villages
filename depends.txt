@@ -20,5 +20,6 @@ grounds?
 moreblocks?
 bell?
 mg?
+intllib?
 mob_world_interaction?
 cavestuff?

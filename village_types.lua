@@ -18,6 +18,9 @@
 --	plant_type = 'farming:wheat_8'  Type of plant that is placed around villages.
 --	plant_frequency = 1	The higher this value is, the less plants are placed.
 
+-- Intllib
+local S = mg_villages.intllib
+
 local village_type_data_list = {
 	nore         = { min = 20, max = 40,   space_between_buildings=1, mods={},            texture = 'default_stone_brick.png',
 			 replacement_function = mg_villages.replacements_nore },
@@ -85,7 +88,7 @@ mg_villages.add_village_type = function( type_name, v )
 	end
 
 	if( not( v.only_single ) and (not(v.min) or not(v.max))) then
-		mg_villages.print( mg_villages.DEBUG_LEVEL_NORMAL, 'Error: Village type '..tostring( type_name )..' lacks size information.');
+		mg_villages.print( mg_villages.DEBUG_LEVEL_NORMAL, S("Error: Village type")..' '..tostring( type_name )..' '..S("lacks size information."));
 		return false;
 	end
 

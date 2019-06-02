@@ -1,7 +1,9 @@
+-- Intllib
+local S = mg_villages.intllib
 
 -- slightly lower than a normal nodes for better look
 minetest.register_node("mg_villages:road", {
-	description = "village road",
+	description = S("village road"),
 	tiles = {"default_gravel.png", "default_dirt.png"},
         is_ground_content = false, -- will not be removed by the cave generator
         groups = {crumbly=2}, -- does not fall
@@ -28,7 +30,7 @@ end
 
 -- special soil that does not need abms/lbms or water
 minetest.register_node("mg_villages:soil", {
-	description = "Soil found on a field",
+	description = S("Soil found on a field"),
 	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt.png"},
 	drop = "default:dirt",
 	is_ground_content = true,
@@ -37,7 +39,7 @@ minetest.register_node("mg_villages:soil", {
 })
 
 minetest.register_node("mg_villages:desert_sand_soil", {
-	description = "Desert Sand",
+	description = S("Desert Sand"),
 	tiles = {"default_desert_sand.png^farming_soil_wet.png", "default_desert_sand.png"},
 	is_ground_content = true,
 	drop   = "default:desert_sand",
@@ -50,7 +52,7 @@ minetest.register_node("mg_villages:desert_sand_soil", {
 if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 	-- This torch is not hot. It will not melt snow and cause no floodings in villages.
 	minetest.register_node("mg_villages:torch", {
-		description = "Torch",
+		description = S("Torch"),
 		drawtype = "torchlike",
 		--tiles = {"default_torch_on_floor.png", "default_torch_on_ceiling.png", "default_torch.png"},
 		tiles = {
@@ -82,7 +84,7 @@ end
 
 -- get information about a plot, the building, its inhabitants; allow to buy the plot etc.
 minetest.register_node("mg_villages:plotmarker", {
-	description = "Plot marker",
+	description = S("Plot marker"),
 	drawtype = "nodebox",
 	tiles = {"default_stone_brick.png"},
 	is_ground_content = false,
@@ -157,7 +159,7 @@ if( not( mg_villages.use_normal_unsafe_lava )) then
 		new_def.groups.hot     = nil;
 		new_def.groups.igniter = nil;
 		new_def.groups.lava_tamed = 3;
-		new_def.description = "Lava Source (tame)";
+		new_def.description = S("Lava Source (tame)");
 		new_def.liquid_alternative_flowing = "mg_villages:lava_flowing_tamed";
 		new_def.liquid_alternative_source = "mg_villages:lava_source_tamed";
 		-- we create a NEW type of lava for this
@@ -175,7 +177,7 @@ if( not( mg_villages.use_normal_unsafe_lava )) then
 		new_def.groups.hot     = nil;
 		new_def.groups.igniter = nil;
 		new_def.groups.lava_tamed = 3;
-		new_def.description = "Flowing Lava (tame)";
+		new_def.description = S("Flowing Lava (tame)");
 		new_def.liquid_alternative_flowing = "mg_villages:lava_flowing_tamed";
 		new_def.liquid_alternative_source = "mg_villages:lava_source_tamed";
 		-- and a NEW type of flowing lava...

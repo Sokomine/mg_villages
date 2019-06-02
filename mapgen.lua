@@ -1,3 +1,5 @@
+-- Intllib
+local S = mg_villages.intllib
 
 ------------------------------------------------------------------------------
 -- Interface for other mods
@@ -772,7 +774,7 @@ end
 
 
 mg_villages.change_village_height = function( village, new_height )
-	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, 'CHANGING HEIGHT from '..tostring( village.vh )..' to '..tostring( new_height ));
+	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, S("CHANGING HEIGHT from").." "..tostring( village.vh ).." "..S("to").." "..tostring( new_height ));
 	for _, pos in ipairs(village.to_add_data.bpos) do
 		pos.y = new_height;
 	end
@@ -974,7 +976,7 @@ end
 
 time_elapsed = function( t_last, msg )
 	mg_villages.t_now = minetest.get_us_time();
-	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, 'TIME ELAPSED: '..tostring( mg_villages.t_now - t_last )..' '..msg );
+	mg_villages.print( mg_villages.DEBUG_LEVEL_TIMING, S("TIME ELAPSED").." : "..tostring( mg_villages.t_now - t_last )..' '..msg );
 	return mg_villages.t_now;
 end
 
