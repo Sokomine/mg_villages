@@ -85,7 +85,7 @@ local function choose_building(l, pr, village_type)
 		
 		if(  not( mg_villages.village_type_data[ village_type ] )
 		  or not( mg_villages.village_type_data[ village_type ][ 'building_list'] )) then
-			mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, S("Unsupported village type").." : "..tostring( village_type )..' '..S("for house at") ' '..tostring(bx)..':'..tostring(bz)..'.');
+			mg_villages.print( mg_villages.DEBUG_LEVEL_INFO, S("Unsupported village type").." : "..tostring( village_type )); --..' '..S("for house at") ' '..tostring(bx)..':'..tostring(bz)..'.');
 			-- ...and crash in the next few lines (because there is no real solution for this problem)
 		end
 
@@ -164,6 +164,23 @@ local function choose_building_rot(l, pr, orient, village_type)
 	end
 	return btype, rotation, bsizex, bsizez, mirror
 end
+
+
+-- choose_building_rot is not public, thus cannot be used by other mods;
+-- also, that functions return values are impractical for other mods;
+-- Returns: Array that is a new entry for array l (list of buildings in the village)
+-- Parameters:
+--   l             array consisting of previous return values of this function here
+--   pos           pos.x, pos.y, pos.z will be part of the returned data structure
+--   pr            instance of PseudoRandom(..)
+--   orient        desired orientation
+--   village_type  type of the desired village (i.e. medieval, taoki, ...)
+mg_villages.choose_building_rotated = function(l, pos, pr, orient, village_type)
+	local btype, rotation, bsizex, bsizez, mirror = choose_building_rot(l, pr, orient, village_type)
+	-- road_nr and side have no relevance for other mods
+	return	{x=pos.x, y=pos.y, z=pos.z, btype=btype, bsizex=bsizex, bsizez=bsizez, brotate = rotation, road_nr = 1, side=1, o=orient, mirror=mirror }
+end
+
 
 local function placeable(bx, bz, bsizex, bsizez, l, exclude_roads, orientation)
 	for _, a in ipairs(l) do
