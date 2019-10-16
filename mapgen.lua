@@ -401,8 +401,22 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 	for x = minp.x, maxp.x do
 		local village_nr = village_area[ x ][ z ][ 1 ];
 		local terrain_blending_value = village_area[ x ][ z ][ 2 ];
-		-- is there a village at this spot?
+		-- use a _special_ given terrain height
 		if(    village_nr > 0
+		   and terrain_blending_value == 11
+		   and village_area[ x ][ z ][3]) then
+			mg_villages.lower_or_raise_terrain_at_point( x, z,
+				village_area[ x ][ z ][ 3 ],
+				minp, maxp, vm, data, param2_data, a, cid,
+				village_area[ x ][ z ][ 3 ],
+				nil,
+				village_tmp[ village_nr ].has_artificial_snow,
+				0,
+				village_tmp[ village_nr ].force_ground,
+				village_tmp[ village_nr ].force_underground );
+
+		-- is there a village at this spot?
+		elseif(village_nr > 0
 		   and terrain_blending_value ~= 0
 		   -- some data is stored in a temp table
 		   and village_tmp[ village_nr]
@@ -552,7 +566,9 @@ end
 
 -- helper functions for mg_villages.place_villages_via_voxelmanip
 -- this one marks the positions of buildings plus a frame around them 
-mg_villages.village_area_mark_buildings = function( village_area, village_nr, bpos)
+-- if keep_house_height is set, then the y position of the house will
+--   be stored as a third parameter
+mg_villages.village_area_mark_buildings = function( village_area, village_nr, bpos, keep_house_height)
 
 	-- mark the roads and buildings and the area between buildings in the village_area table
 	-- 2: road
@@ -575,6 +591,11 @@ mg_villages.village_area_mark_buildings = function( village_area, village_nr, bp
 					village_area[ p.x ][ p.z ] = { village_nr, reserved_for+1}; -- border around a building
 				else
 					village_area[ p.x ][ p.z ] = { village_nr, reserved_for }; -- the actual building
+				end
+				if(keep_house_height) then
+					-- special "keep heigt" value
+					village_area[ p.x ][ p.z ][2] = 11
+					village_area[ p.x ][ p.z ][3] = pos.y
 				end
 			end
 		end
@@ -1071,12 +1092,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			--  3: border around a building
 			--  4: a road
 			--  5: border around a road
-			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
+			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos, village.keep_house_height );
 			-- will set village_area to N where .. is:
 			--  8: a dirt road
 			mg_villages.village_area_mark_dirt_roads(  village_area, village_nr, village.to_add_data.dirt_roads );
 		else -- mark the terrain below single houses
-			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos );
+			mg_villages.village_area_mark_buildings(   village_area, village_nr, village.to_add_data.bpos, village.keep_house_height );
 		end
         end
 	t1 = time_elapsed( t1, 'generate_village, mark_buildings and mark_dirt_roads' );
@@ -1115,12 +1136,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
   	--  6: free/unused spot in the core area of the village where the buildings are
         -- negative value: do terrain blending
 	mg_villages.village_area_mark_inside_village_area( village_area, villages, village_noise, tmin, tmax );
+
 	t1 = time_elapsed( t1, 'mark_inside_village_area' );
 
 	-- determine optimal height for all villages that have their center in this mapchunk; sets village.optimal_height
-	t1 = time_elapsed( t1, 'get_height' );
-
 	mg_villages.village_area_get_height( village_area, villages, tmin, tmax, data, param2_data, a, cid );
+	t1 = time_elapsed( t1, 'get_height' );
 	-- the villages in the first mapchunk are set to a fixed height of 1 so that players will not end up embedded in stone
 	if( not( mg_villages.all_villages ) or mg_villages.anz_villages < 1 ) then
 		villages[1].optimal_height = 1;
