@@ -1170,7 +1170,16 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	vm:update_liquids()
 	t1 = time_elapsed( t1, 'vm update liquids' );
 
+	mg_villages.after_place_villages(villages, minp, maxp, data, param2_data, a, cid)
+end
 
+
+-- called by mg_villages.place_villages_via_voxelmanip(..) and other mods after a village has been placed;
+-- calls on_constr and does other needed stetup of metadata;
+-- prepares mob spawning;
+-- stores the village data
+mg_villages.after_place_villages = function( villages, minp, maxp, data, param2_data, a, cid )
+	local t1 = minetest.get_us_time();
 	-- do on_construct calls AFTER the map data has been written - else i.e. realtest fences can not update themshevles
 	for _, village in ipairs(villages) do
 		handle_schematics.call_on_construct( village.to_add_data.extra_calls.on_constr );
