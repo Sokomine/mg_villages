@@ -1,7 +1,13 @@
 
 -- fountains and lakes have river water, not salt water
-handle_schematics.global_replacement_table[ 'default:water_source' ] = 'default:river_water_source';
-handle_schematics.global_replacement_table[ 'default:water_flowing' ] = 'default:river_water_flowing';
+if(minetest.registered_nodes["default:river_water_source"]) then
+	handle_schematics.global_replacement_table[ 'default:water_source' ] = 'default:river_water_source';
+	handle_schematics.global_replacement_table[ 'default:water_flowing' ] = 'default:river_water_flowing';
+-- ..but some games (like realtest_v5) may not have river water
+else
+	handle_schematics.global_replacement_table[ 'default:river_water_source' ] = 'default:water_source';
+	handle_schematics.global_replacement_table[ 'default:river_water_flowing'] = 'default:water_flowing';
+end
 -- always use the cheaper simulated soil that has no problem with water beeing 4 nodes away
 handle_schematics.global_replacement_table[ 'farming:soil_wet'             ] = 'mg_villages:soil';
 handle_schematics.global_replacement_table[ 'farming:soil'                 ] = 'mg_villages:soil';
