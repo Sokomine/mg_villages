@@ -86,10 +86,15 @@ if(	    minetest.get_modpath( 'trees' )
 
 	-- realtest is very special as far as stairs are concerned
 	mg_villages.realtest_stairs = {'default:stone','default:stone_flat','default:stone_bricks',
-	                               'default:desert_stone_flat','default:desert_stone_bricks'};
-	for i,v in ipairs(metals.list) do
-		table.insert( mg_villages.realtest_stairs, 'metals:'..v..'_block' );
-	end
+	                               'default:desert_stone_flat','default:desert_stone_bricks',
+				       'default:stone_macadam', 'default:stone', 'default:desert_stone',
+				       'default:sandstone','default:sandstone',
+				       -- very decorative...so more likely to appear
+				       'default:stone_bricks', 'default:desert_stone_bricks'};
+	-- the metals are very decorative; but they'd also invite players to grief villages...so better not
+--	for i,v in ipairs(metals.list) do
+--		table.insert( mg_villages.realtest_stairs, 'metals:'..v..'_block' );
+--	end
 	-- the list of minteral names is local; so we can't add "decorations:"..mineral[1].."_block"
 end
 
