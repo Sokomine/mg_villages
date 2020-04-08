@@ -940,27 +940,10 @@ mg_villages.replacements_tower = function( housetype, pr, replacements )
 end
 
 
-
--- Translate replacement function from above (which aims at place_schematic) for the villages in Nores mapgen
-mg_villages.get_replacement_ids = function( housetype, pr )
-
-	local replace = {};
-	local replacements = mg_villages.get_replacement_list( housetype, pr );
-	for i,v in ipairs( replacements ) do
-		if( v and #v == 2 ) then
-			replace[ minetest.get_content_id( v[1] )] = minetest.get_content_id( v[2] );
-		end
-	end
-	return replace;
-end
-
-
-
 -- mapgen based replacements work best using a table, while minetest.place_schematic(..) based spawning needs a list
 mg_villages.get_replacement_table = function( housetype, pr, replacements )
 
 	local rtable = {};
-	local ids    = {};
 	if( not( replacements )) then
 		replacements = mg_villages.get_replacement_list( housetype, pr );
 	end
@@ -978,10 +961,9 @@ mg_villages.get_replacement_table = function( housetype, pr, replacements )
 	for i,v in ipairs( replacements ) do
 		if( v and #v == 2 ) then
 			rtable[ v[1] ] = v[2];
-			ids[ minetest.get_content_id( v[1] )] = minetest.get_content_id( v[2] );
 		end
 	end
-        return { table = rtable, list = replacements, ids = ids };
+        return { table = rtable, list = replacements};
 end
 
 mg_villages.get_content_id_replaced = function( node_name, replacements )
