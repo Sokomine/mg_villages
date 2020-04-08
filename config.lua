@@ -39,6 +39,7 @@ mg_villages.MAX_HEIGHT_TREATED = 200;
 
 -- choose the debug level you want
 mg_villages.DEBUG_LEVEL = mg_villages.DEBUG_LEVEL_NORMAL
+--mg_villages.DEBUG_LEVEL = mg_villages.DEBUG_LEVEL_TIMING
 
 -- if set to true, a water source will be added all 2-3 blocks on a field for farming;
 -- as long as you do not plan to dig up all fields, hoe them and use them manually,
@@ -77,9 +78,11 @@ mg_villages.medieval_subtype = false;
 -- on average, every n.th node inside a village area may be one of these trees - and it will be a relatively dense packed forrest
 mg_villages.sapling_probability = {};
 
-mg_villages.sapling_probability[ minetest.get_content_id( 'default:sapling' )       ] = 25; -- suitable for a relatively dense forrest of normal trees
-mg_villages.sapling_probability[ minetest.get_content_id( 'default:junglesapling' ) ] = 40; -- jungletrees are a bit bigger and need more space
-mg_villages.sapling_probability[ minetest.get_content_id( 'default:pinesapling' )   ] = 30; 
+if(minetest.registered_nodes['default:sapling']) then
+	mg_villages.sapling_probability[ minetest.get_content_id( 'default:sapling' )       ] = 25; -- suitable for a relatively dense forrest of normal trees
+	mg_villages.sapling_probability[ minetest.get_content_id( 'default:junglesapling' ) ] = 40; -- jungletrees are a bit bigger and need more space
+	mg_villages.sapling_probability[ minetest.get_content_id( 'default:pinesapling' )   ] = 30;
+end
 if( minetest.get_modpath( 'mg' )) then
 	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:savannasapling'     ) ] = 30; 
 	mg_villages.sapling_probability[ minetest.get_content_id( 'mg:pinesapling'        ) ] = 35; 
