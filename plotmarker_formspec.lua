@@ -169,7 +169,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 		if( fields.remove_building and fields.remove_building ~= "" ) then
 			-- clear the space above ground, put dirt below ground, but keep the
 			-- surface intact
-			handle_schematics.clear_area( start_pos, end_pos, pos.y-1);
+			handle_schematics.clear_area( start_pos, end_pos, pos.y-1, replacements);
 			-- also clear the meta data to avoid strange effects
 			handle_schematics.clear_meta( start_pos, end_pos );
 			formspec = formspec.."label[3,3;"..S("The plot has been cleared.").."]";
