@@ -547,6 +547,11 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 					data[a:index(x,y,z)] = cid.c_air;
 				-- if there was a moresnow cover, add a snow on top of the new floor node
 				elseif( ci ~= cid.c_ignore
+						 -- only if the game provides the snow nodes
+						 and cid.c_snow ~= cid.c_air
+						 and cid.c_dirt_with_snow ~= cid.c_air
+						 -- only if moresnow is installed
+						 and cid.c_msnow_1 ~= cid.c_air
 					         and (ci==cid.c_msnow_1 or ci==cid.c_msnow_2 or ci==cid.c_msnow_3 or ci==cid.c_msnow_4 or
 					              ci==cid.c_msnow_5 or ci==cid.c_msnow_6 or ci==cid.c_msnow_7 or ci==cid.c_msnow_8 or
 					              ci==cid.c_msnow_9 or ci==cid.c_msnow_10 or ci==cid.c_msnow_11)) then
@@ -868,27 +873,29 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	if( minp.y > 0 ) then
 		return;
 	end
+	-- TODO: replacements depend on the actual village...
+	local replacements = {};
 	-- trees which require grow functions to be called
-	cid.c_savannasapling  = minetest.get_content_id( 'mg:savannasapling');
-	cid.c_pinesapling     = minetest.get_content_id( 'mg:pinesapling');
+	cid.c_savannasapling  = handle_schematics.get_content_id_replaced( 'mg:savannasapling', replacements);
+	cid.c_pinesapling     = handle_schematics.get_content_id_replaced( 'mg:pinesapling', replacements);
 	-- add farmland
-	cid.c_wheat           = minetest.get_content_id( 'farming:wheat_8' );
-	cid.c_cotton          = minetest.get_content_id( 'farming:cotton_8' );
-	cid.c_shrub           = minetest.get_content_id( 'default:dry_shrub');
+	cid.c_wheat           = handle_schematics.get_content_id_replaced( 'farming:wheat_8', replacements );
+	cid.c_cotton          = handle_schematics.get_content_id_replaced( 'farming:cotton_8', replacements );
+	cid.c_shrub           = handle_schematics.get_content_id_replaced( 'default:dry_shrub', replacements);
 	-- these extra nodes are used in order to avoid abms on the huge fields around the villages
-	cid.c_soil_wet        = minetest.get_content_id( 'mg_villages:soil' ); --'farming:soil_wet' );
-	cid.c_soil_sand       = minetest.get_content_id( 'mg_villages:desert_sand_soil'); --'farming:desert_sand_soil_wet' );
-	local c_feldweg         = minetest.get_content_id( 'cottages:feldweg');
+	cid.c_soil_wet        = handle_schematics.get_content_id_replaced( 'mg_villages:soil', replacements ); --'farming:soil_wet' );
+	cid.c_soil_sand       = handle_schematics.get_content_id_replaced( 'mg_villages:desert_sand_soil', replacements); --'farming:desert_sand_soil_wet' );
+	local c_feldweg         = handle_schematics.get_content_id_replaced( 'cottages:feldweg', replacements);
 	if( not( c_feldweg )) then
 		c_feldweg = cid.c_dirt_with_grass;
 	end
 
 	if( mg_villages.realtest_trees ) then
-		cid.c_soil_wet        = minetest.get_content_id( 'farming:soil' ); -- TODO: the one from mg_villages would be better...but that one lacks textures
-		cid.c_soil_sand       = minetest.get_content_id( 'farming:soil' ); -- TODO: the one from mg_villages would be better...but that one lacks textures
-		cid.c_wheat           = minetest.get_content_id( 'farming:spelt_4' );
-		cid.c_cotton          = minetest.get_content_id( 'farming:flax_4' );
---		cid.c_shrub           = minetest.get_content_id( 'default:dry_shrub');
+		cid.c_soil_wet        = handle_schematics.get_content_id_replaced( 'farming:soil', replacements ); -- TODO: the one from mg_villages would be better...but that one lacks textures
+		cid.c_soil_sand       = handle_schematics.get_content_id_replaced( 'farming:soil', replacements ); -- TODO: the one from mg_villages would be better...but that one lacks textures
+		cid.c_wheat           = handle_schematics.get_content_id_replaced( 'farming:spelt_4', replacements );
+		cid.c_cotton          = handle_schematics.get_content_id_replaced( 'farming:flax_4', replacements );
+--		cid.c_shrub           = handle_schematics.get_content_id_replaced( 'default:dry_shrub', replacements);
 	end
 
 	local pr = PseudoRandom(mg_villages.get_bseed(minp));
@@ -979,7 +986,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				end
 
 				-- put a snow cover on plants where needed
-				if( has_snow_cover and cid.c_msnow_1 ~= cid.c_ignore) then
+				if( has_snow_cover and cid.c_msnow_1 ~= cid.c_ignore and cid.c_msnow_1 ~= cid.c_air) then
 					data[a:index( x,  h+2, z)] = cid.c_msnow_1;
 				end
 
@@ -1099,7 +1106,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 
 	-- change height of those villages where an optimal_height could be determined
-	local village_data_updated = false;
 	for _,village in ipairs(villages) do
 		if( village.optimal_height and village.optimal_height > 0 and village.optimal_height ~= village.vh
 		    -- no point in changing the village height if the houses are at a fixed height already
@@ -1109,7 +1115,6 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 				village.optimal_height = village.optimal_height + math.max( math.floor(village.vs/2), 2 );
 			end
 			mg_villages.change_village_height( village, village.optimal_height );
-			village_data_updated = true;
 		end
 	end
 	t1 = time_elapsed( t1, 'change_height' );
@@ -1250,7 +1255,6 @@ mg_villages.after_place_villages = function( villages, minp, maxp, data, param2_
 			mg_villages.print( mg_villages.DEBUG_LEVEL_NORMAL, "Village No. "..tostring( count ).." of type \'"..
 					tostring( village.village_type ).."\' of size "..tostring( village.vs )..
 					" spawned at: x = "..village.vx..", z = "..village.vz)
-			village_data_updated = true;
 
 			-- hook for doing stuff that needs to be done exactly once per village
 			mg_villages.new_village_spawned( village_id );
