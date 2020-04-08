@@ -28,10 +28,15 @@ if( minetest.get_modpath("moresnow")) then
 end
 
 
+-- RealTest still hasn't moved to soil_wet
+local farming_soil_wet_png = "farming_soil_wet.png";
+if(not(minetest.registered_nodes["farming:soil_wet"])) then
+	farming_soil_wet_png = "farming_soil.png";
+end
 -- special soil that does not need abms/lbms or water
 minetest.register_node("mg_villages:soil", {
 	description = S("Soil found on a field"),
-	tiles = {"default_dirt.png^farming_soil_wet.png", "default_dirt.png"},
+	tiles = {"default_dirt.png^"..farming_soil_wet_png, "default_dirt.png"},
 	drop = "default:dirt",
 	is_ground_content = true,
 	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1, soil=3, wet=1},
@@ -40,7 +45,7 @@ minetest.register_node("mg_villages:soil", {
 
 minetest.register_node("mg_villages:desert_sand_soil", {
 	description = S("Desert Sand"),
-	tiles = {"default_desert_sand.png^farming_soil_wet.png", "default_desert_sand.png"},
+	tiles = {"default_desert_sand.png^"..farming_soil_wet_png, "default_desert_sand.png"},
 	is_ground_content = true,
 	drop   = "default:desert_sand",
 	groups = {crumbly=3, not_in_creative_inventory = 1, sand=1, desert = 1, soil=3, wet=1},
@@ -82,11 +87,16 @@ if( mg_villages.USE_DEFAULT_3D_TORCHES == false ) then
 end
 
 
+-- in RealTest, the node and texture come with an additional "s"
+local plotmarker_texture = "default_stone_brick.png";
+if(minetest.registered_nodes["default:stone_bricks"]) then
+	plotmarker_texture = "default_stone_bricks.png";
+end
 -- get information about a plot, the building, its inhabitants; allow to buy the plot etc.
 minetest.register_node("mg_villages:plotmarker", {
 	description = S("Plot marker"),
 	drawtype = "nodebox",
-	tiles = {"default_stone_brick.png"},
+	tiles = {plotmarker_texture},
 	is_ground_content = false,
 	paramtype = "light",
 	paramtype2 = "facedir",
