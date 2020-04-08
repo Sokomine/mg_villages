@@ -966,17 +966,6 @@ mg_villages.get_replacement_table = function( housetype, pr, replacements )
         return { table = rtable, list = replacements};
 end
 
-mg_villages.get_content_id_replaced = function( node_name, replacements )
-	if( not( node_name ) or not( replacements ) or not(replacements.table )) then
-		return minetest.get_content_id( 'ignore' );
-	end
-	if( replacements.table[ node_name ]) then
-		return minetest.get_content_id( replacements.table[ node_name ] );
-	else
-		return minetest.get_content_id( node_name );
-	end
-end
-
 
 -- they don't all grow cotton; farming_plus fruits are far more intresting!
 -- Note: This function modifies replacements.ids and replacements.table for each building
