@@ -7,7 +7,11 @@ local c_leaves = minetest.get_content_id("default:leaves")
 local c_sapling = minetest.get_content_id("default:sapling");
 local c_junglesapling = minetest.get_content_id("default:junglesapling");
 local c_snow = minetest.get_content_id("default:snow");
-local c_msnow_top = minetest.get_content_id( 'moresnow:snow_top' );
+
+local c_msnow_top = minetest.get_content_id( 'air' );
+if(minetest.registered_nodes["moresnow:snow_top"]) then
+	c_msnow_top = minetest.get_content_id( 'moresnow:snow_top' );
+end
 
 local c_msnow_leaves1 = minetest.get_content_id( 'default:leaves' );
 local c_msnow_leaves2 = minetest.get_content_id( 'default:leaves' );
