@@ -216,7 +216,7 @@ mg_villages.analyze_building_for_mobs = function( building_data, file_name, path
 			for i,p in ipairs( paths ) do
 				-- paths[i]: paths from all beds to front door i
 				-- paths[i][1]: path from first bed to front door i
-				if( p and p[1] ) then
+				if( p and p[1] and p[1][ #p[1] ]) then
 					-- the place in front of the door is the last entry
 					local d = p[1][ #p[1] ];
 					building_data.front_door_list[i] = {d[1],d[2],d[3]};
