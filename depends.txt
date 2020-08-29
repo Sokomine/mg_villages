@@ -1,5 +1,5 @@
 handle_schematics
-default
+default?
 doors?
 farming?
 wool?
