@@ -466,44 +466,7 @@ end
 
 
 -- repair mapgen griefings
-mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid, edge_min, edge_max )
-	-- find out if this part of the shell has already been generated or not
-	if(    data[a:index(minp.x,minp.y,minp.z)] == cid.c_ignore
-
-	   and data[a:index(maxp.x,minp.y,minp.z)] == cid.c_ignore
-	   and data[a:index(minp.x,maxp.y,minp.z)] == cid.c_ignore
-	   and data[a:index(minp.x,minp.y,maxp.z)] == cid.c_ignore
-
-	   and data[a:index(maxp.x,maxp.y,maxp.z)] == cid.c_ignore
-
-	   and data[a:index(maxp.x,maxp.y,minp.z)] == cid.c_ignore
-	   and data[a:index(maxp.x,minp.y,maxp.z)] == cid.c_ignore
-	   and data[a:index(minp.x,maxp.y,maxp.z)] == cid.c_ignore ) then
-
-		-- no - none of the edges has been created yet; no point to place anything there
-		return;
-	end
-
-	if( minp.x < edge_min.x ) then
-		edge_min.x = minp.x;
-	end
-	if( minp.y < edge_min.y ) then
-		edge_min.y = minp.y;
-	end
-	if( minp.z < edge_min.z ) then
-		edge_min.z = minp.z;
-	end
-	if( maxp.x > edge_max.x ) then
-		edge_max.x = maxp.x;
-	end
-	if( maxp.y > edge_max.y ) then
-		edge_max.y = maxp.y;
-	end
-	if( maxp.z > edge_max.z ) then
-		edge_max.z = maxp.z;
-	end
-
-
+mg_villages.fill_cavegen_holes_in_outer_shell = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid)
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		-- inside a village
@@ -538,9 +501,34 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 					y = y-1;
 				end
 			end
+		end
+	end
+	end
+end
 
+
+mg_villages.fix_mudflow = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid)
 			-- remove mudflow
 			y = village.vh + 1;
+			local ci = data[a:index(x, y, z)]
+			local ci_last = ci
+			while( y <= maxp.y
+			   and (ci == cid.c_dirt or ci == cid.c_dirt_with_grass or
+			        ci == cid.c_dirt_with_snow or
+				ci == cid.c_snow or ci == cid.c_snowblock or ci == cid.c_plotmarker or
+			        ci == cid.c_sand or ci == cid.c_desert_sand)) do
+				data[a:index(x, y, z)] = cid.c_air
+				y = y+1
+				ci_last = ci
+				ci = data[a:index(x, y, z)]
+			end
+			-- move the topmost node down
+			if(y > village.vh) then
+				data[a:index(x, village.vh+1, z)] = ci
+			end
+
+
+--[[
 			while( y <= maxp.y ) do
 				local ci = data[a:index(x, y, z)];
 				if( ci ~= cid.c_ignore and (ci==cid.c_dirt or ci==cid.c_dirt_with_grass or ci==cid.c_sand or ci==cid.c_desert_sand)) then
@@ -562,9 +550,7 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 				end
 				y = y+1;
 			end
-		end
-	end
-	end
+--]]
 end
 
 
@@ -1123,15 +1109,14 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	-- in all parts yet - and lowering terrain there would cause wrong lighting
 	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
 	t1 = time_elapsed( t1, 'flatten_village_area' );
-	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
-	local e1 = {x=minp.x,y=minp.y,z=minp.z};
-	local e2 = {x=maxp.x,y=maxp.y,z=maxp.z};
-	mg_villages.repair_outer_shell(   villages, {x=tmin.x,   y=tmin.y,z=tmin.z},    {x=tmin.x+16, y=tmax.y, z=tmax.z}, vm, data, param2_data, a, village_area, cid, e1, e2 );
-	mg_villages.repair_outer_shell(   villages, {x=tmax.x-16,y=tmin.y,z=tmin.z},    {x=tmax.x,    y=tmax.y, z=tmax.z}, vm, data, param2_data, a, village_area, cid, e1, e2 );
-	mg_villages.repair_outer_shell(   villages, {x=tmin.x+16,y=tmin.y,z=tmin.z},    {x=tmax.x-16, y=tmax.y, z=tmin.z+16}, vm, data, param2_data, a, village_area, cid, e1, e2 );
-	mg_villages.repair_outer_shell(   villages, {x=tmin.x+16,y=tmin.y,z=tmax.z-16}, {x=tmax.x-16, y=tmax.y, z=tmax.z},    vm, data, param2_data, a, village_area, cid, e1, e2 );
---	mg_villages.repair_outer_shell(   villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
 
+	-- repair cavegen griefings in the outer shell (which is part of other mapchunks);
+	-- such griefings may be caused by caves starting in this mapchunk;
+	-- the holes need to be filled inside the villages as they would look extremly ugly
+	mg_villages.fill_cavegen_holes_in_outer_shell( villages, {x=tmin.x,   y=tmin.y,z=tmin.z},    {x=tmin.x+16, y=tmax.y, z=tmax.z}, vm, data, param2_data, a, village_area, cid );
+	mg_villages.fill_cavegen_holes_in_outer_shell( villages, {x=tmax.x-16,y=tmin.y,z=tmin.z},    {x=tmax.x,    y=tmax.y, z=tmax.z}, vm, data, param2_data, a, village_area, cid );
+	mg_villages.fill_cavegen_holes_in_outer_shell( villages, {x=tmin.x+16,y=tmin.y,z=tmin.z},    {x=tmax.x-16, y=tmax.y, z=tmin.z+16}, vm, data, param2_data, a, village_area, cid );
+	mg_villages.fill_cavegen_holes_in_outer_shell( villages, {x=tmin.x+16,y=tmin.y,z=tmax.z-16}, {x=tmax.x-16, y=tmax.y, z=tmax.z},    vm, data, param2_data, a, village_area, cid );
 	t1 = time_elapsed( t1, 'repair_outer_shell' );
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
