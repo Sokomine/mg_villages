@@ -1,6 +1,12 @@
 -- Intllib
 local S = mg_villages.intllib
 
+-- mapgen v6 has mudflow and requires additional fixes for that
+local is_mapgen_v6 = false
+if(minetest.get_mapgen_setting("mg_name") == "v6") then
+	is_mapgen_v6 = true
+end
+
 ------------------------------------------------------------------------------
 -- Interface for other mods
 
@@ -507,26 +513,30 @@ mg_villages.fill_cavegen_holes_in_outer_shell = function( villages, minp, maxp, 
 end
 
 
-mg_villages.fix_mudflow = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid)
-			-- remove mudflow
-			y = village.vh + 1;
-			local ci = data[a:index(x, y, z)]
-			local ci_last = ci
-			while( y <= maxp.y
-			   and (ci == cid.c_dirt or ci == cid.c_dirt_with_grass or
-			        ci == cid.c_dirt_with_snow or
-				ci == cid.c_snow or ci == cid.c_snowblock or ci == cid.c_plotmarker or
-			        ci == cid.c_sand or ci == cid.c_desert_sand)) do
-				data[a:index(x, y, z)] = cid.c_air
-				y = y+1
-				ci_last = ci
-				ci = data[a:index(x, y, z)]
+-- TODO: handle moresnow and normal snow covers
+mg_villages.undo_mudflow = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid)
+	for z = minp.z, maxp.z do
+	for x = minp.x, maxp.x do
+		-- inside a village
+		if( village_area[ x ][ z ][ 2 ] > 0 ) then
+			local village = villages[ village_area[ x ][ z ][ 1 ]];
+			if( village and village.vh and village.vh > minp.y and village.vh < maxp.y) then
+				-- remove any floating leaves, tree nodes, dirt etc.; any houses
+				-- accidentally removed this way will be placed anew later on anyway
+				local y = maxp.y
+				while( y > village.vh) do
+					ci = data[a:index(x, y, z)]
+					if(ci == cid.c_dirt or ci == cid.c_dirt_with_grass or ci == cid.c_dirt_with_snow or ci == cid.c_snowblock or ci == cid.c_sand or ci == cid.c_desert_sand) then
+						data[a:index(x, y, z)] = cid.c_air
+					elseif(y > village.vh+14 and ci ~= cid.c_air and ci ~= cid.c_ignore) then
+						data[a:index(x, y, z)] = cid.c_air
+					end
+					y = y-1
+				end
 			end
-			-- move the topmost node down
-			if(y > village.vh) then
-				data[a:index(x, village.vh+1, z)] = ci
-			end
-
+		end
+	end
+	end
 
 --[[
 			while( y <= maxp.y ) do
@@ -1118,6 +1128,15 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.fill_cavegen_holes_in_outer_shell( villages, {x=tmin.x+16,y=tmin.y,z=tmin.z},    {x=tmax.x-16, y=tmax.y, z=tmin.z+16}, vm, data, param2_data, a, village_area, cid );
 	mg_villages.fill_cavegen_holes_in_outer_shell( villages, {x=tmin.x+16,y=tmin.y,z=tmax.z-16}, {x=tmax.x-16, y=tmax.y, z=tmax.z},    vm, data, param2_data, a, village_area, cid );
 	t1 = time_elapsed( t1, 'repair_outer_shell' );
+
+
+	-- mapgen v6 has mudflow; while this is fine outside of villages, it needs to be removed inside them
+	if( is_mapgen_v6 ) then
+		mg_villages.undo_mudflow( villages, {x=minp.x-3, y=minp.y, z=minp.z-3}, {x=minp.x+3, y=maxp.y, z=maxp.z+3}, vm, data, param2_data, a, village_area, cid)
+		mg_villages.undo_mudflow( villages, {x=maxp.x-3, y=minp.y, z=minp.z-3}, {x=maxp.x+3, y=maxp.y, z=maxp.z+3}, vm, data, param2_data, a, village_area, cid)
+		mg_villages.undo_mudflow( villages, {x=minp.x-3, y=minp.y, z=minp.z-3}, {x=maxp.x+3, y=maxp.y, z=minp.z+3}, vm, data, param2_data, a, village_area, cid)
+		mg_villages.undo_mudflow( villages, {x=minp.x-3, y=minp.y, z=maxp.z-3}, {x=maxp.x+3, y=maxp.y, z=maxp.z+3}, vm, data, param2_data, a, village_area, cid)
+	end
 
 	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
 	if( not( c_feldweg )) then
