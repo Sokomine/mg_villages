@@ -538,7 +538,7 @@ mg_villages.repair_outer_shell = function( villages, minp, maxp, vm, data, param
 					y = y-1;
 				end
 			end
-					
+
 			-- remove mudflow
 			y = village.vh + 1;
 			while( y <= maxp.y ) do
@@ -1119,8 +1119,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	end
 	t1 = time_elapsed( t1, 'change_height' );
 
-	--mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
-	mg_villages.flatten_village_area( villages, tmin, tmax, vm, data, param2_data, a, village_area, cid );
+	-- flatten only the core area - not the outer shell as the shell may not be generated
+	-- in all parts yet - and lowering terrain there would cause wrong lighting
+	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
 	t1 = time_elapsed( t1, 'flatten_village_area' );
 	-- repair cavegen griefings and mudflow which may have happened in the outer shell (which is part of other mapnodes)
 	local e1 = {x=minp.x,y=minp.y,z=minp.z};
@@ -1157,19 +1158,18 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	t1 = time_elapsed( t1, 'fill_with_plants' );
 
+	mg_villages.grow_trees_voxelmanip( vm );
+	t1 = time_elapsed( t1, 'vm growing trees' );
+
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
 
-	mg_villages.grow_trees_voxelmanip( vm );
-	t1 = time_elapsed( t1, 'vm growing trees' );
-
-	-- only update lighting where we actually placed the nodes
-	vm:calc_lighting( e1, e2 ); --minp, maxp ); --tmin, tmax)
---	vm:calc_lighting( {x=e1.x+1,y=e1.y+1,z=e1.z+1}, {x=e2.x-1,y=e2.y-1,z=e2.z-1});
+	-- calc_lighting will figure out for which volume of the VM it is responsible (minp, maxp)
+	vm:calc_lighting()
 	t1 = time_elapsed( t1, 'vm calc lighting' );
 
-	vm:write_to_map(true)
+	vm:write_to_map()
 	t1 = time_elapsed( t1, 'vm data written' );
 
 	vm:update_liquids()
@@ -1319,5 +1319,3 @@ minetest.register_on_generated(function(minp, maxp, seed)
 		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, data_vm, data_param2_data, nil, nil, seed );
 	end
 end)
-
-
