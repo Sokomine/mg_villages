@@ -38,6 +38,22 @@ local data_param2_data;
 
 local trees_to_grow_via_voxelmanip = {};
 
+
+-- trees in the area around the village may need to be removed and replanted
+-- at a diffrent height
+local trunk_to_sapling = {}
+for k,v in pairs(replacements_group['wood'].data) do
+	-- if tree trunk and sapling exist in this game
+	if(   minetest.registered_nodes[v[4]]
+	  and minetest.registered_nodes[v[6]]) then
+		trunk_to_sapling[ minetest.get_content_id(v[4]) ] = {
+			wood    = k,
+			trunk   = v[4],
+			sapling = v[6],
+			sapling_id = minetest.get_content_id(v[6])}
+	end
+end
+
 mg_villages.wseed = 0;
 
 minetest.register_on_mapgen_init(function(mgparams)
@@ -189,11 +205,7 @@ mg_villages.check_if_ground(nil);
 mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, minp, maxp, vm, data, param2_data, a, cid, vh, treepos, has_artificial_snow, blend, force_ground, force_underground )
 	local surface_node  = nil;
 	local has_snow      = has_artificial_snow;
-	local tree          = false;
-	local jtree         = false;
-	local ptree         = false;
-	local atree         = false;
-        local asptree       = false;
+	local sapling_type  = nil
 	local old_height    = maxp.y;
 	local y = maxp.y;
 
@@ -227,20 +239,8 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		local ci_below = data[a:index( x, y-1, z)];
 		if(     look_for_snow and (ci == cid.c_snow or ci == cid.c_ice or ci == cid.c_snowblock)) then
 			has_snow = true;
-		elseif( ci == cid.c_tree ) then
-			tree  = true;
-		-- no jungletrees for branches
-		elseif( ci == cid.c_jtree and ci_below==cid.c_jtree) then
-			jtree = true;
-		-- pinetrees
-		elseif( ci == cid.c_ptree and ci_below==cid.c_ptree) then
-			ptree = true;
-		-- acacia
-		elseif( ci == cid.c_atree and ci_below==cid.c_atree) then
-			atree = true;
-                -- aspen
-		elseif( ci == cid.c_asptree and ci_below==cid.c_asptree) then
-			asptree = true;
+		elseif( trunk_to_sapling[ ci ] and ci_below == ci) then
+			sapling_type = trunk_to_sapling[ ci ].sapling_id
 		elseif( not( surface_node) and ci ~= cid.c_air and ci ~= cid.c_ignore and mg_villages.check_if_ground( ci ) == true) then
 			-- we have found a surface of some kind
 			surface_node = ci;
@@ -326,21 +326,9 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	if( target_height >= minp.y and target_height < maxp.y ) then
 		if( target_height < 1 ) then
 			-- no trees or snow below water level
-		elseif( tree  and not( mg_villages.ethereal_trees ) and treepos) then
-			data[       a:index( x, target_height+1, z)] = cid.c_sapling
-			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=0, snow=has_artificial_snow});
-		elseif( jtree and not( mg_villages.ethereal_trees ) and treepos) then
-			data[       a:index( x, target_height+1, z)] = cid.c_jsapling
-			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=1, snow=has_artificial_snow});
-		elseif( ptree and not( mg_villages.ethereal_trees ) and treepos) then
-			data[       a:index( x, target_height+1, z)] = cid.c_psapling
-			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=2, snow=has_artificial_snow});
-		elseif( atree and not( mg_villages.ethereal_trees ) and treepos) then
-			data[       a:index( x, target_height+1, z)] = cid.c_asapling
-			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=3, snow=has_artificial_snow});
-		elseif( asptree and not( mg_villages.ethereal_trees ) and treepos) then
-			data[       a:index( x, target_height+1, z)] = cid.c_aspsapling
-			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=4, snow=has_artificial_snow});
+		elseif( sapling_type and treepos) then
+			data[       a:index( x, target_height+1, z)] = sapling_type
+			table.insert( treepos, {x=x, y=target_height+1, z=z, typ=sapling_type, snow=has_artificial_snow});
 		elseif( has_snow ) then
 			data[       a:index( x, target_height+1, z)] = cid.c_snow;
 		end
@@ -455,17 +443,7 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 
 	-- grow normal trees and jungletrees in those parts of the terrain where height blending occours
 	for _, tree in ipairs(treepos) do
-		local plant_id = cid.c_jsapling;
-		if( tree.typ == 0 ) then
-			plant_id = cid.c_sapling;
-		elseif( tree.typ == 2 ) then
-			plant_id = cid.c_psapling;
-		elseif( tree.typ == 3 ) then
-			plant_id = cid.c_asapling;
-		elseif( tree.typ == 4 ) then
-			plant_id = cid.c_aspsapling;
-		end
-		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, plant_id, minp, maxp, data, a, cid, nil, tree.snow ) -- no pseudorandom present
+		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, tree.typ, minp, maxp, data, a, cid, nil, tree.snow ) -- no pseudorandom present
 	end
 
 end
@@ -814,6 +792,10 @@ if( minetest.get_modpath( 'mg' )) then
 end
 
 mg_villages.grow_trees_voxelmanip = function( vm )
+	-- for now, only trees from default are supported
+	if(not(minetest.get_modpath("default"))) then
+		return
+	end
 	local path_acacia = minetest.get_modpath("default").."/schematics/acacia_tree_from_sapling.mts";
 	local path_aspen  = minetest.get_modpath("default").."/schematics/aspen_tree_from_sapling.mts";
 	for tree_nr, pos in ipairs( trees_to_grow_via_voxelmanip ) do
@@ -827,35 +809,40 @@ mg_villages.grow_trees_voxelmanip = function( vm )
 end
 
 
+-- called from mg_villages.flatten_village_area (randomly height adjusted area),
+-- mg_villages.village_area_fill_with_plants (farmland around the village) and
+-- mg_villages.place_villages_via_voxelmanip (saplings inside spawned structures, i.e. gardens)
 mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr, snow )
+	-- the name of the sapling is more practical here than its content_id
+	local sapling_name = minetest.get_name_from_content_id(plant_id)
 	-- a normal tree; sometimes comes with apples
-	if(     plant_id == cid.c_sapling and minetest.registered_nodes[ 'default:tree']) then
+	if(     sapling_name == "default:sapling") then
 		mg_villages.grow_tree(       data, a, pos, math.random(1, 4) == 1, math.random(1,100000), snow)
 		return true;
 	-- a normal jungletree
-	elseif( plant_id == cid.c_jsapling and minetest.registered_nodes[ 'default:jungletree']) then
+	elseif( sapling_name == "default:junglesapling") then
 		mg_villages.grow_jungletree( data, a, pos, math.random(1,100000), snow)
 		return true;
 	-- a pine tree
-	elseif( plant_id == cid.c_psapling and minetest.registered_nodes[ 'default:pine_tree']) then
+	elseif( sapling_name == "default:pine_sapling") then
 		mg_villages.grow_pinetree(   data, a, pos, snow);
 		return true;
 	-- an acacia tree; it does not have its own grow function
-	elseif( plant_id == cid.c_asapling and minetest.registered_nodes[ 'default:acacia_tree']) then
+	elseif( sapling_name == "default:acacia_sapling") then
 		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_asapling;
 		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x, y=pos.y, z=pos.z, typ=3});
 		return true;
         -- aspen tree from newer minetest game
-	elseif( plant_id == cid.c_aspsapling and minetest.registered_nodes[ 'default:aspen_tree']) then
+	elseif( sapling_name == "default:aspen_sapling") then
 		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_aspsapling;
 		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x, y=pos.y, z=pos.z, typ=4});
 		return true;
 	-- a savannatree from the mg mod
-	elseif( plant_id == cid.c_savannasapling and mg_villages.add_savannatree) then
+	elseif( sapling_name == "mg:savannasapling") then
 		mg_villages.add_savannatree(         data, a, pos.x, pos.y, pos.z, minp, maxp, pr) -- TODO: snow
 		return true;
 	-- a pine tree from the mg mod
-	elseif( plant_id == cid.c_pinesapling    and mg_villages.add_pinetree   ) then
+	elseif( sapling_name == "mg:pinesapling") then
 		mg_villages.add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr) -- TODO: snow
 		return true;
 	end
@@ -871,9 +858,6 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 	end
 	-- TODO: replacements depend on the actual village...
 	local replacements = {};
-	-- trees which require grow functions to be called
-	cid.c_savannasapling  = handle_schematics.get_content_id_replaced( 'mg:savannasapling', replacements);
-	cid.c_pinesapling     = handle_schematics.get_content_id_replaced( 'mg:pinesapling', replacements);
 	-- add farmland
 	cid.c_wheat           = handle_schematics.get_content_id_replaced( 'farming:wheat_8', replacements );
 	cid.c_cotton          = handle_schematics.get_content_id_replaced( 'farming:cotton_8', replacements );
