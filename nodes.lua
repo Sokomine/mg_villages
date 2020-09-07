@@ -1,17 +1,37 @@
 -- Intllib
 local S = mg_villages.intllib
 
+-- RealTest still hasn't moved to soil_wet
+local farming_soil_wet_png = "farming_soil_wet.png";
+local desert_sand_png = "default_desert_sand.png"
+-- sounds are specific to some games
+local sound_dirt   = nil
+local sound_gravel = nil
+if(minetest.registered_nodes['default:gravel']) then
+	sound_gravel = minetest.registered_nodes['default:gravel'].sounds
+end
+if(minetest.registered_nodes['farming:soil_wet']) then
+	sound_dirt   = minetest.registered_nodes['farming:soil_wet'].sounds
+	sound_gravel = minetest.registered_nodes['default:gravel'].sounds
+-- MineClone2 requires special handling
+elseif(minetest.registered_nodes['mcl_farming:soil_wet']) then
+	farming_soil_wet_png = "mcl_farming_farmland_wet.png"
+	desert_sand_png = "default_dirt.png"
+	sound_dirt   = minetest.registered_nodes['mcl_farming:soil_wet'].sounds
+	sound_gravel = minetest.registered_nodes['mcl_core:gravel'].sounds
+elseif(not(minetest.registered_nodes["farming:soil_wet"])) then
+	farming_soil_wet_png = "farming_soil.png";
+	sound_dirt   = minetest.registered_nodes['farming:soil'].sounds
+end
+
+
 -- slightly lower than a normal nodes for better look
 minetest.register_node("mg_villages:road", {
 	description = S("Village Road"),
 	tiles = {"default_gravel.png", "default_dirt.png"},
         is_ground_content = false, -- will not be removed by the cave generator
         groups = {crumbly=2}, -- does not fall
---        sounds = default.node_sound_gravel_defaults(),
-        sounds = default.node_sound_dirt_defaults({
-                footstep = {name="default_gravel_footstep", gain=0.1},
-                dug = {name="default_gravel_footstep", gain=1.0},
-	}),
+        sounds = sound_gravel,
 	paramtype  = "light",
 	paramtype2 = "facedir",
 	drawtype   = "nodebox",
@@ -28,11 +48,6 @@ if( minetest.get_modpath("moresnow")) then
 end
 
 
--- RealTest still hasn't moved to soil_wet
-local farming_soil_wet_png = "farming_soil_wet.png";
-if(not(minetest.registered_nodes["farming:soil_wet"])) then
-	farming_soil_wet_png = "farming_soil.png";
-end
 -- special soil that does not need abms/lbms or water
 minetest.register_node("mg_villages:soil", {
 	description = S("Soil found on a field"),
@@ -40,16 +55,16 @@ minetest.register_node("mg_villages:soil", {
 	drop = "default:dirt",
 	is_ground_content = true,
 	groups = {crumbly=3, not_in_creative_inventory=1, grassland = 1, soil=3, wet=1},
-	sounds = default.node_sound_dirt_defaults(),
+	sounds = sound_dirt,
 })
 
 minetest.register_node("mg_villages:desert_sand_soil", {
 	description = S("Desert Sand"),
-	tiles = {"default_desert_sand.png^"..farming_soil_wet_png, "default_desert_sand.png"},
+	tiles = {desert_sand_png.."^"..farming_soil_wet_png, desert_sand_png},
 	is_ground_content = true,
 	drop   = "default:desert_sand",
 	groups = {crumbly=3, not_in_creative_inventory = 1, sand=1, desert = 1, soil=3, wet=1},
-	sounds = default.node_sound_sand_defaults(),
+	sounds = sound_dirt,
 })
 
 
