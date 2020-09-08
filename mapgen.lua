@@ -791,19 +791,11 @@ if( minetest.get_modpath( 'mg' )) then
 	mg_villages.add_pinetree    = add_pinetree;
 end
 
+
 mg_villages.grow_trees_voxelmanip = function( vm )
-	-- for now, only trees from default are supported
-	if(not(minetest.get_modpath("default"))) then
-		return
-	end
-	local path_acacia = minetest.get_modpath("default").."/schematics/acacia_tree_from_sapling.mts";
-	local path_aspen  = minetest.get_modpath("default").."/schematics/aspen_tree_from_sapling.mts";
 	for tree_nr, pos in ipairs( trees_to_grow_via_voxelmanip ) do
-		if(     pos and pos.typ==3 ) then
-			minetest.place_schematic_on_vmanip( vm, {x = pos.x - 4, y = pos.y - 1, z = pos.z - 4}, path_acacia, "random", nil, true);
-		elseif( pos and pos.typ==4) then
-			minetest.place_schematic_on_vmanip( vm, {x = pos.x - 2, y = pos.y - 1, z = pos.z - 2}, path_aspen, "0", nil, true);
-		end
+		-- print("GROWING "..tostring(pos.path).." at "..minetest.pos_to_string(pos))
+		minetest.place_schematic_on_vmanip(vm, {x=pos.x, y=pos.y, z=pos.z}, pos.path, "random", nil, true)
 	end
 	trees_to_grow_via_voxelmanip = {};
 end
@@ -829,13 +821,15 @@ mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr,
 		return true;
 	-- an acacia tree; it does not have its own grow function
 	elseif( sapling_name == "default:acacia_sapling") then
-		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_asapling;
-		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x, y=pos.y, z=pos.z, typ=3});
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-4, y=pos.y-1, z=pos.z-4,
+			path = minetest.get_modpath("default").."/schematics/acacia_tree_from_sapling.mts"})
 		return true;
         -- aspen tree from newer minetest game
 	elseif( sapling_name == "default:aspen_sapling") then
-		data[ a:index( pos.x, pos.y, pos.z )] = cid.c_aspsapling;
-		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x, y=pos.y, z=pos.z, typ=4});
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-2, y=pos.y-1, z=pos.z-2,
+			path = minetest.get_modpath("default").."/schematics/aspen_tree_from_sapling.mts"})
 		return true;
 	-- a savannatree from the mg mod
 	elseif( sapling_name == "mg:savannasapling") then
@@ -844,6 +838,49 @@ mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr,
 	-- a pine tree from the mg mod
 	elseif( sapling_name == "mg:pinesapling") then
 		mg_villages.add_pinetree(            data, a, pos.x, pos.y, pos.z, minp, maxp, pr) -- TODO: snow
+		return true;
+
+	-- trees from MineClone2
+	elseif( sapling_name == "mcl_core:sapling") then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-2, y=pos.y-1, z=pos.z-2,
+			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_oak_classic.mts"})
+		return true;
+	elseif( sapling_name == "mcl_core:darksapling") then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-3, y=pos.y-1, z=pos.z-4,
+			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_dark_oak.mts"})
+		return true;
+	elseif( sapling_name == "mcl_core:sprucesapling") then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		-- there are three variats of spruce trees in MineClone2
+		local r = math.random(1, 3)
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-3, y=pos.y-1, z=pos.z-3,
+			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_spruce_"..r..".mts"})
+		return true;
+	elseif( sapling_name == "mcl_core:acaciasapling") then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		-- there are seven variats of acacia trees in MineClone2
+		local r = math.random(1, 7)
+		local offset = 0
+	        if     r == 2 or r == 3           then offset = -4
+	        elseif r == 4 or r == 6 or r == 7 then offset = -3
+	        elseif r == 1 or r == 5           then offset = -5
+		end
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-offset, y=pos.y-1, z=pos.z-offset,
+			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_acacia_"..r..".mts"})
+		return true;
+	elseif( sapling_name == "mcl_core:junglesapling") then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		-- just normal ones - no huge ones inside a village
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-2, y=pos.y-1, z=pos.z-2,
+			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_jungle_tree.mts"})
+		return true;
+	elseif( sapling_name == "mcl_core:birchsapling") then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		-- just normal ones - no huge ones inside a village
+		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-2, y=pos.y-1, z=pos.z-2,
+			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_birch.mts"})
 		return true;
 	end
 	return false;
@@ -1146,12 +1183,13 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
 	t1 = time_elapsed( t1, 'fill_with_plants' );
 
-	mg_villages.grow_trees_voxelmanip( vm );
-	t1 = time_elapsed( t1, 'vm growing trees' );
-
 	vm:set_data(data)
 	vm:set_param2_data(param2_data)
 	t1 = time_elapsed( t1, 'vm data set' );
+
+	-- needs to be the last because after this data/param2_data will no longer be valid
+	mg_villages.grow_trees_voxelmanip( vm );
+	t1 = time_elapsed( t1, 'vm growing trees' );
 
 	-- calc_lighting will figure out for which volume of the VM it is responsible (minp, maxp)
 	vm:calc_lighting()
