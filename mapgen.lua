@@ -54,6 +54,19 @@ for k,v in pairs(replacements_group['wood'].data) do
 	end
 end
 
+-- figure out which tree to grow in RealTest
+local sapling_to_tree_realtest = {}
+for k,v in pairs(replacements_group['wood'].data) do
+	-- if the sapling exists in this game
+	if(   minetest.registered_nodes[v[6]]
+	  and v[2] == "trees:") then
+		-- we are intrested in the tree name
+		sapling_to_tree_realtest[v[6]] = "trees:"..v[1]
+		sapling_to_tree_realtest[minetest.get_content_id(v[6])] = "trees:"..v[1]
+	end
+end
+
+
 mg_villages.wseed = 0;
 
 minetest.register_on_mapgen_init(function(mgparams)
@@ -882,6 +895,10 @@ mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr,
 		table.insert( trees_to_grow_via_voxelmanip, {x=pos.x-2, y=pos.y-1, z=pos.z-2,
 			path = minetest.get_modpath("mcl_core").."/schematics/mcl_core_birch.mts"})
 		return true;
+	-- RealTest trees
+	elseif( sapling_to_tree_realtest[sapling_name]) then
+		data[ a:index( pos.x, pos.y, pos.z )] = plant_id
+		mg_villages.grow_realtest_tree(data, a, pos, snow, sapling_to_tree_realtest[sapling_name])
 	end
 	return false;
 end
@@ -998,7 +1015,8 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 						data[a:index( pos.x,  pos.y, pos.z)] = cid.c_shrub;
 					end
 
-				elseif( plant_id ) then -- place the sapling or plant (moretrees uses spawn_tree)
+				-- do not place any RealTest saplings again after the tree has been grown
+				elseif( plant_id and not(sapling_to_tree_realtest[plant_id])) then -- place the sapling or plant (moretrees uses spawn_tree)
 					data[a:index( pos.x,  pos.y, pos.z)] = plant_id;
 				end
 
@@ -1345,3 +1363,40 @@ minetest.register_on_generated(function(minp, maxp, seed)
 		mg_villages.place_villages_via_voxelmanip( villages, minp, maxp, nil, data_vm, data_param2_data, nil, nil, seed );
 	end
 end)
+
+
+-- this is taken from the function trees.make_tree in the trees
+-- mod in RealTest - modified so that it can work with VoxelManip
+-- instead of set/get_node
+-- TODO: handle snow
+-- TODO: grow moretree trees
+-- TODO: move tree-handling into seperate mod
+mg_villages.grow_realtest_tree = function(data, a, pos, snow, tree)
+	local tree = realtest.registered_trees[tree]
+	if(not(tree)) then
+		return
+	end
+	local c_air       = minetest.get_content_id("air")
+	local c_ignore    = minetest.get_content_id("ignore")
+	local c_sapling   = minetest.get_content_id(tree.name.."_sapling")
+	local c_trunk     = minetest.get_content_id(tree.name.."_trunk")
+	local c_trunk_top = minetest.get_content_id(tree.name.."_trunk_top")
+	local c_leaves    = minetest.get_content_id(tree.name.."_leaves")
+	local height = tree.height()
+	for i = 0,height-1 do
+		local vi = a:index(pos.x, pos.y+i, pos.z)
+		if(data[vi] == c_air or data[vi] == c_ignore or data[vi] == c_sapling) then
+			data[vi] = c_trunk
+		end
+	end
+	local vi = a:index(pos.x, pos.y+height, pos.z)
+	if(data[vi] == c_air or data[vi] == c_ignore) then
+		data[vi] = c_trunk_top
+	end
+	for i = 1,#tree.leaves do
+		local vi = a:index(pos.x+tree.leaves[i][1], pos.y+height+tree.leaves[i][2], pos.z+tree.leaves[i][3])
+		if(data[vi] == c_air or data[vi] == c_ignore) then
+			data[vi] = c_leaves
+		end
+	end
+end
