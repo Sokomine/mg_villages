@@ -95,7 +95,7 @@ if( minetest.get_modpath( 'moretrees' )) then
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:fir_sapling_ongen'         ) ] =  90;
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:jungletree_sapling_ongen'  ) ] = 200;
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:beech_sapling_ongen'       ) ] =  30;
-	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:apple_sapling_ongen'       ) ] = 380;
+	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:apple_tree_sapling_ongen'  ) ] = 380;
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:oak_sapling_ongen'         ) ] = 380; -- ca 20x20; height: 10
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:sequoia_sapling_ongen'     ) ] =  90; -- ca 10x10
 	mg_villages.sapling_probability[ minetest.get_content_id( 'moretrees:palm_sapling_ongen'        ) ] =  90;
