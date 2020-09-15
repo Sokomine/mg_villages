@@ -1182,6 +1182,14 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		c_feldweg = minetest.get_content_id('default:cobble');
 	end
 
+	-- up til now, cid.c_water had to be default:water_source (or whatever the current
+	-- game uses) so that the terrain could be adjusted; now, we may change it to
+	-- river water for the individual buildings because fountains, lakes and the like
+	-- ought to use river water instead of salt water if possible
+	if(minetest.registered_nodes["default:river_water_source"]) then
+		cid.c_water = minetest.get_content_id('default:river_water_source')
+	end
+
 	for _, village in ipairs(villages) do
 
 		-- the village_id will be stored in the plot markers
