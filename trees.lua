@@ -1,20 +1,21 @@
 -- this code is taken from https://github.com/VanessaE/dreambuilder_game/blob/master/mods/default/trees.lua
+-- The code is adjusted where needed.
 
 local c_air = minetest.get_content_id("air")
 local c_ignore = minetest.get_content_id("ignore")
-local c_tree = minetest.get_content_id("default:tree")
-local c_leaves = minetest.get_content_id("default:leaves")
-local c_sapling = minetest.get_content_id("default:sapling");
-local c_junglesapling = minetest.get_content_id("default:junglesapling");
-local c_snow = minetest.get_content_id("default:snow");
 
 local c_msnow_top = minetest.get_content_id( 'air' );
 if(minetest.registered_nodes["moresnow:snow_top"]) then
 	c_msnow_top = minetest.get_content_id( 'moresnow:snow_top' );
 end
 
-local c_msnow_leaves1 = minetest.get_content_id( 'default:leaves' );
-local c_msnow_leaves2 = minetest.get_content_id( 'default:leaves' );
+-- not all games come with the default leaves
+local leaves_name = 'default:leaves'
+if(not(minetest.registered_nodes[ leaves_name ])) then
+	leaves_name = 'air'
+end
+local c_msnow_leaves1 = minetest.get_content_id( leaves_name );
+local c_msnow_leaves2 = minetest.get_content_id( leaves_name );
 if( minetest.registered_nodes[ 'moresnow:autumnleaves_tree' ] ) then
 	c_msnow_leaves1 = minetest.get_content_id( 'moresnow:autumnleaves_tree' );
 end
@@ -28,6 +29,11 @@ mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed, snow)
                 and in games that have saplings; both are deprecated but not
                 replaced yet
         ]]--
+    local c_leaves = minetest.get_content_id("default:leaves")
+    local c_sapling = minetest.get_content_id("default:sapling");
+    local c_tree = minetest.get_content_id("default:tree")
+    local c_snow = minetest.get_content_id("default:snow");
+
     local leaves_type = c_leaves;
     if(  snow
       or data[ a:index(pos.x, pos.y,   pos.z) ] == c_snow
@@ -64,8 +70,6 @@ mg_villages.grow_tree = function(data, a, pos, is_apple_tree, seed, snow)
     end
 end
 
-local c_jungletree = minetest.get_content_id("default:jungletree")
-local c_jungleleaves = minetest.get_content_id("default:jungleleaves")
 
 mg_villages.grow_jungletree = function(data, a, pos, seed, snow)
         --[[
@@ -73,6 +77,11 @@ mg_villages.grow_jungletree = function(data, a, pos, seed, snow)
                 and in games that have saplings; both are deprecated but not
                 replaced yet
         ]]--
+    local c_junglesapling = minetest.get_content_id("default:junglesapling");
+    local c_jungletree = minetest.get_content_id("default:jungletree")
+    local c_jungleleaves = minetest.get_content_id("default:jungleleaves")
+    local c_snow = minetest.get_content_id("default:snow");
+
     local leaves_type = c_jungleleaves;
     if(  snow
       or data[ a:index(pos.x, pos.y,   pos.z) ] == c_snow
