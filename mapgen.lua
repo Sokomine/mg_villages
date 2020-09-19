@@ -3,8 +3,13 @@ local S = mg_villages.intllib
 
 -- mapgen v6 has mudflow and requires additional fixes for that
 local is_mapgen_v6 = false
+-- no need to adjust height if it is a flat mapgen
+local is_mapgen_flat_at_height = false
 if(minetest.get_mapgen_setting("mg_name") == "v6") then
 	is_mapgen_v6 = true
+elseif(minetest.get_mapgen_setting("mg_name") == "flat") then
+	-- mapgen flat places ground level at this height
+	is_mapgen_flat_at_height = 8
 end
 
 ------------------------------------------------------------------------------
@@ -317,7 +322,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 	if( target_height == maxp.y and old_height < maxp.y ) then
 		local yblend = old_height;
 		if blend > 0 then -- leave some cliffs unblended
-			yblend = math.floor(vh + blend * (old_height - vh))
+			yblend = math.floor(vh + blend * (old_height - vh) - 0.5)
 			target_height = yblend+1;
 		else	
 			target_height = old_height;
@@ -1139,9 +1144,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		villages[1].optimal_height = 1;
 	end
 
-
 	-- change height of those villages where an optimal_height could be determined
 	for _,village in ipairs(villages) do
+		-- for a flat mapgen: use surface level
+		if( is_mapgen_flat_at_height ) then
+			village.optimal_height = is_mapgen_flat_at_height
+		end
 		if( village.optimal_height and village.optimal_height > 0 and village.optimal_height ~= village.vh
 		    -- no point in changing the village height if the houses are at a fixed height already
 		    and not(village.keep_house_height)) then
