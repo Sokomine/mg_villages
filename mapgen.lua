@@ -135,52 +135,17 @@ if( minetest.get_modpath( 'mg' )) then
 	MG_VILLAGES_WATER_LEVEL = 0;
 end
 
---replacements_group.node_is_ground = {}; -- store nodes which have previously been identified as ground
+-- air and ignore are definitely no ground on which players can stand
+-- replacements_group.node_is_ground is defined in handle_schematics
+replacements_group.node_is_ground[ minetest.get_content_id('air'   )] = false
+replacements_group.node_is_ground[ minetest.get_content_id('ignore')] = false
 
+-- can we use this as a ground node in the village?
 mg_villages.check_if_ground = function( ci )
-
-	-- pre-generate a list of no-ground-nodes for caching
-	if( ci==nil or replacements_group.node_is_ground[ minetest.get_content_id('air')]==nil) then
-		local no_ground_nodes = {'air','ignore','default:sandstonebrick','default:cactus','default:wood','default:junglewood',
-			'default:pine_wood','default:pine_tree','default:acacia_wood','default:acacia_tree', 'default:aspen_wood', 'default:aspen_tree',
-			'ethereal:mushroom_pore','ethereal:mushroom_trunk','ethereal:bamboo', 'ethereal:mushroom',
-                        'ethereal:bush', 'default:grass', 'default:grass_1','default:grass_2','default:grass_3','default:grass_4','default:grass_5',
-			'farming_plus:banana_leaves', 'farming_plus:banana',
-			'farming_plus:cocoa_sapling', 'farming_plus:cocoa_leaves', 'farming_plus:cocoa',
-			'farming_plus:melon', 'farming_plus:corn', 'farming_plus:cornb',
-			'farming_plus:lemonb', 'farming_plus:orangeb', 'farming_plus:peachb',
-			'farming_plus:lemon',  'farming_plus:orange',  'farming_plus:peach',
-			'farming_plus:peach_4b', 'farming_plus:peach_5b', 'farming_plus:walnut',
-			'farming:pumpkin', 'farming:pumpkin_face', 'farming:pumpkin_face_light',
-			'cavestuff:desert_pebble_2', 'cavestuff:desert_pebble_1',
-			'cavestuff:pebble_1', 'cavestuff:pebble_2'};
-		-- TODO: add all those other tree and leaf nodes that might be added by mapgen
-		for _,name in ipairs( no_ground_nodes ) do
-			if( minetest.registered_nodes[ name ]) then
-				replacements_group.node_is_ground[ minetest.get_content_id( name )] = false;
-			end
-		end
-		replacements_group.node_is_ground[ minetest.get_content_id( 'air' )] = false;
-		local ground_nodes = {'ethereal:dry_dirt', 'default:dirt_with_dry_grass','default:stone','default:sandstone','default:desertstone',
-                        'ethereal:grey_dirt', 'default:dirt_with_snow', 'default:dirt_with_grass', 'ethereal:grove_dirt', 'ethereal:green_dirt',
-			'ethereal:grove_dirt','ethereal:jungle_dirt',
-			'default:dirt_with_grass_footsteps',
-			'default:dirt_with_rainforest_litter',
-			'default:dirt_with_coniferous_litter',
-			'default:permafrost',
-			'default:permafrost_with_moss',
-			'default:permafrost_with_stones'};
-
-		for _,name in ipairs( ground_nodes ) do
-			if( minetest.registered_nodes[ name ]) then
-				replacements_group.node_is_ground[ minetest.get_content_id( name )] = true;
-			end
-		end
-	end
-
 	if( not( ci )) then
 		return false;
 	end
+	-- information about already analyzed nodes is cached for faster access
 	if( replacements_group.node_is_ground[ ci ] ~= nil) then
 		return replacements_group.node_is_ground[ ci ];
 	end
@@ -188,34 +153,43 @@ mg_villages.check_if_ground = function( ci )
 	-- only nodes on which walking is possible may be counted as ground
 	local node_name = minetest.get_name_from_content_id( ci );
 	local def = minetest.registered_nodes[ node_name ];	
-	-- store information about this node type for later use
-	if(     not( def )) then
-		replacements_group.node_is_ground[ ci ] = false;
-	elseif( not( def.walkable)) then
-		replacements_group.node_is_ground[ ci ] = false;
-	elseif( def.groups and def.groups.tree ) then
-		replacements_group.node_is_ground[ ci ] = false;
-	elseif( def.groups and (def.groups.plant or def.groups.growing)) then
-		replacements_group.node_is_ground[ ci ] = false;
-	elseif( def.drawtype and (def.drawtype=="flowingliquid" or def.drawtype=="torchlike"
-	   or def.drawtype=="signlike"  or def.drawtype=="airlike"  or def.drawtype=="liquid"
-	   or def.drawtype=="plantlike" or def.drawtype=="firelike" or def.drawtype=="fencelike"
-	   or def.drawtype=="raillike"  or def.drawtype=="nodebox"  or def.drawtype=="mesh"
-	   or def.drawtype=="plantlike_rooted")) then
-		replacements_group.node_is_ground[ ci ] = false;
 
-	elseif(	def.drop   and def.drop == 'default:dirt') then
-		replacements_group.node_is_ground[ ci ] = true;
-	elseif( def.walkable == true and def.is_ground_content == true and not(def.node_box)) then
-		replacements_group.node_is_ground[ ci ] = true;
-	else
-		replacements_group.node_is_ground[ ci ] = false;
+	-- if there is not enough information to classify the node, then it
+	-- is not suitable as ground
+	if(     not( def )
+	     or not( def.walkable)
+	     or not( def.groups)) then
+		replacements_group.node_is_ground[ ci ] = false
+		return false
 	end
-	return replacements_group.node_is_ground[ ci ];
-end
 
--- call it once this way so that some grounds and non-grounds get identified
-mg_villages.check_if_ground(nil);
+	-- shortcut for quick access to groups
+	local g = def.groups
+	-- trees and their parts, grass, flowers, liquids etc. are not suitable as ground
+	if((g.leaves or g.sapling or g.tree or g.leaves or g.leafdecay
+	 or g.grass or g.dry_grass or g.flora or g.plant or g.growing
+	 or g.choppy or g.snappy or g.fleshy
+	 or g.attached_node or g.rail
+	 or g.water or g.liquid or g.lava)
+	 -- the drawtype may sometimes also be helpful
+	 -- (glasslike or partly transparent nodes won't do as ground)
+	 or (def.drawtype and def.drawtype ~= "normal")) then
+
+		replacements_group.node_is_ground[ ci ] = false
+		return false
+	-- stone, sand, dirt and things diggable with a pick or shovel count as ground
+	elseif(( g.stone or g.sand or g.soil or g.cracky or g.crumbly or g.spreading_dirt_type )
+	     -- anything that drops dirt when digged
+	     or (def.drop and def.drop == 'default:dirt')
+	     -- cavegen is allowed to eat through these nodes
+	     or (def.walkable == true and def.is_ground_content == true and not(def.node_box))) then
+		replacements_group.node_is_ground[ ci ] = true
+		return true
+	end
+	-- fallback: node is not suitable as ground
+	replacements_group.node_is_ground[ ci ] = false
+	return false
+end
 
 
 -- sets evrything at x,z and above height target_height to air;
