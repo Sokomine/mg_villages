@@ -48,10 +48,8 @@ mg_villages.part_of_village_spawned = function( village, minp, maxp, data, param
 end
 ------------------------------------------------------------------------------
 
-local vm_data_buffer;
-local param2_data_buffer;
-local data_vm;
-local data_param2_data;
+local data_vm          = {}  -- voxelmanip data buffer
+local data_param2_data = {}  -- param2 voxelmanip data buffer
 
 
 
@@ -785,8 +783,6 @@ end
 
 mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, data, param2_data, a, top, seed )
 	local t1 = minetest.get_us_time();
-	local data;
-	local param2data;
 
 	local cid = handle_schematics.get_cid_table()
 	t1 = time_elapsed( t1, 'defines' );
@@ -845,8 +841,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 			MaxEdge={x=emax.x, y=emax.y, z=emax.z},
 		}
 
-		data = vm:get_data(vm_data_buffer);
-		param2_data = vm:get_param2_data(param2_data_buffer);
+		-- use already defined buffers for speedup
+		vm:get_data(data)
+		vm:get_param2_data(param2_data)
 	end
 	t1 = time_elapsed( t1, 'get_vmap_data' );
 
