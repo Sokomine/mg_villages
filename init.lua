@@ -45,6 +45,10 @@ dofile(mg_villages.modpath.."/nodes.lua")
 if(minetest.registered_nodes["default:sapling"]) then
        dofile(mg_villages.modpath.."/trees_default.lua")
 end
+-- RealTest has its own tree growing code
+if(minetest.registered_nodes["trees:maple_sapling"]) then
+       dofile(mg_villages.modpath.."/trees_realtest.lua")
+end
 
 dofile(mg_villages.modpath.."/replacements.lua")
 
