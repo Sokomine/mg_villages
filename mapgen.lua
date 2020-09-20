@@ -340,7 +340,7 @@ end
 
 
 -- adjust the terrain level to the respective height of the village
-mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid )
+mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, param2_data, a, village_area, cid, trees_to_grow_via_voxelmanip )
 	-- prepare information about all villages that might occour here
 	local village_tmp = {};
 	for village_nr, village in ipairs(villages) do
@@ -422,7 +422,7 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 
 	-- grow normal trees and jungletrees in those parts of the terrain where height blending occours
 	for _, tree in ipairs(treepos) do
-		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, tree.typ, minp, maxp, data, a, cid, nil, tree.snow ) -- no pseudorandom present
+		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, tree.typ, minp, maxp, data, a, cid, nil, tree.snow, trees_to_grow_via_voxelmanip ) -- no pseudorandom present
 	end
 
 end
@@ -772,7 +772,7 @@ end
 
 
 -- places trees and plants at empty spaces
-mg_villages.village_area_fill_with_plants = function( village_area, villages, minp, maxp, data, param2_data, a, cid )
+mg_villages.village_area_fill_with_plants = function( village_area, villages, minp, maxp, data, param2_data, a, cid, trees_to_grow_via_voxelmanip )
 	-- do not place any plants if we are working on the mapchunk above
 	if( minp.y > 0 ) then
 		return;
@@ -838,7 +838,7 @@ mg_villages.village_area_fill_with_plants = function( village_area, villages, mi
 				if( not( plant_selected )) then -- in case there is something there already (usually a tree trunk)
 					has_snow_cover = nil;
 
-				elseif( mg_villages.grow_a_tree( pos, plant_id, minp, maxp, data, a, cid, pr, has_snow_cover )) then
+				elseif( mg_villages.grow_a_tree( pos, plant_id, minp, maxp, data, a, cid, pr, has_snow_cover, trees_to_grow_via_voxelmanip )) then
 					param2_data[a:index( x, h+1, z)] = 0; -- make sure the tree trunk is not rotated
 					has_snow_cover = nil; -- else the sapling might not grow
 					-- nothing to do; the function has grown the tree already
@@ -928,6 +928,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	-- determine which coordinates are inside the village and which are not
 	local village_area = {};
+
+	-- trees grown that way are placed a bit later on in this function
+	local trees_to_grow_via_voxelmanip = {}
 
 	for village_nr, village in ipairs(villages) do
 		-- generate the village structure: determine positions of buildings and roads
@@ -1026,7 +1029,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 	-- flatten only the core area - not the outer shell as the shell may not be generated
 	-- in all parts yet - and lowering terrain there would cause wrong lighting
-	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid );
+	mg_villages.flatten_village_area( villages, minp, maxp, vm, data, param2_data, a, village_area, cid, trees_to_grow_via_voxelmanip );
 	t1 = time_elapsed( t1, 'flatten_village_area' );
 
 	-- repair cavegen griefings in the outer shell (which is part of other mapchunks);
@@ -1071,12 +1074,12 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 
 		-- grow trees which are part of buildings into saplings
 		for _,v in ipairs( village.to_add_data.extra_calls.trees ) do
-			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, nil, v.snow ); -- TODO: supply pseudorandom value?
+			mg_villages.grow_a_tree( v, v.typ, minp, maxp, data, a, cid, nil, v.snow, trees_to_grow_via_voxelmanip ); -- TODO: supply pseudorandom value?
 		end
 	end
 	t1 = time_elapsed( t1, 'place_buildings and place_dirt_roads' );
 
-	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid );
+	mg_villages.village_area_fill_with_plants( village_area, villages, tmin, tmax, data, param2_data, a, cid, trees_to_grow_via_voxelmanip );
 	t1 = time_elapsed( t1, 'fill_with_plants' );
 
 	vm:set_data(data)
@@ -1084,7 +1087,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	t1 = time_elapsed( t1, 'vm data set' );
 
 	-- needs to be the last because after this data/param2_data will no longer be valid
-	mg_villages.grow_trees_voxelmanip( vm );
+	mg_villages.grow_trees_voxelmanip( vm, trees_to_grow_via_voxelmanip );
 	t1 = time_elapsed( t1, 'vm growing trees' );
 
 	-- calc_lighting will figure out for which volume of the VM it is responsible (minp, maxp)

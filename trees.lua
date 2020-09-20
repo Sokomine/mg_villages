@@ -2,8 +2,6 @@
 -- schematics placed in villages and in the flattened/partly
 -- flattened area around the village
 
-local trees_to_grow_via_voxelmanip = {};
-
 -- figure out which tree to grow in RealTest
 -- (this is also accessed in mapgen.lua)
 mg_villages.sapling_to_tree_realtest = {}
@@ -18,7 +16,7 @@ for k,v in pairs(replacements_group['wood'].data) do
 end
 
 -- called from mg_villages.place_villages_via_voxelmanip
-mg_villages.grow_trees_voxelmanip = function( vm )
+mg_villages.grow_trees_voxelmanip = function( vm, trees_to_grow_via_voxelmanip )
 	for tree_nr, pos in ipairs( trees_to_grow_via_voxelmanip ) do
 		-- print("GROWING "..tostring(pos.path).." at "..minetest.pos_to_string(pos))
 		minetest.place_schematic_on_vmanip(vm, {x=pos.x, y=pos.y, z=pos.z}, pos.path, "random", nil, true)
@@ -30,7 +28,7 @@ end
 -- called from mg_villages.flatten_village_area (randomly height adjusted area),
 -- mg_villages.village_area_fill_with_plants (farmland around the village) and
 -- mg_villages.place_villages_via_voxelmanip (saplings inside spawned structures, i.e. gardens)
-mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr, snow )
+mg_villages.grow_a_tree = function( pos, plant_id, minp, maxp, data, a, cid, pr, snow, trees_to_grow_via_voxelmanip )
 	-- the name of the sapling is more practical here than its content_id
 	local sapling_name = minetest.get_name_from_content_id(plant_id)
 	-- a normal tree; sometimes comes with apples
