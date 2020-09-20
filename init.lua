@@ -40,6 +40,7 @@ dofile(mg_villages.modpath.."/config.lua")
 -- adds a special gravel node which will neither fall nor be griefed by mapgen
 dofile(mg_villages.modpath.."/nodes.lua")
 
+
 -- the default game no longer provides helpful tree growing code
 -- (but some mods may not have the default tree, jungletree and pinetree)
 if(minetest.registered_nodes["default:sapling"]) then
@@ -49,6 +50,9 @@ end
 if(minetest.registered_nodes["trees:maple_sapling"]) then
        dofile(mg_villages.modpath.."/trees_realtest.lua")
 end
+-- general tree growing (used by mapgen.lua)
+dofile(mg_villages.modpath.."/trees.lua")
+
 
 dofile(mg_villages.modpath.."/replacements.lua")
 
