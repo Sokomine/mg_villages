@@ -764,13 +764,6 @@ mg_villages.change_village_height = function( village, new_height )
 end
 
 
--- those functions from the mg mod do not have their own namespace
-if( minetest.get_modpath( 'mg' )) then
-	mg_villages.add_savannatree = add_savannatree;
-	mg_villages.add_pinetree    = add_pinetree;
-end
-
-
 -- places trees and plants at empty spaces
 mg_villages.village_area_fill_with_plants = function( village_area, villages, minp, maxp, data, param2_data, a, cid, trees_to_grow_via_voxelmanip )
 	-- do not place any plants if we are working on the mapchunk above

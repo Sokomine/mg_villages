@@ -2,6 +2,13 @@
 -- schematics placed in villages and in the flattened/partly
 -- flattened area around the village
 
+-- those functions from the mg mod do not have their own namespace
+-- (and this is too little to warrant a trees_mg.lua)
+if( minetest.get_modpath( 'mg' )) then
+	mg_villages.add_savannatree = add_savannatree
+	mg_villages.add_pinetree    = add_pinetree
+end
+
 -- figure out which tree to grow in RealTest
 -- (this is also accessed in mapgen.lua)
 mg_villages.sapling_to_tree_realtest = {}
