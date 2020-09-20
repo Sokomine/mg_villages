@@ -1,5 +1,5 @@
 -- this code is taken from https://github.com/VanessaE/dreambuilder_game/blob/master/mods/default/trees.lua
--- The code is adjusted where needed.
+-- The code is adjusted where needed. It handles tree growing for default (Minetest Game).
 
 local c_air = minetest.get_content_id("air")
 local c_ignore = minetest.get_content_id("ignore")

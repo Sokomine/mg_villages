@@ -41,7 +41,10 @@ dofile(mg_villages.modpath.."/config.lua")
 dofile(mg_villages.modpath.."/nodes.lua")
 
 -- the default game no longer provides helpful tree growing code
-dofile(mg_villages.modpath.."/trees.lua")
+-- (but some mods may not have the default tree, jungletree and pinetree)
+if(minetest.registered_nodes["default:sapling"]) then
+       dofile(mg_villages.modpath.."/trees_default.lua")
+end
 
 dofile(mg_villages.modpath.."/replacements.lua")
 
