@@ -12,6 +12,18 @@ elseif(minetest.get_mapgen_setting("mg_name") == "flat") then
 	is_mapgen_flat_at_height = 8
 end
 
+
+-- determine water level from mapgens?
+local water_level = minetest.get_mapgen_setting("water_level")
+if(water_level and water_level ~= "") then
+	-- minetest.get_mapgen_setting returns string format (which is
+	-- not very helpful here)
+	water_level = tonumber(water_level)
+else
+	-- fallback for older mapgens
+	water_level = 0
+end
+
 ------------------------------------------------------------------------------
 -- Interface for other mods
 
@@ -115,12 +127,6 @@ mg_villages.villages_in_mapchunk = function( minp, mapchunk_size )
 	return villages;
 end
 
-
--- TODO: determine water level from mapgens?
-local MG_VILLAGES_WATER_LEVEL = 1;
-if( minetest.get_modpath( 'mg' )) then
-	MG_VILLAGES_WATER_LEVEL = 0;
-end
 
 -- air and ignore are definitely no ground on which players can stand
 -- replacements_group.node_is_ground is defined in handle_schematics
@@ -290,7 +296,7 @@ mg_villages.lower_or_raise_terrain_at_point = function( x, z, target_height, min
 		end
 		for y = math.max( minp.y, yblend), maxp.y do
 			local a_index = a:index( x, y, z );
-			if( y<=MG_VILLAGES_WATER_LEVEL ) then
+			if( y<=water_level ) then
 				-- keep ice
 				if( data[a_index] ~= cid.c_ice ) then
 					data[a_index] = cid.c_water;
@@ -876,7 +882,10 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		if( is_mapgen_flat_at_height ) then
 			village.optimal_height = is_mapgen_flat_at_height
 		end
-		if( village.optimal_height and village.optimal_height > 0 and village.optimal_height ~= village.vh
+		if( village.vh and village.vh < water_level ) then
+			village.optimal_height = water_level
+		end
+		if( village.optimal_height and village.optimal_height >= water_level and village.optimal_height ~= village.vh
 		    -- no point in changing the village height if the houses are at a fixed height already
 		    and not(village.keep_house_height)) then
 			-- towers are usually found on elevated places
