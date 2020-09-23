@@ -1089,8 +1089,10 @@ minetest.register_on_generated(function(minp, maxp, seed)
 		villages = mg_villages.villages_in_mapchunk( minp, maxp.x-minp.x+1 );
 	end
 
-	-- if this mapchunk contains no part of a village, probably a lone building may be found in it
-	if( #villages<1 and mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
+	-- are there any lone buildings in this mapchunk?
+	-- if so, they have to be taken into consideration even if this mapchunk
+	-- already contains a village (else lone houses might be cut off)
+	if( mg_villages.INVERSE_HOUSE_DENSITY > 0 ) then
 		villages = mg_villages.houses_in_mapchunk(   minp, maxp.x-minp.x+1, villages );
 	end
 
