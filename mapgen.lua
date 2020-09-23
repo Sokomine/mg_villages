@@ -646,18 +646,14 @@ mg_villages.village_area_get_height = function( village_area, villages, minp, ma
 	-- try to find the optimal village height by looking at the borders defined by inside_village
 	for x = minp.x+1, maxp.x-1 do
 		for z = minp.z+1, maxp.z-1 do
+			-- we are only intrested in the borders of the blending area
 			if(     village_area[ x ][ z ][ 1 ] ~= 0
                             and village_area[ x ][ z ][ 2 ] ~= 0
-			    and ( village_area[ x+1 ][ z   ][ 2 ] <= 0
-			       or village_area[ x-1 ][ z   ][ 2 ] <= 0 
-			       or village_area[  x  ][ z+1 ][ 2 ] <= 0 
-			       or village_area[  x  ][ z-1 ][ 2 ] <= 0 )
-			  -- if the corners of the mapblock are inside the village area, they may count as borders here as well
-			  or ( x==minp.x+1 and village_area[ x-1 ][ z   ][ 1 ] >= 0 )
-			  or ( x==maxp.x-1 and village_area[ x+1 ][ z   ][ 1 ] >= 0 )
-			  or ( z==minp.z-1 and village_area[ x   ][ z-1 ][ 1 ] >= 0 )
-			  or ( z==maxp.z+1 and village_area[ x   ][ z+1 ][ 1 ] >= 0 )) then
-
+			    -- is any neighbour not part of the village or its blending area?
+			    and ( village_area[ x+1 ][ z   ][ 2 ] == 0
+			       or village_area[ x-1 ][ z   ][ 2 ] == 0
+			       or village_area[  x  ][ z+1 ][ 2 ] == 0
+			       or village_area[  x  ][ z-1 ][ 2 ] == 0 )) then
 				local y = maxp.y;
 				while( y > minp.y and y >= 0) do
 					local ci = data[a:index(x, y, z)];
