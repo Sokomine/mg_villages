@@ -930,8 +930,8 @@ mg_villages.houses_in_mapchunk = function( minp, mapchunk_size, villages )
 	local d = math.ceil( mapchunk_size / 2 );
 	for _,candidate in ipairs(village_candidates) do
 		if( not( candidate.areas_intersect )
-		    and (candidate.vx > minp.x - d or candidate.vx < (mapchunk_size+d) )
-		    and (candidate.vz > minp.z - d or candidate.vz < (mapchunk_size+d) )) then
+		    and (candidate.vx > minp.x - d or candidate.vx < (minp.x+mapchunk_size+d) )
+		    and (candidate.vz > minp.z - d or candidate.vz < (minp.z+mapchunk_size+d) )) then
 			table.insert( villages, candidate );
 
 			-- there may be quite a lot of single houses added; plus they are less intresting than entire villages. Thus, logfile spam is reduced
