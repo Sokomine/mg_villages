@@ -425,8 +425,10 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 	end
 
 	-- grow normal trees and jungletrees in those parts of the terrain where height blending occours
+	-- (trees from the mg mod/mapgen need pr to be passed on)
+	local pr = PseudoRandom(mg_villages.get_bseed(minp));
 	for _, tree in ipairs(treepos) do
-		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, tree.typ, minp, maxp, data, a, cid, nil, tree.snow, trees_to_grow_via_voxelmanip ) -- no pseudorandom present
+		mg_villages.grow_a_tree( {x=tree.x, y=tree.y, z=tree.z}, tree.typ, minp, maxp, data, a, cid, pr, tree.snow, trees_to_grow_via_voxelmanip )
 	end
 
 end
