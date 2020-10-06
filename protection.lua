@@ -363,7 +363,7 @@ mg_villages.plotmarker_formspec = function( pos, formname, fields, player )
 			formspec = formspec.."label[3,3;"..S("The plot has been cleared.").."]";
 		else
 			-- actually place it (disregarding mirroring)
-			local error_msg = handle_schematics.place_building_from_file(
+			local error_msg = handle_schematics.place_building_from_file_or_cache(
 						start_pos,
 						end_pos,
 						building_name,
