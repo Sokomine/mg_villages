@@ -112,6 +112,17 @@ mg_villages.get_group_replacement = function( material_type, pr )
 end
 
 
+-- this is so common that an extra function is helpful to combine the two lines
+--      material_type     usually either 'wood' or 'roof'
+--      new_material      optional; if a specific new material ought to be used
+mg_villages.do_group_replacement = function( replacements, pr, material_tpye, new_material)
+	if( new_material == nil or new_material == "") then
+		new_material = mg_villages.get_group_replacement( material_tpye, pr )
+	end
+	return handle_schematics.replace_material( replacements, material_tpye, nil, new_material)
+end
+
+
 mg_villages.replace_materials = function( replacements, pr, original_materials, prefixes, materials, old_material )
 	
 	local postfixes = {};
@@ -317,8 +328,7 @@ mg_villages.replacements_taoki = function( housetype, pr, replacements )
 	}, 'default:wood');
 
       -- tree trunks are seldom used in these houses; let's change them anyway
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
 
       -- all this comes in variants for stairs and slabs as well
       mg_villages.replace_materials( replacements, pr,
@@ -361,8 +371,7 @@ mg_villages.replacements_nore = function( housetype, pr, replacements )
          table.insert( replacements, {'default:glass', 'default:obsidian_glass'});
       end
 
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       return replacements;
 end
 
@@ -373,12 +382,9 @@ mg_villages.replacements_lumberjack = function( housetype, pr, replacements )
       end
 
       -- replace the wood - those are lumberjacks after all
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       -- roof is also replaced
-      local roof = mg_villages.get_group_replacement( 'roof', pr )
-      roof = handle_schematics.replace_material( replacements, 'roof', 'cottages:roof_connector_straw', roof)
-
+      local roof = mg_villages.do_group_replacement( replacements, pr, 'roof', nil)
       return replacements;
 end
 
@@ -387,11 +393,9 @@ mg_villages.replacements_logcabin = function( housetype, pr, replacements )
 
       -- the logcabins are mostly built out of wooden slabs; they also have doors
       -- and fences and the like
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       -- for logcabins, wood is the most likely type of roof material
-      local roof = mg_villages.get_group_replacement( 'roof', pr )
-      roof = handle_schematics.replace_material( replacements, 'roof', 'cottages:roof_connector_straw', roof)
+      local roof = mg_villages.do_group_replacement( replacements, pr, 'roof', nil)
 
       -- TODO: adjust the replacements - we've already found out which type of roof to use
       local roof_type = mg_villages.replace_materials( replacements, pr,
@@ -424,8 +428,7 @@ end
 mg_villages.replacements_chateau = function( housetype, pr, replacements )
 
       if( minetest.get_modpath( 'cottages' )) then
-         local roof = mg_villages.get_group_replacement( 'roof', pr )
-         roof = handle_schematics.replace_material( replacements, 'roof', 'cottages:roof_connector_straw', roof)
+         local roof = mg_villages.do_group_replacement( replacements, pr, 'roof', nil)
       else
          mg_villages.replace_materials( replacements, pr,
 		-- all three shapes of roof parts have to fit together
@@ -437,8 +440,7 @@ mg_villages.replacements_chateau = function( housetype, pr, replacements )
       end
 
 
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
 
       if( mg_villages.realtest_trees ) then
          -- replace the floor with another type of wood (looks better than the same type as above)
@@ -464,8 +466,7 @@ mg_villages.replacements_tent = function( housetype, pr, replacements )
       table.insert( replacements, { "glasspanes:wool_pane",  "cottages:wool_tent" });
       table.insert( replacements, { "default:gravel",        "default:sand"       });
       -- realtest needs diffrent fence posts and doors
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       return replacements;
 end
 
@@ -494,8 +495,7 @@ mg_villages.replacements_grasshut = function( housetype, pr, replacements )
       table.insert( replacements, {'default:desert_sand', 'default:dirt_with_grass' });
 
       -- not really much wood there - still, doors, slabs and chests may exist
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       return replacements;
 end
 
@@ -536,8 +536,7 @@ mg_villages.replacements_claytrader = function( housetype, pr, replacements )
 		'');
 
       -- mostly for doors
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       if( mg_villages.realtest_trees ) then
          table.insert( replacements, {'default:clay', 'default:dirt_with_clay'});
          local mfs2 = mg_villages.replace_materials( replacements, pr,
@@ -552,8 +551,7 @@ end
 
 mg_villages.replacements_charachoal = function( housetype, pr, replacements )
       -- mostly for doors
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
       if( mg_villages.realtest_trees ) then
          table.insert( replacements, {'stairs:slab_loam',     'cottages:loam'});
          table.insert( replacements, {'stairs:stair_loam',    'cottages:loam'});
@@ -649,8 +647,7 @@ mg_villages.replacements_medieval = function( housetype, pr, replacements )
    -- to set this so that a suitable wooden door, fences etc. can be selected for games
    -- like MineClone2 and RealTest;
    -- the houses use the wood for the floors
-   local wood = mg_villages.get_group_replacement( 'wood', pr )
-   wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+   local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
 
    -- TODO: the lower, upper or both parts of the house *may* be made out of that wood above
 
@@ -698,16 +695,14 @@ mg_villages.replacements_medieval = function( housetype, pr, replacements )
  
    -- straw is the most likely building material for roofs for historical buildings
    -- however, the other roof types are fine, and we can use them as well
-   local roof = mg_villages.get_group_replacement( 'roof', pr )
-   roof = handle_schematics.replace_material( replacements, 'roof', 'cottages:roof_connector_straw', roof)
+   local roof = mg_villages.do_group_replacement( replacements, pr, 'roof', nil)
    return replacements;
 end
 
 
 mg_villages.replacements_tower = function( housetype, pr, replacements )
       -- replace the wood - this is needed in particular for the fences
-      local wood = mg_villages.get_group_replacement( 'wood', pr )
-      wood = handle_schematics.replace_material( replacements, 'wood', nil, wood)
+      local wood = mg_villages.do_group_replacement( replacements, pr, 'wood', nil)
 
       mg_villages.replace_materials( replacements, pr,
                 {'stairs:stair_cobble',  'stairs:slab_cobble', 'default:cobble'},
