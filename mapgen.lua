@@ -1,6 +1,14 @@
 -- Intllib
 local S = mg_villages.intllib
 
+-- get_content_id replacement
+local function get_content_id(node)
+	if node and minetest.registered_nodes[node] then
+		return minetest.get_content_id(node)
+	end
+	return nil
+end
+
 -- mapgen v6 has mudflow and requires additional fixes for that
 local is_mapgen_v6 = false
 -- no need to adjust height if it is a flat mapgen
@@ -60,11 +68,11 @@ for k,v in pairs(replacements_group['wood'].data) do
 	-- if tree trunk and sapling exist in this game
 	if(   minetest.registered_nodes[v[4]]
 	  and minetest.registered_nodes[v[6]]) then
-		trunk_to_sapling[ minetest.get_content_id(v[4]) ] = {
+		trunk_to_sapling[ get_content_id(v[4]) ] = {
 			wood    = k,
 			trunk   = v[4],
 			sapling = v[6],
-			sapling_id = minetest.get_content_id(v[6])}
+			sapling_id = get_content_id(v[6])}
 	end
 end
 
@@ -128,8 +136,8 @@ end
 
 -- air and ignore are definitely no ground on which players can stand
 -- replacements_group.node_is_ground is defined in handle_schematics
-replacements_group.node_is_ground[ minetest.get_content_id('air'   )] = false
-replacements_group.node_is_ground[ minetest.get_content_id('ignore')] = false
+replacements_group.node_is_ground[ get_content_id('air'   )] = false
+replacements_group.node_is_ground[ get_content_id('ignore')] = false
 
 -- can we use this as a ground node in the village?
 mg_villages.check_if_ground = function( ci )
@@ -356,8 +364,8 @@ mg_villages.flatten_village_area = function( villages, minp, maxp, vm, data, par
 		   and mg_villages.village_type_data[ village.village_type ]
 		   and mg_villages.village_type_data[ village.village_type ].force_ground
 		   and mg_villages.village_type_data[ village.village_type ].force_underground ) then
-			force_ground      = minetest.get_content_id(mg_villages.village_type_data[ village.village_type ].force_ground);
-			force_underground = minetest.get_content_id(mg_villages.village_type_data[ village.village_type ].force_underground);
+			force_ground      = get_content_id(mg_villages.village_type_data[ village.village_type ].force_ground);
+			force_underground = get_content_id(mg_villages.village_type_data[ village.village_type ].force_underground);
 			if( not( force_ground ) or force_ground < 0 or force_ground == cid.c_ignore
 			   or not( force_underground ) or force_underground < 0 or force_underground == cid.c_ignore ) then
 				force_ground = nil;
@@ -915,9 +923,9 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		mg_villages.undo_mudflow( villages, {x=minp.x-3, y=minp.y, z=maxp.z-3}, {x=maxp.x+3, y=maxp.y, z=maxp.z+3}, vm, data, param2_data, a, village_area, cid)
 	end
 
-	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
+	local c_feldweg =  get_content_id('cottages:feldweg');
 	if( not( c_feldweg )) then
-		c_feldweg = minetest.get_content_id('default:cobble');
+		c_feldweg = get_content_id('default:cobble');
 	end
 
 	-- up til now, cid.c_water had to be default:water_source (or whatever the current
@@ -925,7 +933,7 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 	-- river water for the individual buildings because fountains, lakes and the like
 	-- ought to use river water instead of salt water if possible
 	if(minetest.registered_nodes["default:river_water_source"]) then
-		cid.c_water = minetest.get_content_id('default:river_water_source')
+		cid.c_water = get_content_id('default:river_water_source')
 	end
 
 	for _, village in ipairs(villages) do
