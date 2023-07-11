@@ -56,14 +56,14 @@ dofile(mg_villages.modpath.."/mg_villages_path_info.data");
 -- multiple diffrent village types with their own sets of houses are supported
 -- The function mg_villages.add_village_type( village_type_name, village_type_data )
 --   allows other mods to add new village types.
-dofile(mg_villages.modpath.."/village_types.lua")
+dofile(mg_villages.modpath.."/add_village_type.lua")
 
 -- calls path calculation and stores front doors etc.; only called in mg_villages.add_building
 dofile(mg_villages.modpath.."/analyze_building_for_mobs.lua")
 
 -- Note: the "buildings" talbe is not in the mg_villages.* namespace
 -- The function mg_villages.add_building( building_data ) allows other mods to add buildings.
-dofile(mg_villages.modpath.."/buildings.lua")
+dofile(mg_villages.modpath.."/add_building.lua")
 
 -- mg_villages.init_weights() has to be called AFTER all village types and buildings have
 -- been added using the functions above
