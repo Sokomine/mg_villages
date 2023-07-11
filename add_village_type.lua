@@ -18,50 +18,8 @@
 --	plant_type = 'farming:wheat_8'  Type of plant that is placed around villages.
 --	plant_frequency = 1	The higher this value is, the less plants are placed.
 
--- Intllib
 local S = mg_villages.intllib
 
-local village_type_data_list = {
-	nore         = { min = 20, max = 40,   space_between_buildings=1, mods={},            texture = 'default_stone_brick.png',
-			 replacement_function = mg_villages.replacements_nore },
-	taoki        = { min = 30, max = 70,   space_between_buildings=1, mods={},            texture = 'default_brick.png' ,
-			 sapling_divisor =  5, plant_type = 'farming:cotton_8',    plant_frequency = 1,
-			 replacement_function = mg_villages.replacements_taoki },
-	medieval     = { min = 25, max = 60,   space_between_buildings=2, mods={'cottages'},  texture = 'cottages_darkage_straw.png', -- they often have straw roofs
-			 sapling_divisor = 10, plant_type = 'farming:wheat_8',     plant_frequency = 1,
-			 replacement_function = mg_villages.replacements_medieval,
-			roadsize_list = {2,3,4,5,6},
---			road_materials = {'default:cobble','default:gravel','default:stonebrick','default:coalblock'},
-			}, --roadsize_list = {1,1,2,3,4} },
-	charachoal   = { min = 10, max = 15,   space_between_buildings=1, mods={'cottages'},  texture = 'default_coal_block.png',
-			 replacement_function = mg_villages.replacements_charachoal },
-	lumberjack   = { min = 10, max = 30,   space_between_buildings=1, mods={'cottages'},  texture = 'default_tree.png', name_prefix = 'Camp ',
-			 sapling_divisor =  1, plant_type = 'default:junglegrass', plant_frequency = 24,
-			 replacement_function = mg_villages.replacements_lumberjack },
-	claytrader   = { min = 10, max = 20,   space_between_buildings=1, mods={'cottages'},  texture = 'default_clay.png',
-			 replacement_function = mg_villages.replacements_claytrader },
-	logcabin     = { min = 15, max = 30,   space_between_buildings=1, mods={'cottages'},  texture = 'default_wood.png',
-			 replacement_function = mg_villages.replacements_logcabin },
-	grasshut     = { min = 10, max = 40,   space_between_buildings=1, mods={'dryplants'}, texture = 'dryplants_reed.png',
-			 replacement_function = mg_villages.replacements_grasshut },
-	tent         = { min =  5, max = 20,   space_between_buildings=2, mods={'cottages'},  texture = 'wool_white.png', name_preifx = 'Tent at',
-			 replacement_function = mg_villages.replacements_tent },
-
-	-- these sub-types may occour as single houses placed far from villages
-	tower        = { only_single = 1, name_prefix = 'Tower at ',      mods={'cottages'},  texture = 'default_mese.png',
-			 replacement_function = mg_villages.replacements_tower },
-	chateau      = { only_single = 1, name_prefix = 'Chateau ',                           texture = 'default_gold_block.png',
-			 replacement_function = mg_villages.replacements_chateau },
-	forge        = { only_single = 1, name_prefix = 'Forge at '},
-	tavern       = { only_single = 1, name_prefix = 'Inn at '},
-	well         = { only_single = 1, name_prefix = 'Well at ',
-			 replacement_function = mg_villages.replacements_medieval },
-	trader       = { only_single = 1, name_prefix = 'Trading post ' },
-	sawmill      = { only_single = 1, name_prefix = 'Sawmill at ' },
-	farm_tiny    = { only_single = 1, name_prefix = 'House '},
-	farm_full    = { only_single = 1, name_prefix = 'Farm '},
-	single       = { only_single = 1, name_prefix = 'House '}, -- fallback
-}
 
 -- NOTE: Most values of village types added with mg_villages.add_village_type can still be changed later on by
 --       changing the global variable mg_villages.village_type_data[ village_type ]
@@ -116,7 +74,3 @@ end
 
 -- build a list of all useable village types the mg_villages mod comes with
 mg_villages.village_type_data = {};
-for k,v in pairs( village_type_data_list ) do
-	mg_villages.add_village_type( k, v );
-end
-village_type_data_list = nil;
