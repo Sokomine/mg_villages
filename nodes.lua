@@ -151,6 +151,7 @@ minetest.register_node("mg_villages:mob_workplace_marker", {
 	paramtype2 = "facedir",
 	walkable = false,
 	is_ground_content = false,
+	use_texture_alpha = "clip",
 	node_box = {
 		type = "fixed",
 		fixed = {
