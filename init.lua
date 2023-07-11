@@ -105,3 +105,6 @@ dofile(mg_villages.modpath.."/roads.lua")
 
 -- add some nice villages and buildings;
 dofile(mg_villages.modpath.."/add_default_village_types.lua")
+-- if you DISABLE the default villages above and don't add houses to the
+-- village type "single", then you need to disable lone houses here:
+--mg_villages.INVERSE_HOUSE_DENSITY = 0
