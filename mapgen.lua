@@ -915,9 +915,13 @@ mg_villages.place_villages_via_voxelmanip = function( villages, minp, maxp, vm, 
 		mg_villages.undo_mudflow( villages, {x=minp.x-3, y=minp.y, z=maxp.z-3}, {x=maxp.x+3, y=maxp.y, z=maxp.z+3}, vm, data, param2_data, a, village_area, cid)
 	end
 
-	local c_feldweg =  minetest.get_content_id('cottages:feldweg');
+	local feldweg_name = 'cottages:feldweg'
+	if(not(minetest.registered_nodes[feldweg_name])) then
+		feldweg_name = 'default:cobble'
+	end
+	local c_feldweg =  minetest.get_content_id(feldweg_name);
 	if( not( c_feldweg )) then
-		c_feldweg = minetest.get_content_id('default:cobble');
+		c_feldweg = 1
 	end
 
 	-- up til now, cid.c_water had to be default:water_source (or whatever the current
