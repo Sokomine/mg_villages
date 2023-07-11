@@ -233,7 +233,7 @@ minetest.register_chatcommand( 'visit', {
 			end
 		end
 		-- no village found
-		minetest.chat_send_player( name, "There is no village with the number "..tostring( param ).." (yet?).");
+		minetest.chat_send_player( name, S("There is no village with the number @1 (yet?).", tostring( param )));
         end
 });
 
@@ -245,12 +245,12 @@ minetest.register_chatcommand( 'village_mob_repopulate', {
 
 
 		if( not( minetest.check_player_privs( name, {protection_bypass=true}))) then
-			minetest.chat_send_player( name, "You need the 'protection_bypass' priv in order to delete all the old mob data of a village and to recalculate it anew.");
+			minetest.chat_send_player( name, S("You need the 'protection_bypass' priv in order to delete all the old mob data of a village and to recalculate it anew."));
 			return;
 		end
 
 		if( not( param ) or param == "" ) then
-			minetest.chat_send_player( name, "Which village do you want to repopulate? Please provide the village number!");
+			minetest.chat_send_player( name, S("Which village do you want to repopulate? Please provide the village number!"));
 			return;
 		end
 
@@ -259,7 +259,7 @@ minetest.register_chatcommand( 'village_mob_repopulate', {
 			-- we have found the village
 			if( v and v.nr == nr ) then
 
-				minetest.chat_send_player( name, "Deleting information about workplaces and beds. Recalculating. Assigning new data for village no. "..tostring( v.nr )..", called "..( tostring( v.name or 'unknown'))..".");
+				minetest.chat_send_player( name, S("Deleting information about workplaces and beds. Recalculating. Assigning new data for village no. @1, called @2.", tostring( v.nr ), tostring( v.name or 'unknown')));
 				-- move the player to the center of the village he just changed
 				local player =  minetest.get_player_by_name( name );
 				player:move_to( { x=v.vx, y=(v.vh+1), z=v.vz }, false);

@@ -6,15 +6,15 @@ mg_villages.extra_show_road_list = function( village_id )
 	if( not( village_id ) or not( mg_villages.all_villages[ village_id ] )) then
 		return;
 	end
-	local str = "List of roads:\n";
+	local str = S("List of roads:\n");
 	local bpos_list = mg_villages.all_villages[ village_id ].village.to_add_data.bpos;
 	-- find out which road branches off from which other road
 	mg_villages.identify_parent_roads( bpos_list );
 	for i,pos in ipairs( bpos_list ) do
 		if( pos.btype and pos.btype=="road" ) then
-			str = str.." Plot "..tostring(i)..": road nr. "..tostring(pos.road_nr)..
-				" branching off from road on plot nr "..tostring(pos.parent_road)..
-				"\n     data: "..minetest.serialize( pos ).."\n";
+			str = str..S(" Plot @1: road nr. @2 branching off from road on plot nr @3",
+				tostring(i), tostring(pos.road_nr), tostring(pos.parent_road))..
+				"\n     data: "..minetest.serialize( pos ).."\n"
 		end
 	end
 	minetest.chat_send_player(pname, str );
@@ -71,8 +71,10 @@ mg_villages.plotmarker_list_traders = function( plot, formspec )
 		if( fields[ "visit_trader_"..i ] ) then
 
 			player:move_to( {x=trader.x, y=(village.vh+1), z=trader.z} );
-			minetest.chat_send_player( pname, "You are visiting the "..tostring( trader.typ )..
-				" trader, who is supposed to be somewhere here. He might also be on a floor above you.");
+			minetest.chat_send_player( pname, S("You are visiting the @1"..
+				" trader, who is supposed to be somewhere here. "..
+				"He might also be on a floor above you.",
+				tostring( trader.typ )))
 			return formspec;
 		end
 		if( fields[ "visit_call_"..i ] ) then
@@ -147,7 +149,7 @@ mg_villages.mob_spanwer_on_rightclick = function( pos, node, clicker, itemstack,
 	else
 		-- go to bed and sleep
 		path = mg_villages.get_path_from_outside_to_bed( village_id, plot_nr, bed_nr, 1 );
-		str = str.." The mob plans to go to his bed and start sleeping.\n";
+		str = str.." "..S("The mob plans to go to his bed and start sleeping.").."\n";
 
 --			local target_plot_nr = 9; -- just for testing..
 --			path = mg_villages.get_path_from_pos_to_plot_via_roads( village_id, pos, target_plot_nr );
@@ -174,7 +176,7 @@ mg_villages.debug_inhabitants = function( village, plot_nr)
 			-- find a place next to the bed where the mob can stand
 			local p_next_to_bed = mob_world_interaction.find_place_next_to( bed, 0, {x=0,y=0,z=0});
 			if( not( p_next_to_bed ) or p_next_to_bed.iteration==99 ) then
-				minetest.chat_send_player("singleplayer", "Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..": FAILED to find a place to stand.");
+				minetest.chat_send_player("singleplayer", S("Bed Nr. @1 at @2: FAILED to find a place to stand.", tostring(i), minetest.pos_to_string( bed )))
 			else
 				-- position in front of the building, with the building stretching equally to the right and left
 				-- get a diffrent one for each mob
@@ -182,7 +184,11 @@ mg_villages.debug_inhabitants = function( village, plot_nr)
 				local path = mob_world_interaction.find_path( p_next_to_bed, p_in_front, { collisionbox = {1,0,3,4,2}});
 				local str = "";
 				if( path ) then
-					str = str.."Bed Nr. "..tostring(i).." at "..minetest.pos_to_string( bed )..", standing at "..minetest.pos_to_string( p_next_to_bed )..": "..tostring( table.getn( path )).." Steps to outside.";
+					str = str..S("Bed Nr. @1 at @2, standing at @3: "..
+					"@4 steps to outside.",
+					tostring(i), minetest.pos_to_string( bed ),
+					minetest.pos_to_string( p_next_to_bed ),
+					tostring( table.getn( path )))
 					local front_door_pos = nil;
 					for j,p in ipairs( path ) do
 						local n = minetest.get_node( p );
@@ -191,10 +197,13 @@ mg_villages.debug_inhabitants = function( village, plot_nr)
 						end
 					end
 					if( front_door_pos ) then
-						str = str.." Front door found at: "..minetest.pos_to_string( front_door_pos );
+						str = str..S(" Front door found at: ")..minetest.pos_to_string( front_door_pos );
 					end
 				else
-					str = str.." FAILED to find a path from bed "..minetest.pos_to_string(bed )..", standing at "..minetest.pos_to_string( p_next_to_bed )..", to front of house.";
+					str = str..S(" FAILED to find a path from bed @1, standing at "..
+						"@2, to front of house.",
+						minetest.pos_to_string(bed ),
+						minetest.pos_to_string( p_next_to_bed ))
 				end
 				minetest.chat_send_player("singleplayer", str );
 			end
