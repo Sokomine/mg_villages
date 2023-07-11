@@ -102,3 +102,6 @@ dofile(mg_villages.modpath.."/spawn_player.lua")
 
 -- reconstruct the connection of the roads inside a village
 dofile(mg_villages.modpath.."/roads.lua")
+
+-- add some nice villages and buildings;
+dofile(mg_villages.modpath.."/add_default_village_types.lua")
