@@ -1,13 +1,7 @@
 -- reserve namespace for the villages
 mg_villages = {}
 
--- Intllib
-local S
-if minetest.get_modpath("intllib") then
-	S = intllib.Getter()
-else
-	S = function(s) return s end
-end
+local S = minetest.get_translator("mg_villages")
 mg_villages.intllib = S
 
 mg_villages.all_villages  = {}
